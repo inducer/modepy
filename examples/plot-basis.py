@@ -26,7 +26,8 @@ stretch_factor = 1.5
 
 for (i, j), basis_func in zip(
         gnitstam(p, dims),
-        get_simplex_onb(dims, p)):
+        get_simplex_onb(dims, p),
+        ):
 
     all_nodes.append(plot_nodes + [stretch_factor*i, stretch_factor*j])
     all_triangles.append(tri_subtriangles + node_count)

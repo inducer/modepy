@@ -241,4 +241,54 @@ def get_submesh(node_tuples):
 
 # }}}
 
+class accept_scalar_or_vector:
+    def __init__(self, arg_nr, expected_rank):
+        """
+        :arg arg_nr: The argument number which may be a scalar or a vector,
+            one-based.
+        """
+        self.arg_nr = arg_nr - 1
+        self.expected_rank = expected_rank
+
+    def __call__(self, f):
+        from functools import wraps
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            controlling_arg = args[self.arg_nr]
+            try:
+                shape = controlling_arg.shape
+            except AttributeError:
+                has_shape = False
+            else:
+                has_shape = True
+
+            if not has_shape:
+                if not self.expected_rank == 1:
+                    raise ValueError("cannot pass a scalar to %s" % f)
+
+                controlling_arg = np.array([controlling_arg])
+                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                result = f(*new_args, **kwargs)
+
+                if isinstance(result, tuple):
+                    return tuple(r[0] for r in result)
+                else:
+                    return result[0]
+
+            if len(shape) == self.expected_rank:
+                return f(*args, **kwargs)
+            else:
+                controlling_arg = controlling_arg[..., np.newaxis]
+
+                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                result = f(*new_args, **kwargs)
+
+                if isinstance(result, tuple):
+                    return tuple(r[..., 0] for r in result)
+                else:
+                    return result[..., 0]
+
+        return wrapper
+
 # vim: foldmethod=marker

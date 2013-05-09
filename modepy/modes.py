@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 from math import sqrt
 import numpy as np
+from modepy.tools import accept_scalar_or_vector
 
 
 
@@ -40,6 +41,7 @@ derivatives on unit simplices.
 
 # {{{ jacobi polynomials
 
+@accept_scalar_or_vector(arg_nr=4, expected_rank=1)
 def jacobi(alpha, beta, n, x):
     r"""Evaluate `Jacobi polynomials
     <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type :math:`(\alpha,
@@ -99,6 +101,7 @@ def jacobi(alpha, beta, n, x):
 
 
 
+@accept_scalar_or_vector(arg_nr=4, expected_rank=1)
 def grad_jacobi(alpha, beta, n, x):
     """Evaluate the derivative of :func:`jacobi`,
     with the same meanings and restrictions for all arguments.
@@ -127,6 +130,7 @@ def _rstoab(r, s):
 
 
 
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_2d(order, rs):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -149,6 +153,7 @@ def pkdo_2d(order, rs):
     h2 = jacobi(2*i+1, 0, j, b)
     return sqrt(2)*h1*h2*(1-b)**i
 
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_2d(order, rs):
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
@@ -164,6 +169,7 @@ def grad_pkdo_2d(order, rs):
     * |koornwinder-ref|
     * |dubiner-ref|
     """
+
     a, b = _rstoab(*rs)
     i, j = order
 
@@ -224,6 +230,7 @@ def _rsttoabc(r, s, t):
 
     return a, b, c
 
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_3d(order, rst):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -248,12 +255,15 @@ def pkdo_3d(order, rst):
 
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
+def grad_pkdo_3d(order, rst):
+    """Evaluate the derivatives of :func:`pkdo_3d`.
 
-
-
-def grad_pkdo_3d(a, b, c, id, jd, kd):
-    """Return the derivatives of the modal basis (id, jd, kd) on the
-    3D simplex at (a, b, c).
+    :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
+    :arg rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
+        (See :ref:`tet-coords`)
+    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same length
+        as the *rst* arrays.
 
     See the following publications:
 
@@ -262,49 +272,52 @@ def grad_pkdo_3d(a, b, c, id, jd, kd):
     * |dubiner-ref|
     """
 
-    fa  = JacobiP(a, 0, 0, id).reshape(len(a),1)
-    dfa = GradJacobiP(a, 0, 0, id)
-    gb  = JacobiP(b, 2*id+1,0, jd).reshape(len(b),1)
-    dgb = GradJacobiP(b, 2*id+1,0, jd)
-    hc  = JacobiP(c, 2*(id+jd)+2,0, kd).reshape(len(c),1)
-    dhc = GradJacobiP(c, 2*(id+jd)+2,0, kd)
+    a, b, c = _rsttoabc(*rst)
+    i, j, k = order
+
+    fa  = jacobi(0, 0, i, a)
+    dfa = grad_jacobi(0, 0, i, a)
+    gb  = jacobi(2*i+1,0, j, b)
+    dgb = grad_jacobi(2*i+1,0, j, b)
+    hc  = jacobi(2*(i+j)+2,0, k, c)
+    dhc = grad_jacobi(2*(i+j)+2,0, k, c)
 
     # r-derivative
     # d/dr = da/dr d/da + db/dr d/db + dc/dr d/dx
     dmodedr = dfa*gb*hc
-    if(id>0):
-        dmodedr = dmodedr*((0.5*(1-b))**(id-1))
-    if(id+jd>0):
-        dmodedr = dmodedr*((0.5*(1-c))**(id+jd-1))
+    if i:
+        dmodedr = dmodedr*((0.5*(1-b))**(i-1))
+    if i+j:
+        dmodedr = dmodedr*((0.5*(1-c))**(i+j-1))
 
     # s-derivative
     dmodeds = 0.5*(1+a)*dmodedr
-    tmp = dgb*((0.5*(1-b))**id)
-    if(id>0):
-        tmp = tmp+(-0.5*id)*(gb*(0.5*(1-b))**(id-1))
+    tmp = dgb*((0.5*(1-b))**i)
+    if i:
+        tmp = tmp+(-0.5*i)*(gb*(0.5*(1-b))**(i-1))
 
-    if(id+jd>0):
-        tmp = tmp*((0.5*(1-c))**(id+jd-1))
+    if i+j:
+        tmp = tmp*((0.5*(1-c))**(i+j-1))
 
     tmp = fa*tmp*hc
     dmodeds = dmodeds + tmp
 
     # t-derivative
     dmodedt = 0.5*(1+a)*dmodedr+0.5*(1+b)*tmp
-    tmp = dhc*((0.5*(1-c))**(id+jd))
-    if(id+jd>0):
-        tmp = tmp-0.5*(id+jd)*(hc*((0.5*(1-c))**(id+jd-1)));
+    tmp = dhc*((0.5*(1-c))**(i+j))
+    if i+j:
+        tmp = tmp-0.5*(i+j)*(hc*((0.5*(1-c))**(i+j-1)))
 
     tmp = fa*(gb*tmp)
-    tmp = tmp*((0.5*(1-b))**id);
-    dmodedt = dmodedt+tmp;
+    tmp = tmp*((0.5*(1-b))**i)
+    dmodedt = dmodedt+tmp
 
     # Normalize
-    dmodedr = 2**(2*id+jd+1.5)*dmodedr
-    dmodeds = 2**(2*id+jd+1.5)*dmodeds
-    dmodedt = 2**(2*id+jd+1.5)*dmodedt
+    dmodedr = 2**(2*i+j+1.5)*dmodedr
+    dmodeds = 2**(2*i+j+1.5)*dmodeds
+    dmodedt = 2**(2*i+j+1.5)*dmodedt
 
-    return dmodedr[:,0], dmodeds[:,0], dmodedt[:,0]
+    return dmodedr, dmodeds, dmodedt
 
 # }}}
 
@@ -347,6 +360,8 @@ def get_grad_simplex_onb(dims, p):
         return [partial(grad_jacobi, 0, 0, i) for i in xrange(p+1)]
     elif dims == 2:
         return [partial(grad_pkdo_2d, order) for order in gnitstam(p, dims)]
+    elif dims == 3:
+        return [partial(grad_pkdo_3d, order) for order in gnitstam(p, dims)]
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 

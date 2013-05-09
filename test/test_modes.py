@@ -117,7 +117,7 @@ def test_pkdo_orthogonality(dims, order, ebound):
 
 
 
-@pytest.mark.parametrize("dims", [1, 2])
+@pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
 def test_simplex_basis_grad(dims, order):
     """Do a simplistic FD-style check on the gradients of the basis."""
@@ -131,14 +131,16 @@ def test_simplex_basis_grad(dims, order):
     else:
         err_factor = 1
 
+    np.random.seed(15)
     for i_bf, (bf, gradbf) in enumerate(izip(
                 get_simplex_onb(dims, order),
                 get_grad_simplex_onb(dims, order),
                 )):
         for i in range(10):
+            # pick a spot r somewhere in the element
             base = -0.95
             remaining = 1.90
-            r = np.zeros((dims, 1))
+            r = np.zeros(dims, np.float64)
             for j in range(dims):
                 rn = uniform(0, remaining)
                 r[j] = base+rn
@@ -148,8 +150,8 @@ def test_simplex_basis_grad(dims, order):
             h = 1e-4
             gradbf_v = np.array(gradbf(r))
             approx_gradbf_v = np.array([
-                (bf(r+h*dir) - bf(r-h*dir))/(2*h)
-                for dir in [np.array(dir) for dir in wandering_element(dims)]
+                (bf(r+h*unit) - bf(r-h*unit))/(2*h)
+                for unit in [np.array(unit) for unit in wandering_element(dims)]
                 ])
             err = la.norm(approx_gradbf_v-gradbf_v, np.Inf)
             print dims, order, i_bf, err
