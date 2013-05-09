@@ -78,8 +78,7 @@ def get_warp_factor(n, output_nodes, want_boundary_nodes=True, scaled=True):
     # compute warp factor
     warp = np.dot(eq_to_out, warped_nodes - equi_nodes)
     if scaled:
-        zerof = np.abs(np.abs(output_nodes) - 1) < 1e-10
-        print zerof
+        zerof = (abs(output_nodes)<1.0-1.0e-10)
         sf = 1.0 - (zerof*output_nodes)**2
         warp = warp/sf + warp*(zerof-1)
 
