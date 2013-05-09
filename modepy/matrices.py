@@ -1,100 +1,74 @@
+from __future__ import division
 
-def Vandermonde1D(N, xp):
-    """Initialize the 1D Vandermonde Matrix.
-    V_{ij} = phi_j(xp_i)
+__copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
+
+__license__ = """
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+
+
+
+import numpy as np
+
+
+
+
+def vandermonde(functions, points):
+    """Return a Vandermonde matrix.
+
+    The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
+    where *functions* is the list of :math:`f_j` and points is
+    the array of :math:`x_i`, shaped as *(d, npts)*, where *d*
+    is the number of dimensions and *npts* is the number of points.
+
+    *functions* are allowed to return :class:`tuple` instances.
     """
 
-    Nx = np.int32(xp.shape[0])
-    N  = np.int32(N)
-    V1D = np.zeros((Nx, N+1))
+    npoints = points.shape[-1]
+    nfunctions = len(functions)
 
-    for j in range(N+1):
-            V1D[:, j] = JacobiP(xp, 0, 0, j).T # give the tranpose of Jacobi.p
+    result = None
+    for j, f in enumerate(functions):
+        f_values = f(points)
 
-    return V1D
+        if result is None:
+            if isinstance(f_values, tuple):
+                from pytools import single_valued
+                dtype = single_valued(fi.dtype for fi in f_values)
+                result = [np.empty((npoints, nfunctions), dtype)
+                        for i in range(len(f_values))]
+            else:
+                result = np.empty((npoints, nfunctions), f_values.dtype)
 
+        if isinstance(f_values, tuple):
+            for i, f_values_i in enumerate(f_values):
+                result[i][:, j] = f_values_i
+        else:
+            result[:, j] = f_values
 
+    return result
 
+def mass_matrix(basis, nodes):
+    pass
 
-def Vandermonde2D(N, r, s):
-    """Initialize the 2D Vandermonde Matrix,  V_{ij} = phi_j(r_i, s_i)
-    """
+def differentiation_matrix(basis, nodes):
+    pass
 
-    V2D = np.zeros((len(r),(N+1)*(N+2)/2))
-
-    # Transfer to (a, b) coordinates
-    a, b = rstoab(r, s)
-
-    # build the Vandermonde matrix
-    sk = 0
-
-    for i in range(N+1):
-        for j in range(N-i+1):
-            V2D[:, sk] = Simplex2DP(a, b, i, j)
-            sk = sk+1
-    return V2D
-
-def Vandermonde3D(N, r, s, t):
-    """Initialize the 3D Vandermonde Matrix,  V_{ij} = phi_j(r_i, s_i, t_i)
-    """
-
-    print 'Np computed as ', ((N+1)*(N+2)*(N+3))//6
-
-    V3D = np.zeros((len(r),((N+1)*(N+2)*(N+3))//6))
-
-    # Transfer to (a, b) coordinates
-    a, b, c = rsttoabc(r, s, t)
-
-    # build the Vandermonde matrix
-    sk = 0
-
-    for i in range(N+1):
-        for j in range(N+1-i):
-            for k in range(N+1-i-j):
-                V3D[:, sk] = Simplex3DP(a, b, c, i, j, k)
-                sk = sk+1
-    return V3D
-
-
-
-def GradVandermonde2D(N, Np, r, s):
-    """Initialize the gradient of the modal basis
-    (i, j) at (r, s) at order N.
-    """
-
-    V2Dr = np.zeros((len(r), Np))
-    V2Ds = np.zeros((len(r), Np))
-
-    # find tensor-product coordinates
-    a, b = rstoab(r, s)
-    # Initialize matrices
-    sk = 0
-    for i in range(N+1):
-        for j in range(N-i+1):
-            V2Dr[:, sk], V2Ds[:, sk] = GradSimplex2DP(a, b, i, j)
-            sk = sk+1
-    return V2Dr, V2Ds
-
-
-def GradVandermonde3D(N, Np, r, s, t):
-    """Initialize the gradient of the modal basis
-    (i, j, k) at (r, s, t) at order N.
-    """
-
-    V3Dr = np.zeros((len(r), Np))
-    V3Ds = np.zeros((len(r), Np))
-    V3Dt = np.zeros((len(r), Np))
-
-    # find tensor-product coordinates
-    a, b, c = rsttoabc(r, s, t)
-    # Initialize matrices
-    sk = 0
-    for i in range(N+1):
-        for j in range(N+1-i):
-            for k in range(N+1-i-j):
-                V3Dr[:, sk], V3Ds[:, sk], V3Dt[:, sk] = GradSimplex3DP(a, b, c, i, j, k)
-                sk = sk+1
-
-    return V3Dr, V3Ds, V3Dt
-
-
+# vim: foldmethod=marker

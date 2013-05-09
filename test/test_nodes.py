@@ -32,6 +32,33 @@ import pytest
 
 
 
+@pytest.mark.parametrize("dims", [1, 2, 3])
+def test_barycentric_coordinate_map(dims):
+    from random import Random
+    rng = Random(17)
+
+    n = 5
+    unit = np.empty((dims, n))
+    from modepy.tools import (
+            pick_random_simplex_unit_coordinate,
+            unit_to_barycentric,
+            barycentric_to_unit,
+            barycentric_to_equilateral,
+            equilateral_to_unit,)
+
+    for i in range(n):
+        unit[:, i] = pick_random_simplex_unit_coordinate(rng, dims)
+
+    bary = unit_to_barycentric(unit)
+    assert (np.abs(np.sum(bary, axis=0) - 1) < 1e-15).all()
+    assert (bary >= 0).all()
+    unit2 = barycentric_to_unit(bary)
+    assert la.norm(unit-unit2) < 1e-14
+
+    equi = barycentric_to_equilateral(bary)
+    unit3 = equilateral_to_unit(equi)
+    assert la.norm(unit-unit3) < 1e-14
+
 def test_warp():
     """Check some assumptions on the node warp factor calculator"""
     n = 17

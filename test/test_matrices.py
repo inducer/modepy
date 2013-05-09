@@ -26,35 +26,35 @@ THE SOFTWARE.
 
 
 import numpy as np
-from modepy.quadrature import Quadrature
+import numpy.linalg as la
 
 
 
 
-class XiaoGimbutasSimplexQuadrature(Quadrature):
-    """
-    See
+def test_tri_area_via_mass_matrix():
+    from modepy.discretization.local import TriangleDiscretization
 
-    * H. Xiao and Z. Gimbutas, "A numerical algorithm for the construction of
-      efficient quadrature rules in two and higher dimensions," Computers &
-      Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
-      http://dx.doi.org/10.1016/j.camwa.2009.10.027
-    """
+    for i in range(1,10):
+        edata = TriangleDiscretization(i)
+        ones = np.ones((edata.node_count(),))
+        unit_tri_area = 2
+        error = la.norm(
+            np.dot(ones,np.dot(edata.mass_matrix(), ones))-unit_tri_area)
+        assert error < 1e-14
 
-    def __init__(self, order, dims):
-        if dims == 2:
-            from modepy.quadrature.xg_quad_data import triangle_table as table
-        elif dims == 3:
-            from modepy.quadrature.xg_quad_data import tetrahedron_table as table
-        else:
-            raise ValueError("invalid dimensionality for XG quadrature")
 
-        from modepy.tools import EQUILATERAL_TO_UNIT_MAP
-        e2u = EQUILATERAL_TO_UNIT_MAP[dims]
 
-        nodes = e2u(table[order]["points"].T)
-        wts = table[order]["weights"]*e2u.jacobian
 
-        Quadrature.__init__(self, nodes, wts)
 
-        self.exact_to = order
+# You can test individual routines by typing
+# $ python test_modes.py 'test_routine()'
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        exec(sys.argv[1])
+    else:
+        from py.test.cmdline import main
+        main([__file__])
+
+# vim: fdm=marker

@@ -32,114 +32,144 @@ from math import sqrt
 
 
 
-NODETOL = 1e-12
-eps = np.finfo(float).eps
+__doc__ = """This module generates interpolation nodes as described in
+
+    Warburton, T. "An Explicit Construction of Interpolation Nodes on the Simplex."
+    Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
+    http://dx.doi.org/10.1007/s10665-006-9086-6
+
+The generated nodes have benign 
+`Lebesgue constants <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
+"""
 
 
 
-def Warpfactor(N, rout):
-    """Compute scaled warp function at order N based on
-    rout interpolation nodes.
+
+def get_1d_nodes(n, want_boundary_nodes):
+    from modepy.quadrature.jacobi_gauss import (
+            legendre_gauss_lobatto_nodes,
+            LegendreGaussQuadrature)
+
+    if want_boundary_nodes:
+        return legendre_gauss_lobatto_nodes(n)
+    else:
+        return LegendreGaussQuadrature(n).nodes
+
+
+
+
+def get_warp_factor(n, output_nodes, want_boundary_nodes=True, scaled=True):
+    """Compute warp function at order *n* and evaluate it at
+    the nodes *output_nodes*.
     """
 
-    # Compute LGL and equidistant node distribution
-    LGLr = JacobiGL(0,0, N)
-    req  = np.linspace(-1,1, N+1)
-    # Compute V based on req
-    Veq = Vandermonde1D(N, req)
-    # Evaluate Lagrange polynomial at rout
-    Nr = len(rout); Pmat = np.zeros((N+1, Nr))
-    for i in range(N+1):
-        Pmat[i,:] = JacobiP(rout.T[0,:], 0, 0, i)
+    warped_nodes = get_1d_nodes(n, want_boundary_nodes=want_boundary_nodes)
+    equi_nodes  = np.linspace(-1, 1, n+1)
 
-    Lmat = la.solve(Veq.T, Pmat)
+    from modepy.matrices import vandermonde
+    from modepy.modes import get_simplex_onb
 
-    # Compute warp factor
-    warp = np.dot(Lmat.T, LGLr - req)
-    warp = warp.reshape(Lmat.shape[1],1)
-    zerof = (abs(rout)<1.0-1.0e-10)
-    sf = 1.0 - (zerof*rout)**2
-    warp = warp/sf + warp*(zerof-1)
+    basis = get_simplex_onb(1, n)
+    Veq = vandermonde(basis, equi_nodes)
+
+    # create interpolator from equi_nodes to output_nodes
+    eq_to_out = la.solve(Veq.T, vandermonde(basis, output_nodes).T).T
+
+    # compute warp factor
+    warp = np.dot(eq_to_out, warped_nodes - equi_nodes)
+    if scaled:
+        zerof = np.abs(np.abs(output_nodes) - 1) < 1e-10
+        print zerof
+        sf = 1.0 - (zerof*output_nodes)**2
+        warp = warp/sf + warp*(zerof-1)
+
     return warp
 
-def Nodes2D(N):
-    """Compute (x, y) nodes in equilateral triangle for polynomial
-    of order N.
-    """
 
-    alpopt = np.array([0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
-            1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258])
 
-    # Set optimized parameter, alpha, depending on order N
-    if N< 16:
-        alpha = alpopt[N-1]
+# {{{ 2D nodes
+
+_alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
+        1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258]
+
+def get_2d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples=None):
+    try:
+        alpha = _alpha_opt_2d[n-1]
+    except IndexError:
+        alpha = 5/3
+
+    if node_tuples is None:
+        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+                as gnitstam
+        node_tuples = list(gnitstam(n, 2))
     else:
-        alpha = 5.0/3.0
+        if len(node_tuples) != (n+1)*(n+2)//2:
+            raise ValueError("node_tuples list does not have the correct length")
 
-    # total number of nodes
-    Np = (N+1)*(N+2)//2
+    # shape: (2, nnodes)
+    unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
-    # Create equidistributed nodes on equilateral triangle
-    L1 = np.zeros((Np,1))
-    L2 = np.zeros((Np,1))
-    L3 = np.zeros((Np,1))
-    sk = 0
-    for n in range(N+1):
-        for m in range(N+1-n):
-            L1[sk] = n/N
-            L3[sk] = m/N
-            sk = sk+1
+    from modepy.tools import (
+            unit_to_barycentric,
+            barycentric_to_equilateral,
+            equilateral_to_unit,
+            EQUILATERAL_VERTICES)
+    bary = unit_to_barycentric(unit_nodes)
+    equi = barycentric_to_equilateral(bary)
 
-    L2 = 1.0-L1-L3
-    x = -L2+L3; y = (-L2-L3+2*L1)/sqrt(3.0)
+    equi_vertices = EQUILATERAL_VERTICES[2]
 
-    # Compute blending function at each node for each edge
-    blend1 = 4*L2*L3; blend2 = 4*L1*L3; blend3 = 4*L1*L2
+    for i1 in range(3):
+        i2, i3 = set(range(3)) - set([i1])
 
-    # Amount of warp for each node, for each edge
-    warpf1 = Warpfactor(N, L3-L2)
-    warpf2 = Warpfactor(N, L1-L3)
-    warpf3 = Warpfactor(N, L2-L1)
+        # Compute blending function at each node for each edge
+        blend = 4*bary[i2]*bary[i3]
 
-    # Combine blend & warp
-    warp1 = blend1*warpf1*(1 + (alpha*L1)**2)
-    warp2 = blend2*warpf2*(1 + (alpha*L2)**2)
-    warp3 = blend3*warpf3*(1 + (alpha*L3)**2)
+        # Amount of warp for each node, for each edge
+        warpf = get_warp_factor(n, bary[i2]-bary[i3])
 
-    # Accumulate deformations associated with each edge
-    x = x + 1*warp1 + np.cos(2*np.pi/3)*warp2 + np.cos(4*np.pi/3)*warp3
-    y = y + 0*warp1 + np.sin(2*np.pi/3)*warp2 + np.sin(4*np.pi/3)*warp3
-    return x, y
+        # Combine blend & warp
+        warp = blend*warpf*(1 + (alpha*bary[i1])**2)
 
+        # all vertices have the same distance from the origin
+        tangent = equi_vertices[i2] - equi_vertices[i3]
+        tangent /= la.norm(tangent)
 
-def evalwarp(N, xnodes, xout):
+        equi += tangent[:, np.newaxis] * warp[np.newaxis, :]
 
+    return equilateral_to_unit(equi)
+
+# }}}
+
+# {{{ 3D nodes
+
+def eval_warp(n, xnodes, xout):
     # Purpose: compute one-dimensional edge warping function
 
     warp = np.zeros((len(xout),1))
-    xeq  = np.zeros((N+1,1))
-    for i in range(N+1):
-        xeq[i] = -1. + (2.*(N-i))/N;
+    xeq  = np.zeros((n+1,1))
+    for i in range(n+1):
+        xeq[i] = -1. + (2.*(n-i))/n;
 
-    for i in range(N+1):
+    for i in range(n+1):
         d = xnodes[i]-xeq[i]
 
-        for j in range(1,N):
-            if(i!=j):
+        for j in range(1,n):
+            if i!=j:
                 d = d*(xout-xeq[j])/(xeq[i]-xeq[j]);
 
-        if(i!=0):
+        if i!=0:
             d = -d/(xeq[i]-xeq[0])
 
-        if(i!=N):
-            d = d/(xeq[i]-xeq[N])
+        if i!=n:
+            d = d/(xeq[i]-xeq[n])
 
         warp = warp+d;
 
     return warp
 
 
-def evalshift(N, pval, L1, L2, L3):
+def eval_shift(N, pval, L1, L2, L3):
 
     # Purpose: compute two-dimensional Warp & Blend transform
 
@@ -180,47 +210,104 @@ def  WarpShiftFace3D(p, pval, pval2, L1, L2, L3, L4):
 
     return warpx, warpy
 
-def EquiNodes3D(N):
+_alpha_opt_3d = [
+        0, 0, 0, 0.1002,  1.1332, 1.5608, 1.3413, 1.2577, 1.1603,
+        1.10153, 0.6080, 0.4523, 0.8856, 0.8717, 0.9655]
 
-    # Purpose: compute the equidistributed nodes on the
-    #         reference tetrahedron
-
-    # total number of nodes
-    Np = (N+1)*(N+2)*(N+3)//6
-
-    # 2) create equidistributed nodes on equilateral triangle
-    X = np.zeros((Np,1))
-    Y = np.zeros((Np,1))
-    Z = np.zeros((Np,1))
-
-    sk = 0
-    for n in range(N+1):
-        for m in range(N+1-n):
-            for q in range(N+1-n-m):
-
-                X[sk] = -1 + (q*2.)/N
-                Y[sk] = -1 + (m*2.)/N
-                Z[sk] = -1 + (n*2.)/N;
-
-                sk = sk+1;
-
-    return X, Y, Z
-
-def Nodes3D(N):
-    """Compute (x, y, z) nodes in equilateral tet for polynomial of degree N.
-    """
-
-    alpopt = np.array([0, 0, 0, 0.1002,  1.1332, 1.5608, 1.3413, 1.2577, 1.1603,\
-                           1.10153, 0.6080, 0.4523, 0.8856, 0.8717, 0.9655])
-
-    if(N<=15):
-        alpha = alpopt[N-1]
-    else:
+def get_3d_warp_and_blend_nodes(n, node_tuples=None):
+    try:
+        alpha = _alpha_opt_3d[n-1]
+    except IndexError:
         alpha = 1.
 
+    if node_tuples is None:
+        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+                as gnitstam
+        node_tuples = list(gnitstam(n, 2))
+    else:
+        if len(node_tuples) != (n+1)*(n+2)*(n+3)//6:
+            raise ValueError("node_tuples list does not have the correct length")
+
+    # shape: (3, nnodes)
+    unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
+
+    from modepy.tools import (
+            unit_to_barycentric,
+            barycentric_to_equilateral,
+            equilateral_to_unit,
+            EQUILATERAL_VERTICES)
+    bary = unit_to_barycentric(unit_nodes)
+    equi = barycentric_to_equilateral(bary)
+
+    equi_vertices = EQUILATERAL_VERTICES[3]
+
     # total number of nodes and tolerance
-    Np = (N+1)*(N+2)*(N+3)//6
     tol = 1e-8
+
+    for i1 in range(4):
+        i2, i3, i4 = set(range(4)) - set([i1])
+
+        l2,
+
+        # all vertices have the same distance from the origin
+        tangent1 = equi_vertices[i2] - equi_vertices[i3]
+        tangent1 /= la.norm(tangent1)
+
+        tangent2 = equi_vertices[i3] - equi_vertices[i4]
+        tangent2 /= la.norm(tangent2)
+
+        warp1, warp2 = eval_shift(n, alpha, La, Lb, Lc, Ld)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     r,s,t = EquiNodes3D(N)
 
@@ -272,7 +359,7 @@ def Nodes3D(N):
             La = L4; Lb = L1; Lc = L3; Ld = L2;
 
         #  compute warp tangential to face
-        warp1, warp2 = WarpShiftFace3D(N, alpha, alpha, La, Lb, Lc, Ld)
+        warp1, warp2 = eval_shift(N, alpha, alpha, La, Lb, Lc, Ld)
 
         # compute volume blending
         blend = Lb*Lc*Ld
@@ -304,91 +391,29 @@ def Nodes3D(N):
 
     return x, y, z
 
+# }}}
 
-
-def xytors(x, y):
-    """From (x, y) in equilateral triangle to (r, s) coordinates in standard triangle."""
-
-    L1 = (np.sqrt(3.0)*y+1.0)/3.0
-    L2 = (-3.0*x - np.sqrt(3.0)*y + 2.0)/6.0
-    L3 = ( 3.0*x - np.sqrt(3.0)*y + 2.0)/6.0
-
-    r = -L2 + L3 - L1; s = -L2 - L3 + L1
-    return r, s
-
-def xyztorst(x, y, z):
-
-    # TO BE CONVERTED
-
-    v1 = np.array([-1,-1/sqrt(3), -1/sqrt(6)]) # sqrt ?
-    v2 = np.array([ 1,-1/sqrt(3), -1/sqrt(6)])
-    v3 = np.array([ 0, 2/sqrt(3), -1/sqrt(6)])
-    v4 = np.array([ 0, 0/sqrt(3),  3/sqrt(6)])
-
-    # back out right tet nodes
-    rhs = np.zeros((3, len(x)))
-    rhs[0,:] = x
-    rhs[1,:] = y
-    rhs[2,:] = z
-
-    tmp = np.zeros((3, 1))
-    tmp[:,0] =  0.5*(v2+v3+v4-v1)
-    rhs = rhs - tmp*np.ones((1,len(x)))
-
-    A = np.zeros((3,3))
-    A[:,0] = 0.5*(v2-v1)
-    A[:,1] = 0.5*(v3-v1)
-    A[:,2] = 0.5*(v4-v1)
-
-    RST = la.solve(A,rhs)
-
-    r = RST[0,:] # need to transpose ?
-    s = RST[1,:] # need to transpose ?
-    t = RST[2,:] # need to transpose ?
-
-    return r, s, t
-
-
-def rstoab(r, s):
-    """Transfer from (r, s) -> (a, b) coordinates in triangle.
+def get_warp_and_blend_nodes(dims, n, want_boundary_nodes, node_tuples=None):
     """
-
-    Np = len(r)
-    a = np.zeros((Np,1))
-    for n in range(Np):
-        if s[n] != 1:
-            a[n] = 2*(1+r[n])/(1-s[n])-1
-        else:
-            a[n] = -1
-
-    b = s
-    return a, b
-
-
-def rsttoabc(r,s,t):
-
-    """Transfer from (r,s,t) -> (a,b,c) coordinates in triangle
+    :arg dims: dimensionality of desired simplex
+        (1, 2 or 3, i.e. interval, triangle or tetrahedron).
+    :arg n: Desired maximum total polynomial degree to interpolate.
+    :arg node_tuples: a list of tuples of integers indicating the node order.
+        Use default order if *None*, see
+        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
+    :returns: An array of shape *(dims, nnodes)* containing unit coordinates
+        of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
-
-    Np = len(r)
-    tol = 1e-10
-
-    a = np.zeros((Np,1))
-    b = np.zeros((Np,1))
-    c = np.zeros((Np,1))
-    for n in range(Np):
-        if abs(s[n]+t[n])>tol:
-            a[n] = 2*(1+r[n])/(-s[n]-t[n])-1
-        else:
-            a[n] = -1
-
-        if abs(t[n]-1.)>tol:
-            b[n] = 2*(1+s[n])/(1-t[n])-1
-        else:
-            b[n] = -1
-
-        c[n] = t[n]
-
-    return a, b, c
+    if dims == 1:
+        if node_tuples is not None:
+            raise NotImplementedError("specifying node_tuples in 1D")
+        return get_1d_nodes(n, want_boundary_nodes=want_boundary_nodes)
+    elif dims == 2:
+        return get_2d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples)
+    elif dims == 3:
+        return get_3d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples)
+    else:
+        raise NotImplementedError("%d-dimensional bases" % dims)
 
 
+# vim: foldmethod=marker

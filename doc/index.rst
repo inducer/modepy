@@ -3,9 +3,9 @@ Welcome to modepy's documentation!
 
 .. module:: modepy
 
-:mod:`modepy` helps you create well-conditioned high-order discretizations
-based on simplices (i.e. triangles and tetrahedra). It closely follows
-the approach taken in the book
+:mod:`modepy` helps you create well-behaved unstructured high-order
+discretizations based on simplices (i.e. triangles and tetrahedra). It closely
+follows the approach taken in the book
 
   Hesthaven, Jan S., and Tim Warburton. "Nodal Discontinuous Galerkin Methods:
   Algorithms, Analysis, and Applications". 1st ed. Springer, 2007.
@@ -42,7 +42,6 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    intro
     modes
     nodes
     quadrature
@@ -50,6 +49,5 @@ Contents
 
 * :ref:`genindex`
 * :ref:`modindex`
-
 
 .. vim: sw=4

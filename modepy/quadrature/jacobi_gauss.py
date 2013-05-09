@@ -122,9 +122,9 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
 
 
-def jacobi_gauss_lobatto_points(alpha, beta, N):
+def jacobi_gauss_lobatto_nodes(alpha, beta, N):
     """Compute the *M*th order Gauss-Lobatto quadrature
-    points, x, associated with the Jacobi polynomial,
+    nodes, x, associated with the Jacobi polynomial,
     of type :math:`\alpha,\beta > -1` and 
     :math:`\alpha,\beta \ne 1/2`.
     """
@@ -137,15 +137,15 @@ def jacobi_gauss_lobatto_points(alpha, beta, N):
         return x
 
     x[1:-1] = np.array(
-            JacobiGaussQuadrature(alpha+1, beta+1, N-2).points
+            JacobiGaussQuadrature(alpha+1, beta+1, N-2).nodes
             ).real
     return x
 
 
 
 
-def legendre_gauss_lobatto_points(N):
+def legendre_gauss_lobatto_nodes(N):
     """Compute the *N*th order Gauss-Lobatto quadrature
-    points, x, associated with the Legendre polynomials.
+    nodes, x, associated with the Legendre polynomials.
     """
-    return jacobi_gauss_lobatto_points(0, 0, N)
+    return jacobi_gauss_lobatto_nodes(0, 0, N)

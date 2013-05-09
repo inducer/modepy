@@ -21,9 +21,9 @@ Jacobi-Gauss quadrature
 
 .. autoclass:: LegendreGaussQuadrature
 
-.. autofunction:: jacobi_gauss_lobatto_points
+.. autofunction:: jacobi_gauss_lobatto_nodes
 
-.. autofunction:: legendre_gauss_lobatto_points
+.. autofunction:: legendre_gauss_lobatto_nodes
 
 Quadratures on the simplex
 --------------------------

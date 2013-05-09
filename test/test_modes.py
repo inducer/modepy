@@ -122,7 +122,6 @@ def test_pkdo_orthogonality(dims, order, ebound):
 def test_simplex_basis_grad(dims, order):
     """Do a simplistic FD-style check on the gradients of the basis."""
     from itertools import izip
-    from random import uniform
 
     from modepy.modes import get_simplex_onb, get_grad_simplex_onb
 
@@ -131,20 +130,16 @@ def test_simplex_basis_grad(dims, order):
     else:
         err_factor = 1
 
-    np.random.seed(15)
+    from random import Random
+    rng = Random(17)
+
+    from modepy.tools import pick_random_simplex_unit_coordinate
     for i_bf, (bf, gradbf) in enumerate(izip(
                 get_simplex_onb(dims, order),
                 get_grad_simplex_onb(dims, order),
                 )):
         for i in range(10):
-            # pick a spot r somewhere in the element
-            base = -0.95
-            remaining = 1.90
-            r = np.zeros(dims, np.float64)
-            for j in range(dims):
-                rn = uniform(0, remaining)
-                r[j] = base+rn
-                remaining -= rn
+            r = pick_random_simplex_unit_coordinate(rng, dims)
 
             from pytools import wandering_element
             h = 1e-4
@@ -157,20 +152,6 @@ def test_simplex_basis_grad(dims, order):
             print dims, order, i_bf, err
             assert err < err_factor*h
 
-
-
-
-
-def test_tri_area_via_mass_matrix():
-    from modepy.discretization.local import TriangleDiscretization
-
-    for i in range(1,10):
-        edata = TriangleDiscretization(i)
-        ones = np.ones((edata.node_count(),))
-        unit_tri_area = 2
-        error = la.norm(
-            np.dot(ones,np.dot(edata.mass_matrix(), ones))-unit_tri_area)
-        assert error < 1e-14
 
 
 

@@ -6,9 +6,9 @@ Modes (Basis functions)
 Jacobi polynomials
 ------------------
 
-.. autofunction:: jacobi
+.. autofunction:: jacobi(alpha, beta, n, x)
 
-.. autofunction:: grad_jacobi
+.. autofunction:: grad_jacobi(alpha, beta, n, x)
 
 Dimension-independent basis getters
 -----------------------------------
@@ -33,13 +33,12 @@ Dimension-independent basis getters
 Dimension-specific functions
 ----------------------------
 
-.. autofunction:: pkdo_2d
+.. autofunction:: pkdo_2d(order, rs)
 
-.. autofunction:: grad_pkdo_2d
+.. autofunction:: grad_pkdo_2d(order, rs)
 
-.. autofunction:: pkdo_3d
+.. autofunction:: pkdo_3d(order, rst)
 
-.. autofunction:: grad_pkdo_3d
-
+.. autofunction:: grad_pkdo_3d(order, rst)
 
 .. vim: sw=4

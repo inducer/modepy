@@ -1,0 +1,11 @@
+include test/*.py
+
+include doc/*.rst
+include doc/conf.py
+include doc/images/*.png
+include doc/Makefile
+
+include README.rst
+
+include distribute_setup.py
+include Makefile.in

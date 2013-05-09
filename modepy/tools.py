@@ -112,8 +112,8 @@ class Monomial:
 
 class AffineMap:
     def __init__(self, a, b):
-        self.a = a
-        self.b = b
+        self.a = np.asarray(a, dtype=np.float64)
+        self.b = np.asarray(b, dtype=np.float64)
 
     def __call__(self, x):
         """Apply the map *self* to a batch of vectors *x*.
@@ -139,28 +139,85 @@ class AffineMap:
 
 
 
-@memoize
-def get_equilateral_to_unit(dims):
-    if dims == 1:
-        return AffineMap(
-                np.array([[1]], dtype=np.float64),
-                np.array([0], dtype=np.float64))
-    elif dims == 2:
-        return AffineMap(
-                np.array([[1, -1 / sqrt(3)], [0, 2 / sqrt(3)]]),
-                    np.array([-1/3, -1/3]))
-    elif dims == 3:
-        return AffineMap(
-                np.array([
-                    [1, -1/sqrt(3), -1/sqrt(6)],
-                    [0,  2/sqrt(3), -1/sqrt(6)],
-                    [0,         0,  sqrt(6)/2]
-                    ]),
-                    np.array([-1/2, -1/2, -1/2]))
-    else:
-        raise NotImplementedError("%d-dimensional map" % dims)
+EQUILATERAL_TO_UNIT_MAP = {
+        1: AffineMap([[1]], [0]),
+        2: AffineMap([
+            [1, -1 / sqrt(3)],
+            [0, 2 / sqrt(3)]],
+            [-1/3, -1/3]),
+        3: AffineMap([
+            [1, -1/sqrt(3), -1/sqrt(6)],
+            [0,  2/sqrt(3), -1/sqrt(6)],
+            [0,         0,  sqrt(6)/2]],
+            [-1/2, -1/2, -1/2])
+        }
+
+def equilateral_to_unit(equi):
+    return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
+
+UNIT_VERTICES = {
+        1: np.array([
+            [-1],
+            [1],
+            ]),
+        2: np.array([
+            [-1,-1],
+            [1,-1],
+            [-1,1],
+            ]),
+        3: np.array([
+            [-1,-1,-1],
+            [+1,-1,-1],
+            [-1,+1,-1],
+            [-1,-1,+1],
+            ])
+        }
+
+def barycentric_to_unit(bary):
+    dims = len(bary)-1
+    return np.dot(UNIT_VERTICES[dims].T, bary)
+
+def unit_to_barycentric(unit):
+    last_bary = 0.5*(unit+1)
+    first_bary = 1-np.sum(last_bary, axis=0)
+    return np.vstack([first_bary, last_bary])
+
+# /!\ do not reorder these, stuff (node generation) *will* break.
+EQUILATERAL_VERTICES = {
+        1: np.array([
+            [-1],
+            [1],
+            ]),
+        2: np.array([
+            [-1,-1/sqrt(3)],
+            [1,-1/sqrt(3)],
+            [0,2/sqrt(3)],
+            ]),
+        3: np.array([
+            [-1,-1/sqrt(3),-1/sqrt(6)],
+            [ 1,-1/sqrt(3),-1/sqrt(6)],
+            [ 0, 2/sqrt(3),-1/sqrt(6)],
+            [ 0,         0, 3/sqrt(6)],
+            ])
+        }
+
+def barycentric_to_equilateral(bary):
+    dims = len(bary)-1
+    return np.dot(EQUILATERAL_VERTICES[dims].T, bary)
 
 # }}}
+
+def pick_random_simplex_unit_coordinate(rng, dims):
+    offset = 0.05
+    base = -1 + offset
+    remaining = 2 - dims*offset
+    r = np.zeros(dims, np.float64)
+    for j in range(dims):
+        rn = rng.uniform(0, remaining)
+        r[j] = base+rn
+        remaining -= rn
+    return r
+
 
 # {{{ submeshes
 
