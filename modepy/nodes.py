@@ -45,25 +45,14 @@ The generated nodes have benign
 
 
 
-def get_1d_nodes(n, want_boundary_nodes):
-    from modepy.quadrature.jacobi_gauss import (
-            legendre_gauss_lobatto_nodes,
-            LegendreGaussQuadrature)
-
-    if want_boundary_nodes:
-        return legendre_gauss_lobatto_nodes(n)
-    else:
-        return LegendreGaussQuadrature(n).nodes
-
-
-
-
-def get_warp_factor(n, output_nodes, want_boundary_nodes=True, scaled=True):
+def get_warp_factor(n, output_nodes, scaled=True):
     """Compute warp function at order *n* and evaluate it at
     the nodes *output_nodes*.
     """
 
-    warped_nodes = get_1d_nodes(n, want_boundary_nodes=want_boundary_nodes)
+    from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
+
+    warped_nodes = legendre_gauss_lobatto_nodes(n)
     equi_nodes  = np.linspace(-1, 1, n+1)
 
     from modepy.matrices import vandermonde
@@ -91,7 +80,7 @@ def get_warp_factor(n, output_nodes, want_boundary_nodes=True, scaled=True):
 _alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
         1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258]
 
-def get_2d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples=None):
+def get_2d_warp_and_blend_nodes(n, node_tuples=None):
     try:
         alpha = _alpha_opt_2d[n-1]
     except IndexError:
@@ -392,7 +381,7 @@ def get_3d_warp_and_blend_nodes(n, node_tuples=None):
 
 # }}}
 
-def get_warp_and_blend_nodes(dims, n, want_boundary_nodes, node_tuples=None):
+def get_warp_and_blend_nodes(dims, n, node_tuples=None):
     """
     :arg dims: dimensionality of desired simplex
         (1, 2 or 3, i.e. interval, triangle or tetrahedron).
@@ -406,11 +395,13 @@ def get_warp_and_blend_nodes(dims, n, want_boundary_nodes, node_tuples=None):
     if dims == 1:
         if node_tuples is not None:
             raise NotImplementedError("specifying node_tuples in 1D")
-        return get_1d_nodes(n, want_boundary_nodes=want_boundary_nodes)
+
+        from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
+        return legendre_gauss_lobatto_nodes(n)
     elif dims == 2:
-        return get_2d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples)
+        return get_2d_warp_and_blend_nodes(n, node_tuples)
     elif dims == 3:
-        return get_3d_warp_and_blend_nodes(n, want_boundary_nodes, node_tuples)
+        return get_3d_warp_and_blend_nodes(n, node_tuples)
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 
