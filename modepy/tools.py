@@ -348,4 +348,48 @@ class accept_scalar_or_vector:
 
         return wrapper
 
+def estimate_lebesgue_constant(n, nodes, visualize=False):
+    from modepy.matrices import vandermonde
+    from modepy.modes import get_simplex_onb
+
+    dims = len(nodes)
+    basis = get_simplex_onb(dims, n)
+    vdm = vandermonde(basis, nodes)
+
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+    huge_n = 30*n
+    equi_node_tuples = list(gnitstam(huge_n, dims))
+    tons_of_equi_nodes = (
+            np.array(equi_node_tuples, dtype=np.float64)
+            /huge_n * 2 - 1).T
+
+    eq_vdm = vandermonde(basis, tons_of_equi_nodes)
+    eq_to_out = la.solve(vdm.T, eq_vdm.T).T
+
+    lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
+    lebesgue_constant = np.max(lebesgue_worst)
+
+    if visualize:
+        print "Lebesgue constant: %g" % lebesgue_constant
+        from modepy.tools import get_submesh
+
+        import mayavi.mlab as mlab
+        mlab.figure(bgcolor=(1, 1, 1))
+        mlab.triangular_mesh(
+                tons_of_equi_nodes[0],
+                tons_of_equi_nodes[1],
+                lebesgue_worst / lebesgue_constant,
+                get_submesh(equi_node_tuples))
+
+        x, y = np.mgrid[-1:1:20j, -1:1:20j]
+        mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4), line_width=0.6)
+
+        mlab.show()
+
+    return lebesgue_constant
+
+
+
+
 # vim: foldmethod=marker
