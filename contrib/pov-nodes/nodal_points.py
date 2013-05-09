@@ -1,20 +1,31 @@
-from hedge.discretization.local import TetrahedronDiscretization as Tet
+from __future__ import division
+
 from pov import Sphere, Cylinder, File, Union, Texture, Pigment, \
         Camera, LightSource, Plane, Background, Finish
-from numpy import array, ones
+import numpy as np
 
-t = Tet(8)
+n = 8
 
 ball_radius = 0.05
 link_radius = 0.02
 
-node_ids = t.node_tuples()
+from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+        as gnitstam
+node_tuples = list(gnitstam(n, 3))
 faces = [
-        [node_ids[i] for i in face]
-        for face in t.face_indices()]
+        [nt for nt in node_tuples if nt[0] == 0],
+        [nt for nt in node_tuples if nt[1] == 0],
+        [nt for nt in node_tuples if nt[2] == 0],
+        [nt for nt in node_tuples if sum(nt) == n]
+        ]
 
-nodes = [(n[0],n[2], n[1]) for n in t.equilateral_nodes()]
-id_to_node = dict(zip(node_ids, nodes))
+from modepy.nodes import get_warp_and_blend_nodes
+from modepy.tools import unit_to_barycentric, barycentric_to_equilateral
+nodes = [(n[0],n[2], n[1]) for n in
+        barycentric_to_equilateral(
+            unit_to_barycentric(
+                get_warp_and_blend_nodes(3, n, node_tuples))).T]
+id_to_node = dict(zip(node_tuples, nodes))
 
 def get_ball_radius(nid):
     in_faces = len([f for f in faces if nid in f])
@@ -31,7 +42,7 @@ def get_ball_color(nid):
         return (0,0,1)
 
 balls = Union(*[
-    Sphere(node, get_ball_radius(nid), 
+    Sphere(node, get_ball_radius(nid),
         Texture(Pigment(color=get_ball_color(nid)))
         )
     for nid, node in id_to_node.iteritems()
@@ -39,7 +50,7 @@ balls = Union(*[
 
 links = Union()
 
-for nid in t.node_tuples():
+for nid in node_tuples:
     child_nids = []
     for i in range(len(nid)):
         nid2 = list(nid)
@@ -60,18 +71,17 @@ for nid in t.node_tuples():
         connect_nids(nid2, child_nids[(i+1)%len(child_nids)])
 
 links.append(Texture(
-    Pigment(color=(0.8,0.8,0.8,0.8)),
+    Pigment(color=(0.8,0.8,0.8)),
     Finish(
-        ior=1.5,
         specular=1,
         ),
     ))
 
 outf = File("nodes.pov")
 
-Camera(location=0.65*array((4,0.8,-1)), look_at=(0,0.1,0)).write(outf)
+Camera(location=0.65*np.array((4,0.8,-1)), look_at=(0,0.1,0)).write(outf)
 LightSource(
-        (10,5,0), 
+        (10,5,0),
         color=(1,1,1),
         ).write(outf)
 Background(
@@ -80,7 +90,7 @@ Background(
 if False:
     Plane(
             (0,1,0), min(n[1] for n in nodes)-ball_radius,
-            Texture(Pigment(color=ones(3,)))
+            Texture(Pigment(color=np.ones(3,)))
             ).write(outf)
 balls.write(outf)
 links.write(outf)
