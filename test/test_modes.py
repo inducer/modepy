@@ -121,8 +121,6 @@ def test_pkdo_orthogonality(dims, order, ebound):
 @pytest.mark.parametrize("order", [5, 8])
 def test_simplex_basis_grad(dims, order):
     """Do a simplistic FD-style check on the gradients of the basis."""
-    from itertools import izip
-
     from modepy.modes import get_simplex_onb, get_grad_simplex_onb
 
     if dims == 3:
@@ -134,7 +132,7 @@ def test_simplex_basis_grad(dims, order):
     rng = Random(17)
 
     from modepy.tools import pick_random_simplex_unit_coordinate
-    for i_bf, (bf, gradbf) in enumerate(izip(
+    for i_bf, (bf, gradbf) in enumerate(zip(
                 get_simplex_onb(dims, order),
                 get_grad_simplex_onb(dims, order),
                 )):
