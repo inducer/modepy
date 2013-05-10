@@ -50,7 +50,18 @@ if not _have_gamma:
         _have_gamma = True
 
 if not _have_gamma:
-    raise RuntimeError("no usable implementation of the gamma function found")
+    def gamma(z):
+        from warnings import warn
+        warn("Using makeshift gamma function that only works for integers. No better one was found.")
+
+        if z != int(z):
+            raise RuntimeError("makeshift gamma function doesn't work for non-integers")
+
+        g = 1
+        for i in range(1, int(z)):
+            g = g*i
+
+        return g
 
 
 
