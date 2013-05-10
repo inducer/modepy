@@ -53,7 +53,7 @@ def main():
           install_requires=[
               "numpy>=1.6",
               "pytools>=2013.1",
-              "py.test>=2.3",
+              "pytest>=2.3",
               ],
 
           # 2to3 invocation
