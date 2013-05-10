@@ -39,7 +39,7 @@ def vandermonde(functions, points):
     is the number of dimensions and *npts* is the number of points.
 
     *functions* are allowed to return :class:`tuple` instances.
-    In this case, tuples of matrices are returned.
+    In this case, a tuple of matrices is returned.
     """
 
     npoints = points.shape[-1]
