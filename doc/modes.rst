@@ -6,6 +6,8 @@ Modes (Basis functions)
 Jacobi polynomials
 ------------------
 
+.. currentmodule:: modepy
+
 .. autofunction:: jacobi(alpha, beta, n, x)
 
 .. autofunction:: grad_jacobi(alpha, beta, n, x)
@@ -32,6 +34,8 @@ Dimension-independent basis getters
 
 Dimension-specific functions
 ----------------------------
+
+.. currentmodule:: modepy.modes
 
 .. autofunction:: pkdo_2d(order, rs)
 

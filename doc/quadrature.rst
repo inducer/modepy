@@ -6,20 +6,28 @@ Base classes
 
 .. automodule:: modepy.quadrature
 
+.. currentmodule:: modepy
+
 .. autoclass:: Quadrature
 
     .. automethod:: __call__
-
-.. autoclass:: Transformed1DQuadrature
 
 Jacobi-Gauss quadrature
 -----------------------
 
 .. automodule:: modepy.quadrature.jacobi_gauss
 
+.. currentmodule:: modepy
+
 .. autoclass:: JacobiGaussQuadrature
 
+    .. automethod:: __call__
+
 .. autoclass:: LegendreGaussQuadrature
+
+    .. automethod:: __call__
+
+.. currentmodule:: modepy.quadrature.jacobi_gauss
 
 .. autofunction:: jacobi_gauss_lobatto_nodes
 
@@ -28,13 +36,15 @@ Jacobi-Gauss quadrature
 Quadratures on the simplex
 --------------------------
 
-.. automodule:: modepy.quadrature.grundmann_moeller
+.. currentmodule:: modepy
 
 .. autoclass:: GrundmannMoellerSimplexQuadrature
 
-.. automodule:: modepy.quadrature.xiao_gimbutas
+    .. automethod:: __call__
 
 .. autoclass:: XiaoGimbutasSimplexQuadrature
+
+    .. automethod:: __call__
 
 .. vim: sw=4
 

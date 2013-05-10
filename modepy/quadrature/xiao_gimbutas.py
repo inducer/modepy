@@ -32,13 +32,21 @@ from modepy.quadrature import Quadrature
 
 
 class XiaoGimbutasSimplexQuadrature(Quadrature):
-    """
+    """A (nearly) Gaussian simplicial quadrature with very few quadrature nodes,
+    available for low-to-moderate orders.
+
+    The integration domain is the unit simplex. (see :ref:`tri-coords`
+    and :ref:`tet-coords`)
+
+    :ivar exact_to: The total degree up to which the quadrature is exact.
+
     See
 
     * H. Xiao and Z. Gimbutas, "A numerical algorithm for the construction of
       efficient quadrature rules in two and higher dimensions," Computers &
       Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
       http://dx.doi.org/10.1016/j.camwa.2009.10.027
+
     """
 
     def __init__(self, order, dims):

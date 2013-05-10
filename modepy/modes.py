@@ -180,8 +180,8 @@ def grad_pkdo_2d(order, rs):
 
     # r-derivative
     # d/dr
-    #  = da/dr d/da + db/dr d/db 
-    #  = (2/(1-s)) d/da 
+    #  = da/dr d/da + db/dr d/db
+    #  = (2/(1-s)) d/da
     #  = (2/(1-b)) d/da
     dmodedr = dfa*gb
     if i:
@@ -323,8 +323,16 @@ def grad_pkdo_3d(order, rst):
 
 # {{{ dimension-independent interface
 
-def get_simplex_onb(dims, p):
-    """
+def get_simplex_onb(dims, n):
+    """Return a list of orthonormal basis functions in dimension *dims* of maximal
+    total degree *n*.
+
+    :returns: a list of functions, each of  which
+        accepts arrays of shape *(dims, npts)*
+        and return the function values as an array of size *npts*.
+        'Scalar' evaluation, by passing just one vector of length *dims*,
+        is also supported.
+
     See the following publications:
 
     * |proriol-ref|
@@ -336,16 +344,24 @@ def get_simplex_onb(dims, p):
             as gnitstam
 
     if dims == 1:
-        return [partial(jacobi, 0, 0, i) for i in xrange(p+1)]
+        return [partial(jacobi, 0, 0, i) for i in xrange(n+1)]
     elif dims == 2:
-        return [partial(pkdo_2d, order) for order in gnitstam(p, dims)]
+        return [partial(pkdo_2d, order) for order in gnitstam(n, dims)]
     elif dims == 3:
-        return [partial(pkdo_3d, order) for order in gnitstam(p, dims)]
+        return [partial(pkdo_3d, order) for order in gnitstam(n, dims)]
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 
-def get_grad_simplex_onb(dims, p):
-    """
+def get_grad_simplex_onb(dims, n):
+    """Return the gradients of the functions returned by :func:`get_simplex_onb`.
+
+    :returns: a list of functions, each of  which
+        accepts arrays of shape *(dims, npts)*
+        and returns a :class:`tuple` of length *dims* containing
+        the derivatives along each axis as an array of size *npts*.
+        'Scalar' evaluation, by passing just one vector of length *dims*,
+        is also supported.
+
     See the following publications:
 
     * |proriol-ref|
@@ -357,11 +373,11 @@ def get_grad_simplex_onb(dims, p):
             as gnitstam
 
     if dims == 1:
-        return [partial(grad_jacobi, 0, 0, i) for i in xrange(p+1)]
+        return [partial(grad_jacobi, 0, 0, i) for i in xrange(n+1)]
     elif dims == 2:
-        return [partial(grad_pkdo_2d, order) for order in gnitstam(p, dims)]
+        return [partial(grad_pkdo_2d, order) for order in gnitstam(n, dims)]
     elif dims == 3:
-        return [partial(grad_pkdo_3d, order) for order in gnitstam(p, dims)]
+        return [partial(grad_pkdo_3d, order) for order in gnitstam(n, dims)]
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 

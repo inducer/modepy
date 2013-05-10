@@ -308,9 +308,7 @@ class accept_scalar_or_vector:
         self.expected_rank = expected_rank
 
     def __call__(self, f):
-        from functools import wraps
 
-        @wraps(f)
         def wrapper(*args, **kwargs):
             controlling_arg = args[self.arg_nr]
             try:
@@ -345,6 +343,12 @@ class accept_scalar_or_vector:
                     return tuple(r[..., 0] for r in result)
                 else:
                     return result[..., 0]
+
+        from functools import wraps
+        try:
+            wrapper = wraps(f)(wrapper)
+        except AttributeError:
+            pass
 
         return wrapper
 

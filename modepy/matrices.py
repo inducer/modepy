@@ -31,7 +31,7 @@ import numpy as np
 
 
 def vandermonde(functions, points):
-    """Return a Vandermonde matrix.
+    """Return a (generalized) Vandermonde matrix.
 
     The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
     where *functions* is the list of :math:`f_j` and points is
@@ -39,6 +39,7 @@ def vandermonde(functions, points):
     is the number of dimensions and *npts* is the number of points.
 
     *functions* are allowed to return :class:`tuple` instances.
+    In this case, tuples of matrices are returned.
     """
 
     npoints = points.shape[-1]
@@ -64,11 +65,5 @@ def vandermonde(functions, points):
             result[:, j] = f_values
 
     return result
-
-def mass_matrix(basis, nodes):
-    pass
-
-def differentiation_matrix(basis, nodes):
-    pass
 
 # vim: foldmethod=marker

@@ -42,6 +42,12 @@ class Quadrature(object):
         self.weights = weights
 
     def __call__(self, f):
+        """Evaluate the callable *f* at the quadrature nodes and return its
+        integral.
+
+        *f* is assumed to accept arrays of shape *(dims, npts)*,
+        or of shape *(npts,)* for 1D quadrature.
+        """
         return np.dot(self.weights, f(self.nodes))
 
 

@@ -21,12 +21,10 @@ as :download:`examples/plot-basis.py <../examples/plot-basis.py>`.
 
 Here's an idea of code that uses :mod:`modepy`:
 
-.. literalinclude:: ../examples/integrate-basis.py
-   :start-after: STARTEXAMPLE
-   :end-before: ENDEXAMPLE
+.. literalinclude:: ../examples/derivative.py
 
 This file is included in the :mod:`modepy` distribution as
-:download:`examples/integrate-basis.py <../examples/integrate-basis.py>`.
+:download:`examples/derivative.py <../examples/derivative.py>`.
 
 modepy around the web
 ---------------------
@@ -45,6 +43,7 @@ Contents
     modes
     nodes
     quadrature
+    matrices
     misc
 
 * :ref:`genindex`

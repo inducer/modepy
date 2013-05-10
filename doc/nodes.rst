@@ -98,6 +98,6 @@ All of these expect and return arrays of shape *(dims, npts)*.
 Warp & Blend node generation
 ----------------------------
 
-.. automodule:: modepy.nodes
+.. currentmodule:: modepy
 
 .. autofunction:: get_warp_and_blend_nodes

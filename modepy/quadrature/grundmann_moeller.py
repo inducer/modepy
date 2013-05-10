@@ -74,11 +74,9 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
     This cubature rule has both negative and positive weights.
     It is exact for polynomials up to order :math:`2s+1`, where
     :math:`s` is given as *order*.
-    The integration domain is the unit simplex
 
-    .. math::
-
-        T_n:=\left\{(\lambda_1,\dots,\lambda_n) : \lambda_i\ge -1, \sum_i \lambda_i \le 0\right\}
+    The integration domain is the unit simplex. (see :ref:`tri-coords`
+    and :ref:`tet-coords`)
 
     See
 

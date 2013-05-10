@@ -33,12 +33,14 @@ from modepy.quadrature import Quadrature
 
 
 class JacobiGaussQuadrature(Quadrature):
-    r"""An *N*th order Gauss quadrature associated with the Jacobi
-    polynomials of type :math:`\alpha,\beta > -1` with
-    :math:`(\alpha,\beta)\not\in(-1/2,-1/2)`.
+    r"""An Gauss quadrature of order *N* associated with the
+    Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
+
+    Assumes :math:`\alpha,\beta > -1` with
+    :math:`(\alpha,\beta)\not\in\{(-1/2,-1/2)\}`.
 
     Integrates on the interval (-1,1).
-    The quadrature rule is exact up to degree :math:`2*N+1`.
+    The quadrature rule is exact up to degree :math:`2N+1`.
     """
     def __init__(self, alpha, beta, N):
         x, w = self.compute_weights_and_nodes(N, alpha, beta)
@@ -49,6 +51,9 @@ class JacobiGaussQuadrature(Quadrature):
         """Return (nodes, weights) for an n-th order Gauss quadrature
         with the Jacobi polynomials of type (alpha, beta).
         """
+
+        # FIXME: This could stand to be upgraded to the Rokhlin algorithm.
+
         # follows
         # Gene H. Golub, John H. Welsch, Calculation of Gauss Quadrature Rules,
         # Mathematics of Computation, Vol. 23, No. 106 (Apr., 1969), pp. 221-230
@@ -115,7 +120,10 @@ class JacobiGaussQuadrature(Quadrature):
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
-    """An *N*th order Gauss quadrature associated with the Legendre polynomials.
+    """An Gauss quadrature associated with weight 1.
+
+    Integrates on the interval (-1,1).
+    The quadrature rule is exact up to degree :math:`2N+1`.
     """
     def __init__(self, N):
         JacobiGaussQuadrature.__init__(self, 0, 0, N)
@@ -124,10 +132,11 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
 
 def jacobi_gauss_lobatto_nodes(alpha, beta, N):
-    """Compute the *M*th order Gauss-Lobatto quadrature
-    nodes, x, associated with the Jacobi polynomial,
-    of type :math:`\alpha,\beta > -1` and 
-    :math:`\alpha,\beta \ne 1/2`.
+    """Compute the Gauss-Lobatto quadrature
+    nodes corresponding to the :class:`JacobiGaussQuadrature`
+    with the same parameters.
+
+    Exact to degree :math:`2N-1`.
     """
 
     x = np.zeros((N+1,))
@@ -146,7 +155,8 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):
 
 
 def legendre_gauss_lobatto_nodes(N):
-    """Compute the *N*th order Gauss-Lobatto quadrature
-    nodes, x, associated with the Legendre polynomials.
+    """Compute the Legendre-Gauss-Lobatto quadrature nodes.
+
+    Exact to degree :math:`2N-1`.
     """
     return jacobi_gauss_lobatto_nodes(0, 0, N)
