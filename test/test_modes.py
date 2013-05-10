@@ -71,7 +71,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
             err = abs(result-true_result)
             maxerr = max(maxerr, err)
             if abs(result-true_result) > ebound:
-                print "bad", alpha, beta, i, j, abs(result-true_result)
+                print("bad", alpha, beta, i, j, abs(result-true_result))
 
             assert abs(result-true_result) < ebound
 
@@ -105,12 +105,12 @@ def test_pkdo_orthogonality(dims, order, ebound):
                 true_result = 0
             result = cub(lambda x: f(x)*g(x))
             err = abs(result-true_result)
-            print maxerr, err
+            print(maxerr, err)
             maxerr = max(maxerr, err)
             if err > ebound:
-                print "bad", order,i,j, err
+                print("bad", order,i,j, err)
             assert err < ebound
-    #print order, maxerr
+    #print(order, maxerr)
 
 
 
@@ -149,7 +149,7 @@ def test_simplex_basis_grad(dims, order):
                 for unit in [np.array(unit) for unit in wandering_element(dims)]
                 ])
             err = la.norm(approx_gradbf_v-gradbf_v, np.Inf)
-            print dims, order, i_bf, err
+            print(dims, order, i_bf, err)
             assert err < err_factor*h
 
 
