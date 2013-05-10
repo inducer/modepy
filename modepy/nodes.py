@@ -77,6 +77,32 @@ def get_warp_factor(n, output_nodes, scaled=True):
 
 # {{{ 2D nodes
 
+def _get_2d_equilateral_shift(n, bary, alpha):
+    from modepy.tools import EQUILATERAL_VERTICES
+    equi_vertices = EQUILATERAL_VERTICES[2]
+
+    result = np.zeros((2, bary.shape[1]))
+
+    for i1 in range(3):
+        i2, i3 = set(range(3)) - set([i1])
+
+        # Compute blending function at each node for each edge
+        blend = 4*bary[i2]*bary[i3]
+
+        # Amount of warp for each node, for each edge
+        warpf = get_warp_factor(n, bary[i2]-bary[i3])
+
+        # Combine blend & warp
+        warp = blend*warpf*(1 + (alpha*bary[i1])**2)
+
+        # all vertices have the same distance from the origin
+        tangent = equi_vertices[i2] - equi_vertices[i3]
+        tangent /= la.norm(tangent)
+
+        result += tangent[:, np.newaxis] * warp[np.newaxis, :]
+
+    return result
+
 _alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
         1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258]
 
@@ -100,103 +126,16 @@ def get_2d_warp_and_blend_nodes(n, node_tuples=None):
     from modepy.tools import (
             unit_to_barycentric,
             barycentric_to_equilateral,
-            equilateral_to_unit,
-            EQUILATERAL_VERTICES)
+            equilateral_to_unit)
     bary = unit_to_barycentric(unit_nodes)
-    equi = barycentric_to_equilateral(bary)
 
-    equi_vertices = EQUILATERAL_VERTICES[2]
-
-    for i1 in range(3):
-        i2, i3 = set(range(3)) - set([i1])
-
-        # Compute blending function at each node for each edge
-        blend = 4*bary[i2]*bary[i3]
-
-        # Amount of warp for each node, for each edge
-        warpf = get_warp_factor(n, bary[i2]-bary[i3])
-
-        # Combine blend & warp
-        warp = blend*warpf*(1 + (alpha*bary[i1])**2)
-
-        # all vertices have the same distance from the origin
-        tangent = equi_vertices[i2] - equi_vertices[i3]
-        tangent /= la.norm(tangent)
-
-        equi += tangent[:, np.newaxis] * warp[np.newaxis, :]
-
-    return equilateral_to_unit(equi)
+    return equilateral_to_unit(
+        barycentric_to_equilateral(bary)
+        + _get_2d_equilateral_shift(n, bary, alpha))
 
 # }}}
 
 # {{{ 3D nodes
-
-def eval_warp(n, xnodes, xout):
-    # Purpose: compute one-dimensional edge warping function
-
-    warp = np.zeros((len(xout),1))
-    xeq  = np.zeros((n+1,1))
-    for i in range(n+1):
-        xeq[i] = -1. + (2.*(n-i))/n;
-
-    for i in range(n+1):
-        d = xnodes[i]-xeq[i]
-
-        for j in range(1,n):
-            if i!=j:
-                d = d*(xout-xeq[j])/(xeq[i]-xeq[j]);
-
-        if i!=0:
-            d = -d/(xeq[i]-xeq[0])
-
-        if i!=n:
-            d = d/(xeq[i]-xeq[n])
-
-        warp = warp+d;
-
-    return warp
-
-
-def eval_shift(N, pval, L1, L2, L3):
-
-    # Purpose: compute two-dimensional Warp & Blend transform
-
-    # 1) compute Gauss-Lobatto-Legendre node distribution
-    gaussX = -JacobiGL(0,0,N)
-
-    # 3) compute blending function at each node for each edge
-    blend1 = L2*L3
-    blend2 = L1*L3
-    blend3 = L1*L2
-
-    # 4) amount of warp for each node, for each edge
-    warpfactor1 = 4*evalwarp(N, gaussX, L3-L2)
-    warpfactor2 = 4*evalwarp(N, gaussX, L1-L3)
-    warpfactor3 = 4*evalwarp(N, gaussX, L2-L1)
-
-
-    # 5) combine blend & warp
-    warp1 = blend1*warpfactor1*(1 + (pval*L1)**2)
-    warp2 = blend2*warpfactor2*(1 + (pval*L2)**2)
-    warp3 = blend3*warpfactor3*(1 + (pval*L3)**2)
-
-    # 6) evaluate shift in equilateral triangle
-    dx = 1*warp1 + np.cos(2.*np.pi/3.)*warp2 + np.cos(4.*np.pi/3.)*warp3;
-    dy = 0*warp1 + np.sin(2.*np.pi/3.)*warp2 + np.sin(4.*np.pi/3.)*warp3;
-
-    return dx, dy
-
-
-def  WarpShiftFace3D(p, pval, pval2, L1, L2, L3, L4):
-
-    # Purpose: compute warp factor used in creating 3D Warp & Blend nodes
-
-    dtan1,dtan2 = evalshift(p, pval, L2, L3, L4);
-
-    warpx = dtan1
-    warpy = dtan2
-
-    return warpx, warpy
 
 _alpha_opt_3d = [
         0, 0, 0, 0.1002,  1.1332, 1.5608, 1.3413, 1.2577, 1.1603,
@@ -211,7 +150,7 @@ def get_3d_warp_and_blend_nodes(n, node_tuples=None):
     if node_tuples is None:
         from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
                 as gnitstam
-        node_tuples = list(gnitstam(n, 2))
+        node_tuples = list(gnitstam(n, 3))
     else:
         if len(node_tuples) != (n+1)*(n+2)*(n+3)//6:
             raise ValueError("node_tuples list does not have the correct length")
@@ -232,152 +171,54 @@ def get_3d_warp_and_blend_nodes(n, node_tuples=None):
     # total number of nodes and tolerance
     tol = 1e-8
 
-    for i1 in range(4):
-        i2, i3, i4 = set(range(4)) - set([i1])
+    shift = np.zeros_like(equi)
 
-        l2,
+    for i1, i2, i3, i4, vertex_step in [
+            (0, 1, 2, 3, -1),
+            (1, 2, 3, 0, -1),
+            (2, 3, 0, 1, -1),
+            (3, 0, 1, 2, -1),
+            ]:
+
+        vi2, vi3, vi4 = [(i1 + vertex_step*i)%4 for i in range(1, 4)]
 
         # all vertices have the same distance from the origin
-        tangent1 = equi_vertices[i2] - equi_vertices[i3]
+        tangent1 = equi_vertices[vi3] - equi_vertices[vi4]
         tangent1 /= la.norm(tangent1)
 
-        tangent2 = equi_vertices[i3] - equi_vertices[i4]
+        tangent2 = equi_vertices[vi2] - equi_vertices[vi3]
+        tangent2 -= np.dot(tangent1, tangent2)*tangent1
+
         tangent2 /= la.norm(tangent2)
 
-        warp1, warp2 = eval_shift(n, alpha, La, Lb, Lc, Ld)
+        sub_bary = bary[[i2, i3, i4]]
+        warp1, warp2 = _get_2d_equilateral_shift(n, sub_bary, alpha)
 
+        l1 = bary[i1]
+        l2, l3, l4 = sub_bary
 
+        blend = l2*l3*l4
 
+        denom = (l2+0.5*l1)*(l3+0.5*l1)*(l4+0.5*l1)
+        denom_ok = denom>tol
 
+        blend[denom_ok] = (
+                (1+(alpha*l1[denom_ok])**2)
+                * blend[denom_ok]
+                / denom[denom_ok])
 
+        shift = shift + (blend*warp1)[np.newaxis, :] * tangent1[:, np.newaxis]
+        shift = shift + (blend*warp2)[np.newaxis, :] * tangent2[:, np.newaxis]
 
+        is_face = (l1<tol) & ((l2>tol) | (l3>tol) | (l4>tol))
 
+        # assign face warp separately
+        shift[:, is_face] = (
+                + warp1[is_face][np.newaxis, :] * tangent1[:, np.newaxis]
+                + warp2[is_face][np.newaxis, :] * tangent2[:, np.newaxis]
+                )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    r,s,t = EquiNodes3D(N)
-
-    L1 = (1.+t)/2
-    L2 = (1.+s)/2
-    L3 = -(1.+r+s+t)/2
-    L4 =  (1+r)/2
-
-    # set vertices of tetrahedron
-    v1 = np.array([-1., -1./sqrt(3.), -1./sqrt(6.)]) # row array
-    v2 = np.array([ 1., -1./sqrt(3.), -1./sqrt(6.)])
-    v3 = np.array([ 0,   2./sqrt(3.), -1./sqrt(6.)])
-    v4 = np.array([ 0,            0,  3./sqrt(6.)])
-
-    # orthogonal axis tangents on faces 1-4
-    t1 = np.zeros((4,3))
-    t1[0,:] = v2-v1
-    t1[1,:] = v2-v1
-    t1[2,:] = v3-v2
-    t1[3,:] = v3-v1
-
-    t2 = np.zeros((4,3))
-    t2[0,:] = v3-0.5*(v1+v2)
-    t2[1,:] = v4-0.5*(v1+v2)
-    t2[2,:] = v4-0.5*(v2+v3)
-    t2[3,:] = v4-0.5*(v1+v3)
-
-    for n in range(4):
-        # normalize tangents
-        norm_t1 = la.norm(t1[n,:])
-        norm_t2 = la.norm(t2[n,:])
-        t1[n,:] = t1[n,:]/norm_t1 # 2-norm np.array ?
-        t2[n,:] = t2[n,:]/norm_t2
-
-    # Warp and blend for each face (accumulated in shiftXYZ)
-    XYZ = L3*v1+L4*v2+L2*v3+L1*v4  # form undeformed coordinates
-    shift = np.zeros((Np,3))
-    for face in range(4):
-        if(face==0):
-            La = L1; Lb = L2; Lc = L3; Ld = L4;  # check  syntax
-
-        if(face==1):
-            La = L2; Lb = L1; Lc = L3; Ld = L4;
-
-        if(face==2):
-            La = L3; Lb = L1; Lc = L4; Ld = L2;
-
-        if(face==3):
-            La = L4; Lb = L1; Lc = L3; Ld = L2;
-
-        #  compute warp tangential to face
-        warp1, warp2 = eval_shift(N, alpha, alpha, La, Lb, Lc, Ld)
-
-        # compute volume blending
-        blend = Lb*Lc*Ld
-
-        # modify linear blend
-        denom = (Lb+0.5*La)*(Lc+0.5*La)*(Ld+0.5*La)
-        ids = np.argwhere(denom>tol) # syntax
-        ids = ids[:,0]
-
-        blend[ids] = (1+(alpha*La[ids])**2)*blend[ids]/denom[ids]
-
-        # compute warp & blend
-        shift = shift + (blend*warp1)*t1[face,:]
-        shift = shift + (blend*warp2)*t2[face,:]
-
-        # fix face warp
-        ids = np.argwhere((La<tol) *( (Lb>tol) + (Lc>tol) + (Ld>tol) < 3)) # syntax ??
-        ids = ids[:,0]
-
-        shift[ids,:] = warp1[ids]*t1[face,:] + warp2[ids]*t2[face,:]
-
-
-
-    # shift nodes and extract individual coordinates
-    XYZ = XYZ + shift
-    x = XYZ[:,0]
-    y = XYZ[:,1]
-    z = XYZ[:,2]
-
-    return x, y, z
+    return equilateral_to_unit(equi + shift)
 
 # }}}
 

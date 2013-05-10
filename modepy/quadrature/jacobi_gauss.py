@@ -103,8 +103,9 @@ class JacobiGaussQuadrature(Quadrature):
 
         assert la.norm(np.dot(T, eigvec) - np.dot(eigvec, np.diag(eigval))) < 1e-12
 
-        from hedge.polynomial import JacobiFunction
-        p0 = JacobiFunction(alpha, beta, 0)
+        from modepy.modes import jacobi
+        from functools import partial
+        p0 = partial(jacobi, alpha, beta, 0) # that's a constant, sure
         nodes = eigval
         weights = np.array([eigvec[0,i]**2 / p0(nodes[i])**2 for i in range(N+1)])
 
