@@ -1,13 +1,15 @@
 modepy
 ======
 
-modepy is a simple package to help you set up high order discretizations by
-providing orthogonal basis functions and interpolation nodes.
+:mod:`modepy` helps you create well-behaved high-order
+discretizations on simplices (i.e. triangles and tetrahedra).
+These are a key building block for high-order unstructured
+discretizations, as often used in a finite element context.
+It closely follows the approach taken in the book
 
-It is (closely) based on Matlab routines by Tim Warburton and Jan Hesthaven from the book:
-
-    Hesthaven, Jan S., and Tim Warburton. Nodal Discontinuous Galerkin Methods:
-    Algorithms, Analysis, and Applications. 1st ed. Springer, 2007.
+  Hesthaven, Jan S., and Tim Warburton. "Nodal Discontinuous Galerkin Methods:
+  Algorithms, Analysis, and Applications". 1st ed. Springer, 2007.
+  `Book web page <http://nudg.org>`_
 
 Resources:
 
