@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 import numpy as np
 import numpy.linalg as la
-from math import sqrt
 
 
 
@@ -234,11 +233,19 @@ def get_warp_and_blend_nodes(dims, n, node_tuples=None):
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
     if dims == 1:
-        if node_tuples is not None:
-            raise NotImplementedError("specifying node_tuples in 1D")
-
         from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
-        return legendre_gauss_lobatto_nodes(n)
+        result = legendre_gauss_lobatto_nodes(n)
+
+        if node_tuples is not None:
+            new_result = np.empty_like(result)
+            if len(node_tuples) != n+1:
+                raise ValueError("node_tuples list does not have the correct length")
+            for i, (nti,) in enumerate(node_tuples):
+                new_result[i] = result[nti]
+            result = new_result
+
+        return result.reshape(1, -1)
+
     elif dims == 2:
         return get_2d_warp_and_blend_nodes(n, node_tuples)
     elif dims == 3:
