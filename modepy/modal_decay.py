@@ -53,18 +53,6 @@ def make_mode_number_vector(mode_order_tuples, ignored_modes):
 
     return mode_number_vector
 
-def make_mode_weight_vector(mode_number_vector_int):
-    counts = {}
-    for vi in mode_number_vector_int:
-        counts[int(vi)] = counts.get(int(vi), 0)+1
-
-    mode_weight_vector = np.zeros(mode_number_vector_int.shape, dtype=np.float64)
-    for i, vi in enumerate(mode_number_vector_int):
-        mode_weight_vector[i] = 1/counts[int(vi)]
-
-    return mode_weight_vector
-
-
 
 
 def create_decay_baseline(mode_number_vector, n):
@@ -143,11 +131,7 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
 
     mode_number_vector_int = make_mode_number_vector(mode_order_tuples, ignored_modes)
     mode_number_vector = mode_number_vector_int.astype(np.float64)
-    if 1:
-        weight_vector = np.ones_like(mode_number_vector)
-    else:
-        # apparently not helpful
-        weight_vector = make_mode_weight_vector(mode_number_vector_int)
+    weight_vector = np.ones_like(mode_number_vector)
 
     fit_mat = get_decay_fit_matrix(mode_number_vector, ignored_modes,
             weight_vector)
