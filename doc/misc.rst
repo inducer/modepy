@@ -22,19 +22,23 @@ In addition, you need to have :mod:`numpy` installed.
 User-visible Changes
 ====================
 
-Version 2013.2
+Version 2013.3
 --------------
+
 .. note::
 
     This version is currently under development. You can get snapshots from
     ModePy's `git repository <https://github.com/inducer/modepy>`_
+
+Version 2013.2
+--------------
 
 * Add :func:`modepy.tools.estimate_lebesgue_constant` to public interface.
 * Add :mod:`modepy.modal_decay`.
 * Add :func:`modepy.resampling_matrix`.
 * Add :func:`modepy.equidistant_nodes`.
 * Add :func:`modepy.differentiation_matrices`.
-* Remove ``get_`` prefix from a number of functions. (Incompatible change, sorry!)
+* Remove ``get_`` prefix from a number of functions. (Backward compatible wrappers provided.)
 
 Version 2013.1.1
 ----------------
