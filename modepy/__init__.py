@@ -48,3 +48,9 @@ __all__ = [
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         ]
+
+from pytools import MovedFunctionDeprecationWrapper
+
+get_simplex_onb = MovedFunctionDeprecationWrapper(simplex_onb)
+get_grad_simplex_onb = MovedFunctionDeprecationWrapper(grad_simplex_onb)
+get_warp_and_blend_nodes = MovedFunctionDeprecationWrapper(warp_and_blend_nodes)
