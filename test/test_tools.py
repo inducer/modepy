@@ -178,7 +178,7 @@ def test_diff_matrix(dims):
         diff_mat = diff_mat[0]
     df_dx_num = np.dot(diff_mat, f)
 
-    print la.norm(df_dx-df_dx_num)
+    print(la.norm(df_dx-df_dx_num))
     assert la.norm(df_dx-df_dx_num) < 1e-3
 
 
