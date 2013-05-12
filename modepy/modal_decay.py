@@ -30,7 +30,7 @@ returned by :func:`modepy.simplex_onb`.
 
 The method implemented in this module follows this article:
 
-    A. Kloeckner, T. Warburton, und J. S. Hesthaven. "Viscous Shock Capturing
+    A. Kloeckner, T. Warburton, and J. S. Hesthaven. "Viscous Shock Capturing
     in a Time-Explicit Discontinuous Galerkin Method". Mathematical Modelling
     of Natural Phenomena 6, No. 3 (May 16, 2011): 57-83.
     http://dx.doi.org/10.1051/mmnp/20116303
