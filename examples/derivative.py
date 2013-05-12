@@ -6,10 +6,10 @@ dimensions = 2
 
 # Get a basis of orthonormal functions, and their derivatives.
 
-basis = mp.get_simplex_onb(dimensions, n)
-grad_basis = mp.get_grad_simplex_onb(dimensions, n)
+basis = mp.simplex_onb(dimensions, n)
+grad_basis = mp.grad_simplex_onb(dimensions, n)
 
-nodes = mp.get_warp_and_blend_nodes(dimensions, n)
+nodes = mp.warp_and_blend_nodes(dimensions, n)
 x, y = nodes
 
 # We want to compute the x derivative of this function:

@@ -10,8 +10,8 @@ plot_nodes = np.array(node_tuples, dtype=np.float64) / node_n
 eval_nodes = 2*(plot_nodes - 0.5).T
 
 # get triangle submesh
-from modepy.tools import get_submesh
-tri_subtriangles = np.array(get_submesh(node_tuples))
+from modepy.tools import submesh
+tri_subtriangles = np.array(submesh(node_tuples))
 
 # evaluate each basis function, build global tri mesh
 node_count = 0
@@ -19,14 +19,14 @@ all_nodes = []
 all_triangles = []
 all_values = []
 
-from modepy.modes import get_simplex_onb
+from modepy.modes import simplex_onb
 
 p = 3
 stretch_factor = 1.5
 
 for (i, j), basis_func in zip(
         gnitstam(p, dims),
-        get_simplex_onb(dims, p),
+        simplex_onb(dims, p),
         ):
 
     all_nodes.append(plot_nodes + [stretch_factor*i, stretch_factor*j])

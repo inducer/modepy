@@ -95,9 +95,11 @@ All of these expect and return arrays of shape *(dims, npts)*.
 .. autofunction:: unit_to_barycentric
 .. autofunction:: barycentric_to_equilateral
 
-Warp & Blend node generation
-----------------------------
+Node sets
+---------
 
 .. currentmodule:: modepy
 
-.. autofunction:: get_warp_and_blend_nodes
+.. autofunction:: equidistant_nodes
+
+.. autofunction:: warp_and_blend_nodes

@@ -31,20 +31,33 @@ import numpy.linalg as la
 
 
 
-__doc__ = """This module generates interpolation nodes as described in
+def equidistant_nodes(dims, n, node_tuples=None):
+    """
+    :arg dims: dimensionality of desired simplex
+        (e.g. 1, 2 or 3, for interval, triangle or tetrahedron).
+    :arg n: Desired maximum total polynomial degree to interpolate.
+    :arg node_tuples: a list of tuples of integers indicating the node order.
+        Use default order if *None*, see
+        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
+    :returns: An array of shape *(dims, nnodes)* containing unit coordinates
+        of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
+    """
 
-    Warburton, T. "An Explicit Construction of Interpolation Nodes on the Simplex."
-    Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
-    http://dx.doi.org/10.1007/s10665-006-9086-6
+    if node_tuples is None:
+        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+                as gnitstam
+        node_tuples = list(gnitstam(n, dims))
+    else:
+        if len(node_tuples) != (n+1)*(n+2)//2:
+            raise ValueError("node_tuples list does not have the correct length")
 
-The generated nodes have benign 
-`Lebesgue constants <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
-"""
+    # shape: (2, nnodes)
+    return (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
 
 
 
-def get_warp_factor(n, output_nodes, scaled=True):
+def warp_factor(n, output_nodes, scaled=True):
     """Compute warp function at order *n* and evaluate it at
     the nodes *output_nodes*.
     """
@@ -55,9 +68,9 @@ def get_warp_factor(n, output_nodes, scaled=True):
     equi_nodes  = np.linspace(-1, 1, n+1)
 
     from modepy.matrices import vandermonde
-    from modepy.modes import get_simplex_onb
+    from modepy.modes import simplex_onb
 
-    basis = get_simplex_onb(1, n)
+    basis = simplex_onb(1, n)
     Veq = vandermonde(basis, equi_nodes)
 
     # create interpolator from equi_nodes to output_nodes
@@ -76,7 +89,7 @@ def get_warp_factor(n, output_nodes, scaled=True):
 
 # {{{ 2D nodes
 
-def _get_2d_equilateral_shift(n, bary, alpha):
+def _2d_equilateral_shift(n, bary, alpha):
     from modepy.tools import EQUILATERAL_VERTICES
     equi_vertices = EQUILATERAL_VERTICES[2]
 
@@ -89,7 +102,7 @@ def _get_2d_equilateral_shift(n, bary, alpha):
         blend = 4*bary[i2]*bary[i3]
 
         # Amount of warp for each node, for each edge
-        warpf = get_warp_factor(n, bary[i2]-bary[i3])
+        warpf = warp_factor(n, bary[i2]-bary[i3])
 
         # Combine blend & warp
         warp = blend*warpf*(1 + (alpha*bary[i1])**2)
@@ -105,7 +118,7 @@ def _get_2d_equilateral_shift(n, bary, alpha):
 _alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
         1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258]
 
-def get_2d_warp_and_blend_nodes(n, node_tuples=None):
+def warp_and_blend_nodes_2d(n, node_tuples=None):
     try:
         alpha = _alpha_opt_2d[n-1]
     except IndexError:
@@ -130,7 +143,7 @@ def get_2d_warp_and_blend_nodes(n, node_tuples=None):
 
     return equilateral_to_unit(
         barycentric_to_equilateral(bary)
-        + _get_2d_equilateral_shift(n, bary, alpha))
+        + _2d_equilateral_shift(n, bary, alpha))
 
 # }}}
 
@@ -140,7 +153,7 @@ _alpha_opt_3d = [
         0, 0, 0, 0.1002,  1.1332, 1.5608, 1.3413, 1.2577, 1.1603,
         1.10153, 0.6080, 0.4523, 0.8856, 0.8717, 0.9655]
 
-def get_3d_warp_and_blend_nodes(n, node_tuples=None):
+def warp_and_blend_nodes_3d(n, node_tuples=None):
     try:
         alpha = _alpha_opt_3d[n-1]
     except IndexError:
@@ -191,7 +204,7 @@ def get_3d_warp_and_blend_nodes(n, node_tuples=None):
         tangent2 /= la.norm(tangent2)
 
         sub_bary = bary[[i2, i3, i4]]
-        warp1, warp2 = _get_2d_equilateral_shift(n, sub_bary, alpha)
+        warp1, warp2 = _2d_equilateral_shift(n, sub_bary, alpha)
 
         l1 = bary[i1]
         l2, l3, l4 = sub_bary
@@ -221,8 +234,17 @@ def get_3d_warp_and_blend_nodes(n, node_tuples=None):
 
 # }}}
 
-def get_warp_and_blend_nodes(dims, n, node_tuples=None):
-    """
+def warp_and_blend_nodes(dims, n, node_tuples=None):
+    """Return interpolation nodes as described in
+
+        Warburton, T. "An Explicit Construction of Interpolation Nodes on the Simplex."
+        Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
+        http://dx.doi.org/10.1007/s10665-006-9086-6
+
+    The generated nodes have benign
+    `Lebesgue constants <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
+    (See also :func:`modepy.tools.estimate_lebesgue_constant`)
+
     :arg dims: dimensionality of desired simplex
         (1, 2 or 3, i.e. interval, triangle or tetrahedron).
     :arg n: Desired maximum total polynomial degree to interpolate.
@@ -247,9 +269,9 @@ def get_warp_and_blend_nodes(dims, n, node_tuples=None):
         return result.reshape(1, -1)
 
     elif dims == 2:
-        return get_2d_warp_and_blend_nodes(n, node_tuples)
+        return warp_and_blend_nodes_2d(n, node_tuples)
     elif dims == 3:
-        return get_3d_warp_and_blend_nodes(n, node_tuples)
+        return warp_and_blend_nodes_3d(n, node_tuples)
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 

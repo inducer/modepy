@@ -41,7 +41,6 @@ derivatives on unit simplices.
 
 # {{{ jacobi polynomials
 
-@accept_scalar_or_vector(arg_nr=4, expected_rank=1)
 def jacobi(alpha, beta, n, x):
     r"""Evaluate `Jacobi polynomials
     <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type :math:`(\alpha,
@@ -57,6 +56,9 @@ def jacobi(alpha, beta, n, x):
     Observe that choosing :math:`\alpha=\beta=0` will yield the
     `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`_.
     """
+
+    out_shape = x.shape
+    x = x.ravel()
 
     from modepy.tools import gamma
 
@@ -75,12 +77,12 @@ def jacobi(alpha, beta, n, x):
 
     PL[:,0] = 1.0/sqrt(gamma0)
     if n == 0:
-        return PL[:,0]
+        return PL[:,0].reshape(out_shape)
 
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0
     PL[:,1] = ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1)
     if n==1:
-        return PL[:,1]
+        return PL[:,1].reshape(out_shape)
 
     # Repeat value in recurrence.
     aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
@@ -96,12 +98,11 @@ def jacobi(alpha, beta, n, x):
             PL[:, i+1] = ( -aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]) )/anew
             aold = anew
 
-    return PL[:, n]
+    return PL[:, n].reshape(out_shape)
 
 
 
 
-@accept_scalar_or_vector(arg_nr=4, expected_rank=1)
 def grad_jacobi(alpha, beta, n, x):
     """Evaluate the derivative of :func:`jacobi`,
     with the same meanings and restrictions for all arguments.
@@ -323,11 +324,11 @@ def grad_pkdo_3d(order, rst):
 
 # {{{ dimension-independent interface
 
-def get_simplex_onb(dims, n):
+def simplex_onb(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
     total degree *n*.
 
-    :returns: a list of functions, each of  which
+    :returns: a class:`tuple` of functions, each of  which
         accepts arrays of shape *(dims, npts)*
         and return the function values as an array of size *npts*.
         'Scalar' evaluation, by passing just one vector of length *dims*,
@@ -338,24 +339,28 @@ def get_simplex_onb(dims, n):
     * |proriol-ref|
     * |koornwinder-ref|
     * |dubiner-ref|
+
+    .. versionchanged:: 2013.2
+
+        Made return value a tuple, to make bases hashable.
     """
     from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
 
     if dims == 1:
-        return [partial(jacobi, 0, 0, i) for i in xrange(n+1)]
+        return tuple(partial(jacobi, 0, 0, i) for i in xrange(n+1))
     elif dims == 2:
-        return [partial(pkdo_2d, order) for order in gnitstam(n, dims)]
+        return tuple(partial(pkdo_2d, order) for order in gnitstam(n, dims))
     elif dims == 3:
-        return [partial(pkdo_3d, order) for order in gnitstam(n, dims)]
+        return tuple(partial(pkdo_3d, order) for order in gnitstam(n, dims))
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 
-def get_grad_simplex_onb(dims, n):
-    """Return the gradients of the functions returned by :func:`get_simplex_onb`.
+def grad_simplex_onb(dims, n):
+    """Return the gradients of the functions returned by :func:`simplex_onb`.
 
-    :returns: a list of functions, each of  which
+    :returns: a :class:`tuple` of functions, each of  which
         accepts arrays of shape *(dims, npts)*
         and returns a :class:`tuple` of length *dims* containing
         the derivatives along each axis as an array of size *npts*.
@@ -367,17 +372,21 @@ def get_grad_simplex_onb(dims, n):
     * |proriol-ref|
     * |koornwinder-ref|
     * |dubiner-ref|
+
+    .. versionchanged:: 2013.2
+
+        Made return value a tuple, to make bases hashable.
     """
     from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
 
     if dims == 1:
-        return [partial(grad_jacobi, 0, 0, i) for i in xrange(n+1)]
+        return tuple(partial(grad_jacobi, 0, 0, i) for i in xrange(n+1))
     elif dims == 2:
-        return [partial(grad_pkdo_2d, order) for order in gnitstam(n, dims)]
+        return tuple(partial(grad_pkdo_2d, order) for order in gnitstam(n, dims))
     elif dims == 3:
-        return [partial(grad_pkdo_3d, order) for order in gnitstam(n, dims)]
+        return tuple(partial(grad_pkdo_3d, order) for order in gnitstam(n, dims))
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
 

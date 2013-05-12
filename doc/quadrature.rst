@@ -12,8 +12,8 @@ Base classes
 
     .. automethod:: __call__
 
-Jacobi-Gauss quadrature
------------------------
+Jacobi-Gauss quadrature in one dimension
+----------------------------------------
 
 .. automodule:: modepy.quadrature.jacobi_gauss
 

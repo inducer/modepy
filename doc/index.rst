@@ -45,7 +45,7 @@ Contents
     modes
     nodes
     quadrature
-    matrices
+    tools
     misc
 
 * :ref:`genindex`

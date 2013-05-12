@@ -65,12 +65,12 @@ def test_barycentric_coordinate_map(dims):
 def test_warp():
     """Check some assumptions on the node warp factor calculator"""
     n = 17
-    from modepy.nodes import get_warp_factor
+    from modepy.nodes import warp_factor
     from functools import partial
     from modepy.tools import accept_scalar_or_vector
 
     wfc = accept_scalar_or_vector(1, 1)(
-            partial(get_warp_factor, 17, scaled=False))
+            partial(warp_factor, 17, scaled=False))
 
     assert abs(wfc(-1)) < 1e-12
     assert abs(wfc(1)) < 1e-12
@@ -96,8 +96,8 @@ def test_tri_face_node_distribution():
             as gnitstam
     node_tuples = list(gnitstam(n, 2))
 
-    from modepy.nodes import get_warp_and_blend_nodes
-    unodes = get_warp_and_blend_nodes(2, n, node_tuples)
+    from modepy.nodes import warp_and_blend_nodes
+    unodes = warp_and_blend_nodes(2, n, node_tuples)
 
     faces = [
             [i for i, nt in enumerate(node_tuples) if nt[0] == 0],
@@ -129,8 +129,8 @@ def test_simp_nodes(dims, n):
 
     eps = 1e-10
 
-    from modepy.nodes import get_warp_and_blend_nodes
-    unodes = get_warp_and_blend_nodes(dims, n)
+    from modepy.nodes import warp_and_blend_nodes
+    unodes = warp_and_blend_nodes(dims, n)
     assert (unodes >= -1-eps).all()
     assert (np.sum(unodes) <= eps).all()
 

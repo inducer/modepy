@@ -28,7 +28,7 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 from math import sqrt
-from pytools import memoize_method, memoize
+from pytools import memoize_method
 
 
 
@@ -62,8 +62,6 @@ if not _have_gamma:
             g = g*i
 
         return g
-
-
 
 
 
@@ -230,9 +228,70 @@ def pick_random_simplex_unit_coordinate(rng, dims):
     return r
 
 
-# {{{ submeshes
+# {{{ accept_scalar_or_vector decorator
 
-def get_submesh(node_tuples):
+class accept_scalar_or_vector:
+    def __init__(self, arg_nr, expected_rank):
+        """
+        :arg arg_nr: The argument number which may be a scalar or a vector,
+            one-based.
+        """
+        self.arg_nr = arg_nr - 1
+        self.expected_rank = expected_rank
+
+    def __call__(self, f):
+
+        def wrapper(*args, **kwargs):
+            controlling_arg = args[self.arg_nr]
+            try:
+                shape = controlling_arg.shape
+            except AttributeError:
+                has_shape = False
+            else:
+                has_shape = True
+
+            if not has_shape:
+                if not self.expected_rank == 1:
+                    raise ValueError("cannot pass a scalar to %s" % f)
+
+                controlling_arg = np.array([controlling_arg])
+                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                result = f(*new_args, **kwargs)
+
+                if isinstance(result, tuple):
+                    return tuple(r[0] for r in result)
+                else:
+                    return result[0]
+
+            if len(shape) == self.expected_rank:
+                return f(*args, **kwargs)
+            elif len(shape) < self.expected_rank:
+                controlling_arg = controlling_arg[..., np.newaxis]
+
+                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                result = f(*new_args, **kwargs)
+
+                if isinstance(result, tuple):
+                    return tuple(r[..., 0] for r in result)
+                else:
+                    return result[..., 0]
+            else:
+                raise ValueError("argument rank is too large: got %d, expected %d"
+                        % (len(shape), self.expected_rank))
+
+        from functools import wraps
+        try:
+            wrapper = wraps(f)(wrapper)
+        except AttributeError:
+            pass
+
+        return wrapper
+
+# }}}
+
+# {{{ submeshes, plotting helpers
+
+def submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
 
@@ -307,68 +366,65 @@ def get_submesh(node_tuples):
     else:
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
+@accept_scalar_or_vector(2, 2)
+def plot_element_values(n, nodes, values, resample_n=None,
+        node_tuples=None, show_nodes=False):
+    dims = len(nodes)
+
+    orig_nodes = nodes
+    orig_values = values
+
+    if resample_n is not None:
+        import modepy as mp
+        basis = mp.simplex_onb(dims, n)
+        fine_nodes = mp.equidistant_nodes(dims, resample_n)
+
+        values = np.dot(mp.resampling_matrix(basis, fine_nodes, nodes), values)
+        nodes = fine_nodes
+        n = resample_n
+
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+
+    if dims == 1:
+        import matplotlib.pyplot as pt
+        pt.plot(nodes[0], values)
+        if show_nodes:
+            pt.plot(orig_nodes[0], orig_values, "x")
+        pt.show()
+    elif dims == 2:
+        import mayavi.mlab as mlab
+        mlab.triangular_mesh(
+                nodes[0], nodes[1], values, submesh(list(gnitstam(n, 2))))
+        if show_nodes:
+            mlab.points3d(orig_nodes[0], orig_nodes[1], orig_values,
+                    scale_factor=0.05)
+        mlab.show()
+    else:
+        raise RuntimeError("unsupported dimensionality %d" % dims)
+
 # }}}
 
-class accept_scalar_or_vector:
-    def __init__(self, arg_nr, expected_rank):
-        """
-        :arg arg_nr: The argument number which may be a scalar or a vector,
-            one-based.
-        """
-        self.arg_nr = arg_nr - 1
-        self.expected_rank = expected_rank
-
-    def __call__(self, f):
-
-        def wrapper(*args, **kwargs):
-            controlling_arg = args[self.arg_nr]
-            try:
-                shape = controlling_arg.shape
-            except AttributeError:
-                has_shape = False
-            else:
-                has_shape = True
-
-            if not has_shape:
-                if not self.expected_rank == 1:
-                    raise ValueError("cannot pass a scalar to %s" % f)
-
-                controlling_arg = np.array([controlling_arg])
-                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
-                result = f(*new_args, **kwargs)
-
-                if isinstance(result, tuple):
-                    return tuple(r[0] for r in result)
-                else:
-                    return result[0]
-
-            if len(shape) == self.expected_rank:
-                return f(*args, **kwargs)
-            else:
-                controlling_arg = controlling_arg[..., np.newaxis]
-
-                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
-                result = f(*new_args, **kwargs)
-
-                if isinstance(result, tuple):
-                    return tuple(r[..., 0] for r in result)
-                else:
-                    return result[..., 0]
-
-        from functools import wraps
-        try:
-            wrapper = wraps(f)(wrapper)
-        except AttributeError:
-            pass
-
-        return wrapper
+# {{{ lebesgue constant
 
 def estimate_lebesgue_constant(n, nodes, visualize=False):
+    """Estimate the
+    `Lebesgue constant <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
+    of the *nodes* at polynomial order *n*.
+
+    :arg nodes: an array of shape *(dims, nnodes)* as returned by
+        :func:`modepy.warp_and_blend_nodes`.
+    :arg visualize: visualize the function that gives rise to the
+        returned Lebesgue constant. (2D only for now)
+    :return: the Lebesgue constant, a scalar
+
+    .. versionadded:: 2013.2
+    """
     from modepy.matrices import vandermonde
-    from modepy.modes import get_simplex_onb
+    from modepy.modes import simplex_onb
 
     dims = len(nodes)
-    basis = get_simplex_onb(dims, n)
+    basis = simplex_onb(dims, n)
     vdm = vandermonde(basis, nodes)
 
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
@@ -387,7 +443,7 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
 
     if visualize:
         print "Lebesgue constant: %g" % lebesgue_constant
-        from modepy.tools import get_submesh
+        from modepy.tools import submesh
 
         import mayavi.mlab as mlab
         mlab.figure(bgcolor=(1, 1, 1))
@@ -395,7 +451,7 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
                 tons_of_equi_nodes[0],
                 tons_of_equi_nodes[1],
                 lebesgue_worst / lebesgue_constant,
-                get_submesh(equi_node_tuples))
+                submesh(equi_node_tuples))
 
         x, y = np.mgrid[-1:1:20j, -1:1:20j]
         mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4), line_width=0.6)
@@ -403,6 +459,8 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
         mlab.show()
 
     return lebesgue_constant
+
+# }}}
 
 
 

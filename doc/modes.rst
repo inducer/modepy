@@ -28,9 +28,9 @@ Dimension-independent basis getters
     Scientific Computing 6, no. 4 (December 1, 1991): 345–390.
     http://dx.doi.org/10.1007/BF01060030
 
-.. autofunction:: get_simplex_onb
+.. autofunction:: simplex_onb
 
-.. autofunction:: get_grad_simplex_onb
+.. autofunction:: grad_simplex_onb
 
 Dimension-specific functions
 ----------------------------

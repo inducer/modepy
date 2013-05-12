@@ -3,6 +3,7 @@ from __future__ import division
 from pov import Sphere, Cylinder, File, Union, Texture, Pigment, \
         Camera, LightSource, Plane, Background, Finish
 import numpy as np
+import modepy as mp
 
 n = 8
 
@@ -19,12 +20,11 @@ faces = [
         [nt for nt in node_tuples if sum(nt) == n]
         ]
 
-from modepy.nodes import get_warp_and_blend_nodes
 from modepy.tools import unit_to_barycentric, barycentric_to_equilateral
 nodes = [(n[0],n[2], n[1]) for n in
         barycentric_to_equilateral(
             unit_to_barycentric(
-                get_warp_and_blend_nodes(3, n, node_tuples))).T]
+                mp.warp_and_blend_nodes(3, n, node_tuples))).T]
 id_to_node = dict(zip(node_tuples, nodes))
 
 def get_ball_radius(nid):

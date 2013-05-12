@@ -91,10 +91,10 @@ def test_pkdo_orthogonality(dims, order, ebound):
     """Test orthogonality of simplicial bases using Grundmann-Moeller cubature."""
 
     from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
-    from modepy.modes import get_simplex_onb
+    from modepy.modes import simplex_onb
 
     cub = GrundmannMoellerSimplexQuadrature(order, dims)
-    basis = get_simplex_onb(dims, order)
+    basis = simplex_onb(dims, order)
 
     maxerr = 0
     for i, f in enumerate(basis):
@@ -121,7 +121,7 @@ def test_pkdo_orthogonality(dims, order, ebound):
 @pytest.mark.parametrize("order", [5, 8])
 def test_simplex_basis_grad(dims, order):
     """Do a simplistic FD-style check on the gradients of the basis."""
-    from modepy.modes import get_simplex_onb, get_grad_simplex_onb
+    from modepy.modes import simplex_onb, grad_simplex_onb
 
     if dims == 3:
         err_factor = 3
@@ -133,8 +133,8 @@ def test_simplex_basis_grad(dims, order):
 
     from modepy.tools import pick_random_simplex_unit_coordinate
     for i_bf, (bf, gradbf) in enumerate(zip(
-                get_simplex_onb(dims, order),
-                get_grad_simplex_onb(dims, order),
+                simplex_onb(dims, order),
+                grad_simplex_onb(dims, order),
                 )):
         for i in range(10):
             r = pick_random_simplex_unit_coordinate(rng, dims)

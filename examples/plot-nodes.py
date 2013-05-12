@@ -1,11 +1,11 @@
 import matplotlib.pyplot as pt
 import numpy as np
+import modepy as mp
 
 dims = 3
 n = 10
 
-from modepy.nodes import get_warp_and_blend_nodes
-unit = get_warp_and_blend_nodes(dims, n)
+unit = mp.warp_and_blend_nodes(dims, n)
 
 if 0:
     from modepy.tools import estimate_lebesgue_constant

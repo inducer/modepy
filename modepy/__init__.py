@@ -24,21 +24,25 @@ THE SOFTWARE.
 
 
 
-from modepy.modes import jacobi, grad_jacobi, get_simplex_onb, get_grad_simplex_onb
-from modepy.nodes import get_warp_and_blend_nodes
-from modepy.matrices import vandermonde
+from modepy.modes import jacobi, grad_jacobi, simplex_onb, grad_simplex_onb
+from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
+from modepy.matrices import vandermonde, resampling_matrix, differentiation_matrices
 from modepy.quadrature import Quadrature
 from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature, LegendreGaussQuadrature
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
 
+from modepy.version import VERSION_TEXT as __version__
+
 __all__ = [
+        "__version__",
+
         "jacobi", "grad_jacobi",
-        "get_simplex_onb", "get_grad_simplex_onb",
+        "simplex_onb", "grad_simplex_onb",
 
-        "get_warp_and_blend_nodes",
+        "equidistant_nodes", "warp_and_blend_nodes",
 
-        "vandermonde",
+        "vandermonde", "resampling_matrix", "differentiation_matrices",
 
         "Quadrature",
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",

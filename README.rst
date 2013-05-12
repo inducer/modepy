@@ -1,7 +1,7 @@
 modepy
 ======
 
-:mod:`modepy` helps you create well-behaved high-order
+modepy helps you create well-behaved high-order
 discretizations on simplices (i.e. triangles and tetrahedra).
 These are a key building block for high-order unstructured
 discretizations, as often used in a finite element context.
