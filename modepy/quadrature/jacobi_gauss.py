@@ -41,6 +41,9 @@ class JacobiGaussQuadrature(Quadrature):
 
     Integrates on the interval (-1,1).
     The quadrature rule is exact up to degree :math:`2N+1`.
+
+    Inherits from :class:`modepy.Quadrature`. See there for the interface
+    to obtain nodes and weights.
     """
     def __init__(self, alpha, beta, N):
         x, w = self.compute_weights_and_nodes(N, alpha, beta)
@@ -124,6 +127,9 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
     Integrates on the interval (-1,1).
     The quadrature rule is exact up to degree :math:`2N+1`.
+
+    Inherits from :class:`modepy.Quadrature`. See there for the interface
+    to obtain nodes and weights.
     """
     def __init__(self, N):
         JacobiGaussQuadrature.__init__(self, 0, 0, N)

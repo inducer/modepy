@@ -30,12 +30,23 @@ import numpy as np
 
 
 
-class Quadrature(object):
-    """An abstract quadrature rule.
+class QuadratureRuleUnavailable(RuntimeError):
+    """
 
-    :ivar nodes: An array of shape *(d, nnodes)*, where *d* is the dimension
+    .. versionadded :: 2013.3
+    """
+
+class Quadrature(object):
+    """The basic interface for a quadrature rule.
+
+    .. attribute :: nodes
+
+        An array of shape *(d, nnodes)*, where *d* is the dimension
         of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
-    :ivar weights: A vector of length *nnodes*.
+
+    .. attribute :: weights
+
+        A vector of length *nnodes*.
     """
     def __init__(self, nodes, weights):
         self.nodes = nodes

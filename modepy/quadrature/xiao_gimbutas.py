@@ -25,8 +25,7 @@ THE SOFTWARE.
 
 
 
-import numpy as np
-from modepy.quadrature import Quadrature
+from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 
 
 
@@ -35,33 +34,46 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
     """A (nearly) Gaussian simplicial quadrature with very few quadrature nodes,
     available for low-to-moderate orders.
 
+    Raises :exc:`modepy.QuadratureRuleUnavailable` if no quadrature rule for the
+    requested parameters is available.
+
     The integration domain is the unit simplex. (see :ref:`tri-coords`
     and :ref:`tet-coords`)
 
-    :ivar exact_to: The total degree up to which the quadrature is exact.
+    Inherits from :class:`modepy.Quadrature`. See there for the interface
+    to obtain nodes and weights.
+
+    .. attribute:: exact_to
+
+        The total degree up to which the quadrature is exact.
 
     See
 
-    * H. Xiao and Z. Gimbutas, "A numerical algorithm for the construction of
-      efficient quadrature rules in two and higher dimensions," Computers &
-      Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
-      http://dx.doi.org/10.1016/j.camwa.2009.10.027
-
+        H. Xiao and Z. Gimbutas, "A numerical algorithm for the construction of
+        efficient quadrature rules in two and higher dimensions," Computers &
+        Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
+        http://dx.doi.org/10.1016/j.camwa.2009.10.027
     """
 
     def __init__(self, order, dims):
+        """:arg order: The total degree to which the quadrature rule is exact."""
+
         if dims == 2:
             from modepy.quadrature.xg_quad_data import triangle_table as table
         elif dims == 3:
             from modepy.quadrature.xg_quad_data import tetrahedron_table as table
         else:
-            raise ValueError("invalid dimensionality for XG quadrature")
+            raise ValueError("invalid dimensionality")
+        try:
+            order_table = table[order]
+        except KeyError:
+            raise QuadratureRuleUnavailable
 
         from modepy.tools import EQUILATERAL_TO_UNIT_MAP
         e2u = EQUILATERAL_TO_UNIT_MAP[dims]
 
-        nodes = e2u(table[order]["points"].T)
-        wts = table[order]["weights"]*e2u.jacobian
+        nodes = e2u(order_table["points"].T)
+        wts = order_table["weights"]*e2u.jacobian
 
         Quadrature.__init__(self, nodes, wts)
 

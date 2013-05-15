@@ -27,9 +27,7 @@ THE SOFTWARE.
 
 import numpy as np
 import pytest
-
-from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
-from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
+import modepy as mp
 
 
 
@@ -67,23 +65,45 @@ def test_gauss_quadrature():
             err = abs(i_f - i_f_true)
             assert err < 2e-15
 
-@pytest.mark.parametrize("quad_class", [
-    XiaoGimbutasSimplexQuadrature,
-    GrundmannMoellerSimplexQuadrature])
+@pytest.mark.parametrize(("quad_class", "highest_order"), [
+    (mp.XiaoGimbutasSimplexQuadrature, None),
+    (mp.VioreanuRokhlinSimplexQuadrature, None),
+    (mp.GrundmannMoellerSimplexQuadrature, 3),
+    ])
 @pytest.mark.parametrize("dim", [2, 3])
-def test_simplex_quadrature(quad_class, dim):
-    """Check that quadratures on simplices cubature works as advertised"""
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most
+def test_simplex_quadrature(quad_class, highest_order, dim):
+    """Check that quadratures on simplices works as advertised"""
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
     from modepy.tools import Monomial
 
-    for s in range(1, 3+1):
-        cub = quad_class(s, dim)
-        for comb in generate_nonnegative_integer_tuples_summing_to_at_most(
-                cub.exact_to, dim):
+    order = 1
+    while True:
+        try:
+            quad = quad_class(order, dim)
+        except mp.QuadratureRuleUnavailable:
+            print("UNAVAIL", quad_class, order)
+            break
+
+        if isinstance(quad_class, mp.VioreanuRokhlinSimplexQuadrature):
+            assert (quad.weights > 0).all()
+
+        if 0:
+            import matplotlib.pyplot as pt
+            pt.plot(quad.nodes[0], quad.nodes[1])
+            pt.show()
+
+        print(quad_class, order, quad.exact_to)
+        for comb in gnitstam(quad.exact_to, dim):
             f = Monomial(comb)
-            i_f = cub(f)
-            err = abs(i_f - f.simplex_integral())
-            assert err < 6e-15
+            i_f = quad(f)
+            ref = f.simplex_integral()
+            err = abs(i_f - ref)
+            assert err < 6e-15, (err, comb, i_f, ref)
+
+        order += 1
+        if highest_order is not None and order >= highest_order:
+            break
 
 
 

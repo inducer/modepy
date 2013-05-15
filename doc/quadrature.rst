@@ -19,13 +19,11 @@ Jacobi-Gauss quadrature in one dimension
 
 .. currentmodule:: modepy
 
+.. autoclass:: Quadrature
+
 .. autoclass:: JacobiGaussQuadrature
 
-    .. automethod:: __call__
-
 .. autoclass:: LegendreGaussQuadrature
-
-    .. automethod:: __call__
 
 .. currentmodule:: modepy.quadrature.jacobi_gauss
 
@@ -38,6 +36,8 @@ Quadratures on the simplex
 
 .. currentmodule:: modepy
 
+.. autoexception:: QuadratureRuleUnavailable
+
 .. autoclass:: GrundmannMoellerSimplexQuadrature
 
     .. automethod:: __call__
@@ -46,6 +46,8 @@ Quadratures on the simplex
 
     .. automethod:: __call__
 
+.. autoclass:: VioreanuRokhlinSimplexQuadrature
+
+    .. automethod:: __call__
+
 .. vim: sw=4
-
-

@@ -270,3 +270,5 @@ intersphinx_mapping = {
         'http://docs.python.org/': None,
         'http://docs.scipy.org/doc/numpy/': None,
         }
+
+autoclass_content = "both"

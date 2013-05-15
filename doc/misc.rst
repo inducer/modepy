@@ -30,6 +30,10 @@ Version 2013.3
     This version is currently under development. You can get snapshots from
     ModePy's `git repository <https://github.com/inducer/modepy>`_
 
+* Add :class:`modepy.VioreanuRokhlinSimplexQuadrature`.
+* Update nodes and weights for :class:`modepy.XiaoGimbutasSimplexQuadrature`.
+  (thanks to Zydrunas Gimbutas)
+
 Version 2013.2.1
 ----------------
 

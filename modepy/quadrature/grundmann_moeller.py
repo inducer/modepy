@@ -78,6 +78,10 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
     The integration domain is the unit simplex. (see :ref:`tri-coords`
     and :ref:`tet-coords`)
 
+    .. attribute:: exact_to
+
+        The total degree up to which the quadrature is exact.
+
     See
 
     * A. Grundmann and H.M. Moeller,
@@ -88,6 +92,13 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
     """
 
     def __init__(self, order, dimension):
+        """
+        :arg order: A parameter correlated with the total degree of polynomials
+            that are integrated exactly. (See also :attr:`exact_to`.)
+        :arg dimension: The number of dimensions for the quadrature rule.
+            Any positive integer.
+        """
+
         s = order
         n = dimension
         d = 2*s+1
