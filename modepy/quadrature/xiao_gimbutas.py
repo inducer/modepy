@@ -56,7 +56,11 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
     """
 
     def __init__(self, order, dims):
-        """:arg order: The total degree to which the quadrature rule is exact."""
+        """
+        :arg order: The total degree to which the quadrature rule is exact.
+        :arg dims: The number of dimensions for the quadrature rule.
+            2 for quadrature on triangles and 3 for tetrahedra.
+        """
 
         if dims == 2:
             from modepy.quadrature.xg_quad_data import triangle_table as table
