@@ -19,7 +19,7 @@ Unit coordinates :math:`(r,s)`::
     |    \
     A-----B
 
-Points in unit coordinates::
+Vertices in unit coordinates::
 
     O = (0,0)
     A = (-1,-1)
@@ -36,7 +36,7 @@ Equilateral coordinates :math:`(x,y)`::
      /         \
     A-----------B
 
-Points in equilateral coordinates::
+Vertices in equilateral coordinates::
 
     O = (0,0)
     A = (-1,-1/sqrt(3))
@@ -65,7 +65,7 @@ Unit coordinates :math:`(r,s,t)`::
 
 (squint, and it might start making sense...)
 
-Points in unit coordinates::
+Vertices in unit coordinates::
 
     O=( 0, 0, 0)
     A=(-1,-1,-1)
@@ -73,7 +73,7 @@ Points in unit coordinates::
     C=(-1,+1,-1)
     D=(-1,-1,+1)
 
-Points in equilateral coordinates :math:`(x,y,z)`::
+Vertices in equilateral coordinates :math:`(x,y,z)`::
 
     O = (0,0,0)
     A = (-1,-1/sqrt(3),-1/sqrt(6))
