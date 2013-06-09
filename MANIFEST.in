@@ -11,7 +11,7 @@ include examples/*.py
 
 include README.rst
 
-include distribute_setup.py
+include ez_setup.py
 include Makefile.in
 
 recursive-include contrib *.sh *.py
