@@ -12,6 +12,5 @@ include examples/*.py
 include README.rst
 
 include ez_setup.py
-include Makefile.in
 
 recursive-include contrib *.sh *.py
