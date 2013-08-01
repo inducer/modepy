@@ -52,7 +52,7 @@ def main():
               "modepy.quadrature",
               ],
           install_requires=[
-              "numpy>=1.6",
+              "numpy",
               "pytools>=2013.1",
               "pytest>=2.3",
               ],
