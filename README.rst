@@ -1,6 +1,9 @@
 modepy
 ======
 
+.. image:: https://badge.fury.io/py/modepy.png
+    :target: http://pypi.python.org/pypi/modepy
+
 modepy helps you create well-behaved high-order
 discretizations on simplices (i.e. triangles and tetrahedra).
 These are a key building block for high-order unstructured
