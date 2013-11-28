@@ -101,10 +101,14 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
         return m.shape[0] == m.shape[1]
 
     if is_square(vdm_old):
-        return la.solve(vdm_old.T, resample_vdm_new.T).T
+        return np.asarray(
+                la.solve(vdm_old.T, resample_vdm_new.T).T,
+                order="C")
     else:
         if least_squares_ok:
-            return np.dot(resample_vdm_new, la.pinv(vdm_old))
+            return np.asarray(
+                    np.dot(resample_vdm_new, la.pinv(vdm_old)),
+                    order="C")
         else:
             raise RuntimeError("number of input nodes and number "
                     "of basis functions "
@@ -140,9 +144,13 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
     grad_vdms = vandermonde(grad_basis, nodes)
 
     if isinstance(grad_vdms, tuple):
-        return tuple(la.solve(vdm.T, gv.T).T for gv in grad_vdms)
+        return tuple(
+                np.asarray(la.solve(vdm.T, gv.T).T, order="C")
+                for gv in grad_vdms)
     else:
-        return la.solve(vdm.T, grad_vdms.T).T
+        return np.asarray(
+                la.solve(vdm.T, grad_vdms.T).T,
+                order="C")
 
 
 # vim: foldmethod=marker
