@@ -142,7 +142,7 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):
     nodes corresponding to the :class:`JacobiGaussQuadrature`
     with the same parameters.
 
-    Exact to degree :math:`2N-1`.
+    Exact to degree :math:`2N-3`.
     """
 
     x = np.zeros((N+1,))
