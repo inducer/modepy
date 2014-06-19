@@ -1,6 +1,7 @@
 from __future__ import division
 
-__copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu"
+__copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, " \
+        "Tim Warburton, Jan Hesthaven, Xueyu Zhu"
 
 __license__ = """
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,13 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
-
 import numpy as np
 import numpy.linalg as la
-
-
 
 
 def equidistant_nodes(dims, n, node_tuples=None):
@@ -55,8 +51,6 @@ def equidistant_nodes(dims, n, node_tuples=None):
     return (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
 
-
-
 def warp_factor(n, output_nodes, scaled=True):
     """Compute warp function at order *n* and evaluate it at
     the nodes *output_nodes*.
@@ -65,7 +59,7 @@ def warp_factor(n, output_nodes, scaled=True):
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
 
     warped_nodes = legendre_gauss_lobatto_nodes(n)
-    equi_nodes  = np.linspace(-1, 1, n+1)
+    equi_nodes = np.linspace(-1, 1, n+1)
 
     from modepy.matrices import vandermonde
     from modepy.modes import simplex_onb
@@ -79,12 +73,11 @@ def warp_factor(n, output_nodes, scaled=True):
     # compute warp factor
     warp = np.dot(eq_to_out, warped_nodes - equi_nodes)
     if scaled:
-        zerof = (abs(output_nodes)<1.0-1.0e-10)
+        zerof = (abs(output_nodes) < 1.0-1.0e-10)
         sf = 1.0 - (zerof*output_nodes)**2
         warp = warp/sf + warp*(zerof-1)
 
     return warp
-
 
 
 # {{{ 2D nodes
@@ -115,8 +108,10 @@ def _2d_equilateral_shift(n, bary, alpha):
 
     return result
 
-_alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,\
-        1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223,1.6258]
+
+_alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,
+        1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223, 1.6258]
+
 
 def warp_and_blend_nodes_2d(n, node_tuples=None):
     try:
@@ -147,11 +142,13 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
 
 # }}}
 
+
 # {{{ 3D nodes
 
 _alpha_opt_3d = [
         0, 0, 0, 0.1002,  1.1332, 1.5608, 1.3413, 1.2577, 1.1603,
         1.10153, 0.6080, 0.4523, 0.8856, 0.8717, 0.9655]
+
 
 def warp_and_blend_nodes_3d(n, node_tuples=None):
     try:
@@ -192,7 +189,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
             (3, 0, 1, 2, -1),
             ]:
 
-        vi2, vi3, vi4 = [(i1 + vertex_step*i)%4 for i in range(1, 4)]
+        vi2, vi3, vi4 = [(i1 + vertex_step*i) % 4 for i in range(1, 4)]
 
         # all vertices have the same distance from the origin
         tangent1 = equi_vertices[vi3] - equi_vertices[vi4]
@@ -212,7 +209,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
         blend = l2*l3*l4
 
         denom = (l2+0.5*l1)*(l3+0.5*l1)*(l4+0.5*l1)
-        denom_ok = denom>tol
+        denom_ok = denom > tol
 
         blend[denom_ok] = (
                 (1+(alpha*l1[denom_ok])**2)
@@ -222,7 +219,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
         shift = shift + (blend*warp1)[np.newaxis, :] * tangent1[:, np.newaxis]
         shift = shift + (blend*warp2)[np.newaxis, :] * tangent2[:, np.newaxis]
 
-        is_face = (l1<tol) & ((l2>tol) | (l3>tol) | (l4>tol))
+        is_face = (l1 < tol) & ((l2 > tol) | (l3 > tol) | (l4 > tol))
 
         # assign face warp separately
         shift[:, is_face] = (
@@ -234,15 +231,18 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 # }}}
 
+
 def warp_and_blend_nodes(dims, n, node_tuples=None):
     """Return interpolation nodes as described in
 
-        Warburton, T. "An Explicit Construction of Interpolation Nodes on the Simplex."
+        Warburton, T. "An Explicit Construction of Interpolation Nodes on
+            the Simplex."
         Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
         http://dx.doi.org/10.1007/s10665-006-9086-6
 
     The generated nodes have benign
-    `Lebesgue constants <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
+    `Lebesgue constants
+    <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
     (See also :func:`modepy.tools.estimate_lebesgue_constant`)
 
     :arg dims: dimensionality of desired simplex
