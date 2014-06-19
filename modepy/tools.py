@@ -22,15 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
-
 import numpy as np
 import numpy.linalg as la
 from math import sqrt
 from pytools import memoize_method
-
-
 
 
 try:
@@ -41,30 +36,31 @@ except ImportError:
 else:
     _have_gamma = True
 
+
 if not _have_gamma:
     try:
-        from scipy.special import gamma
+        from scipy.special import gamma  # noqa
     except ImportError:
         pass
     else:
         _have_gamma = True
 
+
 if not _have_gamma:
-    def gamma(z):
+    def gamma(z):  # noqa
         from warnings import warn
-        warn("Using makeshift gamma function that only works for integers. No better one was found.")
+        warn("Using makeshift gamma function that only works for integers. "
+                "No better one was found.")
 
         if z != int(z):
-            raise RuntimeError("makeshift gamma function doesn't work for non-integers")
+            raise RuntimeError("makeshift gamma function doesn't work "
+                    "for non-integers")
 
         g = 1
         for i in range(1, int(z)):
             g = g*i
 
         return g
-
-
-
 
 
 class Monomial:
@@ -92,7 +88,7 @@ class Monomial:
         from operator import mul
 
         x = (xi+1)/2
-        return self.factor* \
+        return self.factor * \
                 reduce(mul, (x[i]**expn
                     for i, expn in enumerate(self.exponents)))
 
@@ -101,7 +97,7 @@ class Monomial:
         from pytools import factorial
         from operator import mul
 
-        return (self.factor*2**len(self.exponents)*
+        return (self.factor*2**len(self.exponents) *
             reduce(mul, (factorial(alpha) for alpha in self.exponents))
             /
             factorial(len(self.exponents)+sum(self.exponents)))
@@ -113,8 +109,6 @@ class Monomial:
             return Monomial(diff_exp, 0)
         diff_exp[coordinate] = orig_exp-1
         return Monomial(diff_exp, self.factor*orig_exp)
-
-
 
 
 # {{{ coordinate mapping
@@ -146,8 +140,6 @@ class AffineMap:
         return AffineMap(la.inv(self.a), -la.solve(self.a, self.b))
 
 
-
-
 EQUILATERAL_TO_UNIT_MAP = {
         1: AffineMap([[1]], [0]),
         2: AffineMap([
@@ -161,6 +153,7 @@ EQUILATERAL_TO_UNIT_MAP = {
             [-1/2, -1/2, -1/2])
         }
 
+
 def equilateral_to_unit(equi):
     return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
 
@@ -170,21 +163,23 @@ UNIT_VERTICES = {
             [1],
             ]),
         2: np.array([
-            [-1,-1],
-            [1,-1],
-            [-1,1],
+            [-1, -1],
+            [1, -1],
+            [-1, 1],
             ]),
         3: np.array([
-            [-1,-1,-1],
-            [+1,-1,-1],
-            [-1,+1,-1],
-            [-1,-1,+1],
+            [-1, -1, -1],
+            [+1, -1, -1],
+            [-1, +1, -1],
+            [-1, -1, +1],
             ])
         }
+
 
 def barycentric_to_unit(bary):
     dims = len(bary)-1
     return np.dot(UNIT_VERTICES[dims].T, bary)
+
 
 def unit_to_barycentric(unit):
     last_bary = 0.5*(unit+1)
@@ -198,23 +193,25 @@ EQUILATERAL_VERTICES = {
             [1],
             ]),
         2: np.array([
-            [-1,-1/sqrt(3)],
-            [1,-1/sqrt(3)],
-            [0,2/sqrt(3)],
+            [-1, -1/sqrt(3)],
+            [1, -1/sqrt(3)],
+            [0, 2/sqrt(3)],
             ]),
         3: np.array([
-            [-1,-1/sqrt(3),-1/sqrt(6)],
-            [ 1,-1/sqrt(3),-1/sqrt(6)],
-            [ 0, 2/sqrt(3),-1/sqrt(6)],
-            [ 0,         0, 3/sqrt(6)],
+            [-1, -1/sqrt(3), -1/sqrt(6)],
+            [1, -1/sqrt(3), -1/sqrt(6)],
+            [0, 2/sqrt(3), -1/sqrt(6)],
+            [0,         0, 3/sqrt(6)],
             ])
         }
+
 
 def barycentric_to_equilateral(bary):
     dims = len(bary)-1
     return np.dot(EQUILATERAL_VERTICES[dims].T, bary)
 
 # }}}
+
 
 def pick_random_simplex_unit_coordinate(rng, dims):
     offset = 0.05
@@ -255,7 +252,8 @@ class accept_scalar_or_vector:
                     raise ValueError("cannot pass a scalar to %s" % f)
 
                 controlling_arg = np.array([controlling_arg])
-                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                new_args = args[:self.arg_nr] \
+                        + (controlling_arg,) + args[self.arg_nr+1:]
                 result = f(*new_args, **kwargs)
 
                 if isinstance(result, tuple):
@@ -268,7 +266,8 @@ class accept_scalar_or_vector:
             elif len(shape) < self.expected_rank:
                 controlling_arg = controlling_arg[..., np.newaxis]
 
-                new_args = args[:self.arg_nr] + (controlling_arg,) + args[self.arg_nr+1:]
+                new_args = args[:self.arg_nr] \
+                        + (controlling_arg,) + args[self.arg_nr+1:]
                 result = f(*new_args, **kwargs)
 
                 if isinstance(result, tuple):
@@ -288,6 +287,7 @@ class accept_scalar_or_vector:
         return wrapper
 
 # }}}
+
 
 # {{{ submeshes, plotting helpers
 
@@ -366,6 +366,7 @@ def submesh(node_tuples):
     else:
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
+
 @accept_scalar_or_vector(2, 2)
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
@@ -405,11 +406,13 @@ def plot_element_values(n, nodes, values, resample_n=None,
 
 # }}}
 
+
 # {{{ lebesgue constant
 
 def estimate_lebesgue_constant(n, nodes, visualize=False):
     """Estimate the
-    `Lebesgue constant <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
+    `Lebesgue constant
+    <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
     of the *nodes* at polynomial order *n*.
 
     :arg nodes: an array of shape *(dims, nnodes)* as returned by
@@ -433,7 +436,7 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
     equi_node_tuples = list(gnitstam(huge_n, dims))
     tons_of_equi_nodes = (
             np.array(equi_node_tuples, dtype=np.float64)
-            /huge_n * 2 - 1).T
+            / huge_n * 2 - 1).T
 
     eq_vdm = vandermonde(basis, tons_of_equi_nodes)
     eq_to_out = la.solve(vdm.T, eq_vdm.T).T
@@ -454,7 +457,8 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
                 submesh(equi_node_tuples))
 
         x, y = np.mgrid[-1:1:20j, -1:1:20j]
-        mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4), line_width=0.6)
+        mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4),
+                line_width=0.6)
 
         mlab.show()
 
