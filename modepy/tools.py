@@ -306,7 +306,23 @@ def submesh(node_tuples):
             (ituple, idx)
             for idx, ituple in enumerate(node_tuples))
 
-    if dims == 2:
+    if dims == 1:
+        result = []
+
+        def try_add_line(d1, d2):
+            try:
+                result.append((
+                    node_dict[add_tuples(current, d1)],
+                    node_dict[add_tuples(current, d2)],
+                    ))
+            except KeyError:
+                pass
+
+        for current in node_tuples:
+            try_add_line((0,), (1,),)
+
+        return result
+    elif dims == 2:
         # {{{ triangle sub-mesh
         result = []
 
