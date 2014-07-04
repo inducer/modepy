@@ -177,11 +177,18 @@ UNIT_VERTICES = {
 
 
 def barycentric_to_unit(bary):
+    """
+    :arg bary: shaped ``(dims+1,npoints)``
+    """
     dims = len(bary)-1
     return np.dot(UNIT_VERTICES[dims].T, bary)
 
 
 def unit_to_barycentric(unit):
+    """
+    :arg unit: shaped ``(dims,npoints)``
+    """
+
     last_bary = 0.5*(unit+1)
     first_bary = 1-np.sum(last_bary, axis=0)
     return np.vstack([first_bary, last_bary])

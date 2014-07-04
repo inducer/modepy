@@ -1,6 +1,7 @@
 from __future__ import division
 
-__copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu"
+__copyright__ = """Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton,
+    Jan Hesthaven, Xueyu Zhu"""
 
 __license__ = """
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,12 +24,14 @@ THE SOFTWARE.
 """
 
 
-
 from modepy.modes import jacobi, grad_jacobi, simplex_onb, grad_simplex_onb
 from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
-from modepy.matrices import vandermonde, resampling_matrix, differentiation_matrices
+from modepy.matrices import (vandermonde,
+        resampling_matrix, differentiation_matrices,
+        mass_matrix)
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
-from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature, LegendreGaussQuadrature
+from modepy.quadrature.jacobi_gauss import (
+        JacobiGaussQuadrature, LegendreGaussQuadrature)
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
@@ -44,6 +47,7 @@ __all__ = [
         "equidistant_nodes", "warp_and_blend_nodes",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
+        "mass_matrix",
 
         "Quadrature", "QuadratureRuleUnavailable",
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",

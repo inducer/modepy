@@ -153,4 +153,25 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
                 order="C")
 
 
+def mass_matrix(basis, nodes):
+    """Return a mass matrix :math:`M`, which obeys
+
+    :arg basis: assumed to be an orthonormal basis with respect to the :math:`L^2`
+        inner product.
+
+    .. math::
+
+        M_{ij} = \int_\triangle \phi_i(x) \phi_j(x) dx = (V^{-T} V^{-1})_{ij}.
+
+    .. versionadded:: 2014.1
+    """
+
+    vdm = vandermonde(basis, nodes)
+
+    inverse_mass_matrix = np.dot(vdm, vdm.T)
+
+    return la.inv(inverse_mass_matrix)
+
+
+
 # vim: foldmethod=marker
