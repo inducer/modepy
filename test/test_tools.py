@@ -1,4 +1,6 @@
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -100,7 +102,7 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     expn, _ = fit_modal_decay(coeffs.reshape(1, -1), dims, n)
     expn = expn[0]
 
-    print("%s: computed: %g, expected: %g" % (case_name, expn, expected_expn))
+    print(("%s: computed: %g, expected: %g" % (case_name, expn, expected_expn)))
     assert abs(expn-expected_expn) < 0.1
 
 
@@ -129,7 +131,7 @@ def test_residual_estimation(case_name, test_func, dims, n):
 
     resid = estimate_resid(n)
     resid2 = estimate_resid(2*n)
-    print("%s: %g -> %g" % (case_name, resid, resid2))
+    print(("%s: %g -> %g" % (case_name, resid, resid2)))
     assert resid2 < resid
 
 
@@ -178,7 +180,7 @@ def test_diff_matrix(dims):
         diff_mat = diff_mat[0]
     df_dx_num = np.dot(diff_mat, f)
 
-    print(la.norm(df_dx-df_dx_num))
+    print((la.norm(df_dx-df_dx_num)))
     assert la.norm(df_dx-df_dx_num) < 1e-3
 
 

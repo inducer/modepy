@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 
 import sys
+from six.moves import range
 with open(sys.argv[1]) as inf:
     lines = [l.strip() for l in inf.readlines() if l.strip()]
 
@@ -19,7 +22,7 @@ while i < len(lines):
     points = []
     weights = []
 
-    for j in xrange(point_count):
+    for j in range(point_count):
         l = lines[i]
         i += 1
         data = [float(x) for x in l.split()]
@@ -31,11 +34,11 @@ while i < len(lines):
             "weights": weights }
 
 from pprint import pformat
-print "%s = %s" % (rule_name, pformat(table))
+print("%s = %s" % (rule_name, pformat(table)))
 
-print """
+print("""
 
 %s = dict(
     (order, dict((name, numpy.array(ary)) for name, ary in rule.iteritems()))
     for order, rule in %s.iteritems())
-""" % (rule_name, rule_name)
+""" % (rule_name, rule_name))

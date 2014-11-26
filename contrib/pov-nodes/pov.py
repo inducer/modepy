@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/205451
 
 import sys, os
 import numpy
+from six.moves import range
 
 class File:
   def __init__(self,fnam="out.pov",*items):
@@ -74,7 +76,7 @@ class Item:
         opt.write(file)
       else:
         file.writeln( str(opt) )
-    for key,val in self.kwargs.items():
+    for key,val in list(self.kwargs.items()):
       if val is None:
         file.writeln(key)
       elif isinstance(val, (tuple, list, numpy.ndarray)):

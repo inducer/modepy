@@ -1,4 +1,7 @@
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import range
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -82,7 +85,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
         try:
             quad = quad_class(order, dim)
         except mp.QuadratureRuleUnavailable:
-            print("UNAVAIL", quad_class, order)
+            print(("UNAVAIL", quad_class, order))
             break
 
         if isinstance(quad_class, mp.VioreanuRokhlinSimplexQuadrature):
@@ -93,7 +96,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
             pt.plot(quad.nodes[0], quad.nodes[1])
             pt.show()
 
-        print(quad_class, order, quad.exact_to)
+        print((quad_class, order, quad.exact_to))
         for comb in gnitstam(quad.exact_to, dim):
             f = Monomial(comb)
             i_f = quad(f)

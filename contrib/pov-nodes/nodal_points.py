@@ -1,9 +1,13 @@
 from __future__ import division
+from __future__ import absolute_import
 
 from pov import Sphere, Cylinder, File, Union, Texture, Pigment, \
         Camera, LightSource, Plane, Background, Finish
 import numpy as np
 import modepy as mp
+import six
+from six.moves import range
+from six.moves import zip
 
 n = 8
 
@@ -25,7 +29,7 @@ nodes = [(n[0],n[2], n[1]) for n in
         barycentric_to_equilateral(
             unit_to_barycentric(
                 mp.warp_and_blend_nodes(3, n, node_tuples))).T]
-id_to_node = dict(zip(node_tuples, nodes))
+id_to_node = dict(list(zip(node_tuples, nodes)))
 
 def get_ball_radius(nid):
     in_faces = len([f for f in faces if nid in f])
@@ -45,7 +49,7 @@ balls = Union(*[
     Sphere(node, get_ball_radius(nid),
         Texture(Pigment(color=get_ball_color(nid)))
         )
-    for nid, node in id_to_node.iteritems()
+    for nid, node in six.iteritems(id_to_node)
     ])
 
 links = Union()

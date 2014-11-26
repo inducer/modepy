@@ -1,4 +1,8 @@
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import range
+from functools import reduce
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -468,7 +472,7 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
     lebesgue_constant = np.max(lebesgue_worst)
 
     if visualize:
-        print "Lebesgue constant: %g" % lebesgue_constant
+        print("Lebesgue constant: %g" % lebesgue_constant)
         from modepy.tools import submesh
 
         import mayavi.mlab as mlab

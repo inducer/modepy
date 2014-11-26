@@ -1,4 +1,6 @@
 from __future__ import division
+from __future__ import absolute_import
+from six.moves import range
 
 __copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu"
 
@@ -88,7 +90,7 @@ def jacobi(alpha, beta, n, x):
     aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
 
     # Forward recurrence using the symmetry of the recurrence.
-    for i in xrange(1, n):
+    for i in range(1, n):
             h1 = 2.*i+alpha+beta
 
             foo = (i+1.)*(i+1.+alpha+beta)*(i+1.+alpha)*(i+1.+beta)/(h1+1.)/(h1+3.)
@@ -349,7 +351,7 @@ def simplex_onb(dims, n):
             as gnitstam
 
     if dims == 1:
-        return tuple(partial(jacobi, 0, 0, i) for i in xrange(n+1))
+        return tuple(partial(jacobi, 0, 0, i) for i in range(n+1))
     elif dims == 2:
         return tuple(partial(pkdo_2d, order) for order in gnitstam(n, dims))
     elif dims == 3:
@@ -382,7 +384,7 @@ def grad_simplex_onb(dims, n):
             as gnitstam
 
     if dims == 1:
-        return tuple(partial(grad_jacobi, 0, 0, i) for i in xrange(n+1))
+        return tuple(partial(grad_jacobi, 0, 0, i) for i in range(n+1))
     elif dims == 2:
         return tuple(partial(grad_pkdo_2d, order) for order in gnitstam(n, dims))
     elif dims == 3:

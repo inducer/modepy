@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # -*- coding: utf-8 -*-
 #
 # modepy documentation build configuration file, created by
@@ -54,7 +55,7 @@ copyright = u'2013 Andreas Klöckner, Tim Warburton, Jan Hesthaven'
 # built documents.
 #
 ver_dic = {}
-execfile("../modepy/version.py", ver_dic)
+exec(compile(open("../modepy/version.py").read(), "../modepy/version.py", 'exec'), ver_dic)
 version = ".".join(str(x) for x in ver_dic["VERSION"])
 # The full version, including alpha/beta/rc tags.
 release = ver_dic["VERSION_TEXT"]

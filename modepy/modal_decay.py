@@ -1,4 +1,6 @@
 from __future__ import division
+from __future__ import absolute_import
+from six.moves import range
 
 __copyright__ = "Copyright (C) 2010-2012 Andreas Kloeckner"
 
@@ -91,11 +93,11 @@ def skyline_pessimize(modal_values):
 
     result = np.empty_like(modal_values)
 
-    for iel in xrange(nelements):
+    for iel in range(nelements):
         my_modes = modal_values[iel]
         cur_val = max(my_modes[-1], my_modes[-2])
 
-        for imode in xrange(nmodes-1, -1, -1):
+        for imode in range(nmodes-1, -1, -1):
             if my_modes[imode] > cur_val:
                 cur_val = my_modes[imode]
 

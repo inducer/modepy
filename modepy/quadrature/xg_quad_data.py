@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 # GENERATED, DO NOT EDIT
 # Xiao-Gimbutas quadratures
 # http://dx.doi.org/10.1016/j.camwa.2009.10.027
 import numpy
+import six
 
 triangle_table = {1: {'points': [[-5.55111512312578e-17, 2.22044604925031e-16]],
      'weights': [1.73205080756888]},
@@ -16108,8 +16110,8 @@ triangle_table = {1: {'points': [[-5.55111512312578e-17, 2.22044604925031e-16]],
 
 
 triangle_table = dict(
-    (order, dict((name, numpy.array(ary)) for name, ary in rule.iteritems()))
-    for order, rule in triangle_table.iteritems())
+    (order, dict((name, numpy.array(ary)) for name, ary in six.iteritems(rule)))
+    for order, rule in six.iteritems(triangle_table))
 
 
 tetrahedron_table = {1: {'points': [[0.0, 0.0, 0.0]], 'weights': [0.942809041582063]},
@@ -18782,6 +18784,6 @@ tetrahedron_table = {1: {'points': [[0.0, 0.0, 0.0]], 'weights': [0.942809041582
 
 
 tetrahedron_table = dict(
-    (order, dict((name, numpy.array(ary)) for name, ary in rule.iteritems()))
-    for order, rule in tetrahedron_table.iteritems())
+    (order, dict((name, numpy.array(ary)) for name, ary in six.iteritems(rule)))
+    for order, rule in six.iteritems(tetrahedron_table))
 
