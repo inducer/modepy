@@ -24,8 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
 import numpy as np
 import numpy.linalg as la
 import modepy as mp
@@ -34,55 +32,58 @@ from functools import partial
 import pytest
 
 
-
-
-
 # {{{ modal decay test functions
 
 def jump(where, x):
     result = np.empty_like(x)
-    result[x>=where] = 1
-    result[x<where] = 0
+    result[x >= where] = 1
+    result[x < where] = 0
     return result
+
 
 def smooth_jump(where, x):
     return np.arctan(100*(x-where))/(0.5*np.pi)
 
+
 def kink(where, x):
     result = np.empty_like(x)
-    result[x>=where] = x[x>=where]
-    result[x<where] = 0
+    result[x >= where] = x[x >= where]
+    result[x < where] = 0
     return result
+
 
 def c1(where, x):
     result = np.empty_like(x)
-    result[x>=where] = x[x>=where]**2
-    result[x<where] = 0
+    result[x >= where] = x[x >= where]**2
+    result[x < where] = 0
     return result
+
 
 def sample_polynomial(x):
     return 3*x**2 + 5*x + 3
+
 
 def constant(x):
     return 5+0*x
 
 # }}}
 
+
 @pytest.mark.parametrize(("case_name", "test_func", "dims", "n", "expected_expn"), [
     ("jump-1d", partial(jump, 0), 1, 10, -1),
-    ("kink-1d", partial(kink, 0), 1, 10, -1.7 ), # Slightly off from -2 (same in paper)
+    ("kink-1d", partial(kink, 0), 1, 10, -1.7),  # Slightly off from -2 (same in paper)  # noqa
     ("c1-1d", partial(c1, 0), 1, 10, -3),
 
     # Offset 1D tests
     ("offset-jump-1d", partial(jump, 0.8), 1, 20, -0.7),
-    ("offset-kink-1d", partial(kink, 0.8), 1, 20, -0.7), # boo
-    ("offset-c1-1d", partial(c1, 0.8), 1, 20, -0.8), # boo
+    ("offset-kink-1d", partial(kink, 0.8), 1, 20, -0.7),  # boo
+    ("offset-c1-1d", partial(c1, 0.8), 1, 20, -0.8),  # boo
 
     # 2D tests
     # A harsh jump introduces high-frequency wiggles transverse to the jump edge.
     # Therefore, use a smooth one.
     ("jump-2d", partial(smooth_jump, -0.1), 2, 15, -1.1),
-    ("kink-2d", partial(kink, 0), 2, 15, -1.6 ),
+    ("kink-2d", partial(kink, 0), 2, 15, -1.6),
     ("c1-2d", partial(c1, -0.1), 2, 15, -2.3),
     ])
 def test_modal_decay(case_name, test_func, dims, n, expected_expn):
@@ -106,8 +107,6 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     assert abs(expn-expected_expn) < 0.1
 
 
-
-
 @pytest.mark.parametrize(("case_name", "test_func", "dims", "n"), [
     ("sin-1d", np.sin, 1, 5),
     ("poly-1d", sample_polynomial, 1, 5),
@@ -127,14 +126,13 @@ def test_residual_estimation(case_name, test_func, dims, n):
         coeffs = la.solve(vdm, f)
 
         from modepy.modal_decay import estimate_relative_expansion_residual
-        return estimate_relative_expansion_residual(coeffs.reshape(1, -1), dims, inner_n)
+        return estimate_relative_expansion_residual(
+                coeffs.reshape(1, -1), dims, inner_n)
 
     resid = estimate_resid(n)
     resid2 = estimate_resid(2*n)
     print(("%s: %g -> %g" % (case_name, resid, resid2)))
     assert resid2 < resid
-
-
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
@@ -155,13 +153,12 @@ def test_resampling_matrix(dims):
     assert la.norm(my_eye - np.eye(len(my_eye))) < 4e-13
 
     my_eye_least_squares = np.dot(
-            mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes, least_squares_ok=True),
+            mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes,
+                least_squares_ok=True),
             mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes),
             )
 
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 1e-13
-
-
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
@@ -182,8 +179,6 @@ def test_diff_matrix(dims):
 
     print((la.norm(df_dx-df_dx_num)))
     assert la.norm(df_dx-df_dx_num) < 1e-3
-
-
 
 
 # You can test individual routines by typing
