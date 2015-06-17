@@ -158,7 +158,7 @@ def test_resampling_matrix(dims):
             mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes),
             )
 
-    assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 1e-13
+    assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
