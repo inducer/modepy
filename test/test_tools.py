@@ -152,7 +152,7 @@ def test_resampling_matrix(dims):
             mp.resampling_matrix(fine_basis, coarse_nodes, fine_nodes),
             mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes))
 
-    assert la.norm(my_eye - np.eye(len(my_eye))) < 1e-13
+    assert la.norm(my_eye - np.eye(len(my_eye))) < 4e-13
 
     my_eye_least_squares = np.dot(
             mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes, least_squares_ok=True),
