@@ -1,8 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import print_function
-from six.moves import range
-from six.moves import zip
+from __future__ import division, absolute_import, print_function
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -26,13 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
+from six.moves import range, zip
 
 import numpy as np
 import numpy.linalg as la
 import pytest
-
 
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
@@ -49,7 +43,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     max_n = 10
-    quad = LegendreGaussQuadrature(4*max_n) # overkill...
+    quad = LegendreGaussQuadrature(4*max_n)  # overkill...
 
     class WeightFunction:
         def __init__(self, alpha, beta):
@@ -80,15 +74,13 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
             assert abs(result-true_result) < ebound
 
 
-
-
 @pytest.mark.parametrize(("order", "ebound"), [
     (1, 2e-15),
     (2, 5e-15),
     (3, 1e-14),
-    #(4, 3e-14),
-    #(7, 3e-14),
-    #(9, 2e-13),
+    # (4, 3e-14),
+    # (7, 3e-14),
+    # (9, 2e-13),
     ])
 @pytest.mark.parametrize("dims", [2, 3])
 def test_pkdo_orthogonality(dims, order, ebound):
@@ -112,13 +104,9 @@ def test_pkdo_orthogonality(dims, order, ebound):
             print((maxerr, err))
             maxerr = max(maxerr, err)
             if err > ebound:
-                print(("bad", order,i,j, err))
+                print("bad", order, i, j, err)
             assert err < ebound
-    #print(order, maxerr)
-
-
-
-
+    # print(order, maxerr)
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
@@ -153,9 +141,6 @@ def test_simplex_basis_grad(dims, order):
             err = la.norm(approx_gradbf_v-gradbf_v, np.Inf)
             print((dims, order, i_bf, err))
             assert err < err_factor*h
-
-
-
 
 
 # You can test individual routines by typing

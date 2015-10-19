@@ -1,7 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import print_function
-from six.moves import range
+from __future__ import division, absolute_import, print_function
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -25,15 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
+from six.moves import range
 
 import numpy as np
 import pytest
 import modepy as mp
-
-
-
 
 
 def test_transformed_quadrature():
@@ -53,8 +46,6 @@ def test_transformed_quadrature():
     assert abs(result - 1) < 1e-9
 
 
-
-
 def test_gauss_quadrature():
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
@@ -67,6 +58,7 @@ def test_gauss_quadrature():
             i_f_true = 1/(deg+1)*(1-(-1)**(deg+1))
             err = abs(i_f - i_f_true)
             assert err < 2e-15
+
 
 @pytest.mark.parametrize(("quad_class", "highest_order"), [
     (mp.XiaoGimbutasSimplexQuadrature, None),
@@ -107,8 +99,6 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
         order += 1
         if highest_order is not None and order >= highest_order:
             break
-
-
 
 
 # You can test individual routines by typing
