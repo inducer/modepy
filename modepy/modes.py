@@ -1,8 +1,7 @@
-from __future__ import division
-from __future__ import absolute_import
-from six.moves import range
+from __future__ import division, absolute_import
 
-__copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu"
+__copyright__ = ("Copyright (C) 2009, 2010, 2013 "
+"Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu")
 
 __license__ = """
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,20 +24,16 @@ THE SOFTWARE.
 """
 
 
-
+from six.moves import range
 
 from math import sqrt
 import numpy as np
 from modepy.tools import accept_scalar_or_vector
 
 
-
-
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
 derivatives on unit simplices.
 """
-
-
 
 
 # {{{ jacobi polynomials
@@ -66,7 +61,7 @@ def jacobi(alpha, beta, n, x):
 
     n = np.int32(n)
     Nx = len(x)
-    if x.shape[0]>1:
+    if x.shape[0] > 1:
         x = x.T
 
     # Storage for recursive construction
@@ -77,14 +72,14 @@ def jacobi(alpha, beta, n, x):
             / (alpha+beta+1.)
             * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
-    PL[:,0] = 1.0/sqrt(gamma0)
+    PL[:, 0] = 1.0/sqrt(gamma0)
     if n == 0:
-        return PL[:,0].reshape(out_shape)
+        return PL[:, 0].reshape(out_shape)
 
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0
-    PL[:,1] = ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1)
-    if n==1:
-        return PL[:,1].reshape(out_shape)
+    PL[:, 1] = ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1)
+    if n == 1:
+        return PL[:, 1].reshape(out_shape)
 
     # Repeat value in recurrence.
     aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
@@ -97,12 +92,10 @@ def jacobi(alpha, beta, n, x):
             anew = 2./(h1+2.)*sqrt(foo)
 
             bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
-            PL[:, i+1] = ( -aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]) )/anew
+            PL[:, i+1] = (-aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]))/anew
             aold = anew
 
     return PL[:, n].reshape(out_shape)
-
-
 
 
 def grad_jacobi(alpha, beta, n, x):
@@ -117,6 +110,7 @@ def grad_jacobi(alpha, beta, n, x):
 
 # }}}
 
+
 # {{{ 2D PKDO
 
 def _rstoab(r, s):
@@ -130,7 +124,6 @@ def _rstoab(r, s):
     a[~valid] = -1
     b = s
     return a, b
-
 
 
 @accept_scalar_or_vector(arg_nr=2, expected_rank=2)
@@ -156,6 +149,7 @@ def pkdo_2d(order, rs):
     h2 = jacobi(2*i+1, 0, j, b)
     return sqrt(2)*h1*h2*(1-b)**i
 
+
 @accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_2d(order, rs):
     """Evaluate the derivatives of :func:`pkdo_2d`.
@@ -176,9 +170,9 @@ def grad_pkdo_2d(order, rs):
     a, b = _rstoab(*rs)
     i, j = order
 
-    fa  = jacobi     (0, 0, i, a)
+    fa = jacobi(0, 0, i, a)
     dfa = grad_jacobi(0, 0, i, a)
-    gb  = jacobi     (2*i+1, 0, j, b)
+    gb = jacobi(2*i+1, 0, j, b)
     dgb = grad_jacobi(2*i+1, 0, j, b)
 
     # r-derivative
@@ -208,6 +202,7 @@ def grad_pkdo_2d(order, rs):
 
 # }}}
 
+
 # {{{ 3D PKDO
 
 def _rsttoabc(r, s, t):
@@ -219,12 +214,12 @@ def _rsttoabc(r, s, t):
     c = np.zeros(Np)
 
     for n in range(Np):
-        if abs(s[n]+t[n])>tol:
+        if abs(s[n]+t[n]) > tol:
             a[n] = 2*(1+r[n])/(-s[n]-t[n])-1
         else:
             a[n] = -1
 
-        if abs(t[n]-1.)>tol:
+        if abs(t[n]-1.) > tol:
             b[n] = 2*(1+s[n])/(1-t[n])-1
         else:
             b[n] = -1
@@ -232,6 +227,7 @@ def _rsttoabc(r, s, t):
         c[n] = t[n]
 
     return a, b, c
+
 
 @accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_3d(order, rst):
@@ -258,6 +254,7 @@ def pkdo_3d(order, rst):
 
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
+
 @accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_3d(order, rst):
     """Evaluate the derivatives of :func:`pkdo_3d`.
@@ -265,8 +262,8 @@ def grad_pkdo_3d(order, rst):
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
     :arg rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
         (See :ref:`tet-coords`)
-    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same length
-        as the *rst* arrays.
+    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same
+        length as the *rst* arrays.
 
     See the following publications:
 
@@ -278,12 +275,12 @@ def grad_pkdo_3d(order, rst):
     a, b, c = _rsttoabc(*rst)
     i, j, k = order
 
-    fa  = jacobi(0, 0, i, a)
+    fa = jacobi(0, 0, i, a)
     dfa = grad_jacobi(0, 0, i, a)
-    gb  = jacobi(2*i+1,0, j, b)
-    dgb = grad_jacobi(2*i+1,0, j, b)
-    hc  = jacobi(2*(i+j)+2,0, k, c)
-    dhc = grad_jacobi(2*(i+j)+2,0, k, c)
+    gb = jacobi(2*i+1, 0, j, b)
+    dgb = grad_jacobi(2*i+1, 0, j, b)
+    hc = jacobi(2*(i+j)+2, 0, k, c)
+    dhc = grad_jacobi(2*(i+j)+2, 0, k, c)
 
     # r-derivative
     # d/dr = da/dr d/da + db/dr d/db + dc/dr d/dx
@@ -324,6 +321,7 @@ def grad_pkdo_3d(order, rst):
 
 # }}}
 
+
 # {{{ dimension-independent interface
 
 def simplex_onb(dims, n):
@@ -358,6 +356,7 @@ def simplex_onb(dims, n):
         return tuple(partial(pkdo_3d, order) for order in gnitstam(n, dims))
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
+
 
 def grad_simplex_onb(dims, n):
     """Return the gradients of the functions returned by :func:`simplex_onb`.
