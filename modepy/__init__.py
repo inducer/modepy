@@ -28,7 +28,7 @@ from modepy.modes import jacobi, grad_jacobi, simplex_onb, grad_simplex_onb
 from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
-        mass_matrix)
+        inverse_mass_matrix, mass_matrix)
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 from modepy.quadrature.jacobi_gauss import (
         JacobiGaussQuadrature, LegendreGaussQuadrature)
@@ -47,7 +47,7 @@ __all__ = [
         "equidistant_nodes", "warp_and_blend_nodes",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
-        "mass_matrix",
+        "inverse_mass_matrix", "mass_matrix",
 
         "Quadrature", "QuadratureRuleUnavailable",
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",

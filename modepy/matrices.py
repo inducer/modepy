@@ -153,6 +153,18 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
                 order="C")
 
 
+def inverse_mass_matrix(basis, nodes):
+    """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
+    by :func:`mass_matrix`.
+
+    .. versionadded:: 2015.1
+    """
+
+    vdm = vandermonde(basis, nodes)
+
+    return np.dot(vdm, vdm.T)
+
+
 def mass_matrix(basis, nodes):
     """Return a mass matrix :math:`M`, which obeys
 
@@ -166,12 +178,6 @@ def mass_matrix(basis, nodes):
     .. versionadded:: 2014.1
     """
 
-    vdm = vandermonde(basis, nodes)
-
-    inverse_mass_matrix = np.dot(vdm, vdm.T)
-
-    return la.inv(inverse_mass_matrix)
-
-
+    return la.inv(inverse_mass_matrix(basis, nodes))
 
 # vim: foldmethod=marker
