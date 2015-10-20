@@ -162,6 +162,7 @@ def equilateral_to_unit(equi):
     return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
 
 UNIT_VERTICES = {
+        0: np.empty((0, 0), dtype=np.float64),
         1: np.array([
             [-1],
             [1],

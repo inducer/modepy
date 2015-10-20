@@ -348,7 +348,16 @@ def simplex_onb(dims, n):
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
 
-    if dims == 1:
+    if dims == 0:
+        def zerod_basis(x):
+            if len(x.shape) == 1:
+                return 1
+            else:
+                return np.ones(x.shape[1])
+
+        return (zerod_basis,)
+
+    elif dims == 1:
         return tuple(partial(jacobi, 0, 0, i) for i in range(n+1))
     elif dims == 2:
         return tuple(partial(pkdo_2d, order) for order in gnitstam(n, dims))
