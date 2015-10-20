@@ -254,7 +254,10 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
     :returns: An array of shape *(dims, nnodes)* containing unit coordinates
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
-    if dims == 1:
+    if dims == 0:
+        return np.empty((0, 1), dtype=np.float64)
+
+    elif dims == 1:
         from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
         result = legendre_gauss_lobatto_nodes(n)
 
@@ -270,10 +273,12 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
     elif dims == 2:
         return warp_and_blend_nodes_2d(n, node_tuples)
+
     elif dims == 3:
         return warp_and_blend_nodes_3d(n, node_tuples)
+
     else:
-        raise NotImplementedError("%d-dimensional bases" % dims)
+        raise NotImplementedError("%d-dimensional node sets" % dims)
 
 
 # vim: foldmethod=marker
