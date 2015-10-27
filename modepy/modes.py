@@ -103,7 +103,7 @@ def grad_jacobi(alpha, beta, n, x):
     with the same meanings and restrictions for all arguments.
     """
     if n == 0:
-        return np.zeros(len(x))
+        return np.zeros_like(x)
     else:
         return sqrt(n*(n+alpha+beta+1)) \
                 * jacobi(alpha+1, beta+1, n-1, x)
