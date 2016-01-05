@@ -1,9 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-import six
-from six.moves import range
-from six.moves import zip
-from functools import reduce
+from __future__ import division, absolute_import
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -27,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
+import six
+from six.moves import range
+from six.moves import zip
+from functools import reduce
 
 import numpy as np
 from modepy.quadrature import Quadrature
-
-
 
 
 def _extended_euclidean(q, r):
@@ -58,20 +54,14 @@ def _extended_euclidean(q, r):
     return q, Q[0], Q[1]
 
 
-
-
 def _gcd(q, r):
     return _extended_euclidean(q, r)[0]
 
 
-
-
 def _simplify_fraction(xxx_todo_changeme):
     (a, b) = xxx_todo_changeme
-    gcd = _gcd(a,b)
+    gcd = _gcd(a, b)
     return (a//gcd, b//gcd)
-
-
 
 
 class GrundmannMoellerSimplexQuadrature(Quadrature):
@@ -132,19 +122,21 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
                             _simplify_fraction((2*beta_i+1, denominator))
                             for beta_i in beta)
 
-                    points_to_weights[point] = points_to_weights.get(point, 0) + weight
+                    points_to_weights[point] = \
+                            points_to_weights.get(point, 0) + weight
 
         from operator import add
 
         vertices = [-1 * np.ones((n,))] \
-                + [np.array(x) for x in wandering_element(n, landscape=-1, wanderer=1)]
+                + [np.array(x)
+                        for x in wandering_element(n, landscape=-1, wanderer=1)]
 
         nodes = []
         weights = []
 
         dim_factor = 2**n
         for p, w in six.iteritems(points_to_weights):
-            real_p = reduce(add, (a/b*v for (a,b),v in zip(p, vertices)))
+            real_p = reduce(add, (a/b*v for (a, b), v in zip(p, vertices)))
             nodes.append(real_p)
             weights.append(dim_factor*w)
 
