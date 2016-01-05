@@ -1,6 +1,7 @@
 from __future__ import division
 
-__copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu"
+__copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
+        "Jan Hesthaven, Xueyu Zhu")
 
 __license__ = """
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,11 +24,7 @@ THE SOFTWARE.
 """
 
 
-
-
 import numpy as np
-
-
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -35,6 +32,7 @@ class QuadratureRuleUnavailable(RuntimeError):
 
     .. versionadded :: 2013.3
     """
+
 
 class Quadrature(object):
     """The basic interface for a quadrature rule.
@@ -62,8 +60,6 @@ class Quadrature(object):
         return np.dot(self.weights, f(self.nodes))
 
 
-
-
 class Transformed1DQuadrature(Quadrature):
     """A quadrature rule on an arbitrary interval :math:`(a,b)`. """
 
@@ -80,7 +76,3 @@ class Transformed1DQuadrature(Quadrature):
         Quadrature.__init__(self,
                 left + (quad.nodes+1)/2*length,
                 quad.weights*half_length)
-
-
-
-
