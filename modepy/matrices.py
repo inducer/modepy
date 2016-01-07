@@ -168,12 +168,12 @@ def inverse_mass_matrix(basis, nodes):
 def mass_matrix(basis, nodes):
     """Return a mass matrix :math:`M`, which obeys
 
-    :arg basis: assumed to be an orthonormal basis with respect to the :math:`L^2`
-        inner product.
-
     .. math::
 
         M_{ij} = \int_\triangle \phi_i(x) \phi_j(x) dx = (V^{-T} V^{-1})_{ij}.
+
+    :arg basis: assumed to be an orthonormal basis with respect to the :math:`L^2`
+        inner product.
 
     .. versionadded:: 2014.1
     """
