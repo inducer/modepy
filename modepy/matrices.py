@@ -180,4 +180,81 @@ def mass_matrix(basis, nodes):
 
     return la.inv(inverse_mass_matrix(basis, nodes))
 
+
+class _FaceMap(object):
+    def __init__(self, face_vertices):
+        """
+        :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
+            should equal *dim*.
+        """
+        vol_dim, npts = face_vertices.shape
+        if npts != vol_dim:
+            raise ValueError("face_vertices has wrong shape")
+
+        self.origin = face_vertices[:, 0]
+        self.span = face_vertices[:, 1:] - self.origin[:, np.newaxis]
+
+        self.face_dim = vol_dim - 1
+
+    def __call__(self, points):
+        return (
+                self.origin[:, np.newaxis]
+                +
+                np.einsum("ad,dn->an", self.span, points*0.5 + 0.5))
+
+
+def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
+    """
+    :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
+        should equal *dim*.
+
+    .. versionadded :: 2016.1
+    """
+
+    if test_basis is None:
+        test_basis = trial_basis
+
+    fmap = _FaceMap(face_vertices)
+
+    from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
+    quad = GrundmannMoellerSimplexQuadrature(order, fmap.face_dim)
+    assert quad.exact_to > order*2
+
+    mapped_nodes = fmap(quad.nodes)
+
+    nrows = len(test_basis)
+    ncols = len(trial_basis)
+    result = np.empty((nrows, ncols))
+
+    for i, test_f in enumerate(test_basis):
+        test_vals = test_f(mapped_nodes)
+        for j, trial_f in enumerate(trial_basis):
+            trial_vals = trial_f(mapped_nodes)
+
+            result[i, j] = (test_vals*trial_vals).dot(quad.weights)
+
+    return result
+
+
+def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
+        face_vertices, test_basis=None):
+    """
+    :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
+        should equal *dim*.
+
+    .. versionadded :: 2016.1
+    """
+
+    if test_basis is None:
+        test_basis = trial_basis
+
+    fmap = _FaceMap(face_vertices)
+
+    face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
+    vol_vdm = vandermonde(test_basis, volume_nodes)
+
+    modal_fmm = modal_face_mass_matrix(
+            trial_basis, order, face_vertices, test_basis=test_basis)
+    return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
+
 # vim: foldmethod=marker

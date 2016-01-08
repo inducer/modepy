@@ -181,6 +181,63 @@ def test_diff_matrix(dims):
     assert la.norm(df_dx-df_dx_num) < 1e-3
 
 
+def test_modal_face_mass_matrix(dim, order=3):
+    from modepy.tools import UNIT_VERTICES
+    all_verts = UNIT_VERTICES[dim].T
+
+    basis = mp.simplex_onb(dim, order)
+
+    # np.set_printoptions(linewidth=200)
+
+    from modepy.matrices import modal_face_mass_matrix
+    for iface in range(dim+1):
+        verts = np.hstack([all_verts[:, :iface], all_verts[:, iface+1:]])
+
+        fmm = modal_face_mass_matrix(basis, order, verts)
+        fmm2 = modal_face_mass_matrix(basis, order+1, verts)
+
+        assert la.norm(fmm-fmm2, np.inf) < 1e-11
+
+        fmm[np.abs(fmm) < 1e-13] = 0
+
+        print(fmm)
+        nnz = np.sum(fmm > 0)
+        print(nnz)
+
+
+def test_nodal_face_mass_matrix(dim, order=3):
+    from modepy.tools import UNIT_VERTICES
+    all_verts = UNIT_VERTICES[dim].T
+
+    basis = mp.simplex_onb(dim, order)
+
+    np.set_printoptions(linewidth=200)
+
+    from modepy.matrices import nodal_face_mass_matrix
+    volume_nodes = mp.warp_and_blend_nodes(dim, order)
+    face_nodes = mp.warp_and_blend_nodes(dim-1, order)
+
+    for iface in range(dim+1):
+        verts = np.hstack([all_verts[:, :iface], all_verts[:, iface+1:]])
+
+        fmm = nodal_face_mass_matrix(basis, volume_nodes, face_nodes, order,
+                verts)
+        fmm2 = nodal_face_mass_matrix(basis, volume_nodes, face_nodes, order+1,
+                verts)
+
+        assert la.norm(fmm-fmm2, np.inf) < 1e-11
+
+        fmm[np.abs(fmm) < 1e-13] = 0
+
+        print(fmm)
+        nnz = np.sum(np.abs(fmm) > 0)
+        print(nnz)
+
+    print(mp.mass_matrix(
+        mp.simplex_onb(dim-1, order),
+        mp.warp_and_blend_nodes(dim-1, order), ))
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
