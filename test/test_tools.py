@@ -181,6 +181,7 @@ def test_diff_matrix(dims):
     assert la.norm(df_dx-df_dx_num) < 1e-3
 
 
+@pytest.mark.parametrize("dim", [1, 2, 3])
 def test_modal_face_mass_matrix(dim, order=3):
     from modepy.tools import UNIT_VERTICES
     all_verts = UNIT_VERTICES[dim].T
@@ -205,6 +206,7 @@ def test_modal_face_mass_matrix(dim, order=3):
         print(nnz)
 
 
+@pytest.mark.parametrize("dim", [1, 2, 3])
 def test_nodal_face_mass_matrix(dim, order=3):
     from modepy.tools import UNIT_VERTICES
     all_verts = UNIT_VERTICES[dim].T
