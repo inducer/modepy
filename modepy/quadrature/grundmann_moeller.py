@@ -94,12 +94,18 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
         :arg dimension: The number of dimensions for the quadrature rule.
             Any positive integer.
         """
-
         s = order
         n = dimension
         d = 2*s+1
 
         self.exact_to = d
+
+        if dimension == 0:
+            nodes = np.zeros((dimension, 1))
+            weights = np.ones(1)
+
+            Quadrature.__init__(self, nodes, weights)
+            return
 
         from pytools import \
                 generate_decreasing_nonnegative_tuples_summing_to, \
