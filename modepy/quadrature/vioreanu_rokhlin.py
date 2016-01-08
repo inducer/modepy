@@ -1,5 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
+from __future__ import division, absolute_import
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -24,12 +23,8 @@ THE SOFTWARE.
 """
 
 
-
-
 import numpy as np
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
-
-
 
 
 class VioreanuRokhlinSimplexQuadrature(Quadrature):
@@ -54,9 +49,10 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
     * The 2D nodes are based on the interpolation node set derived
       in the article
 
-          B. Vioreanu and V. Rokhlin, "Spectra of Multiplication Operators as a Numerical
-          Tool,"
-          `Yale CS Tech Report 1443 <http://www.cs.yale.edu/publications/techreports/tr1443.pdf>`_
+          B. Vioreanu and V. Rokhlin, "Spectra of Multiplication Operators as a
+          Numerical Tool,"
+          `Yale CS Tech Report 1443
+          <http://www.cs.yale.edu/publications/techreports/tr1443.pdf>`_
 
       Note that in Vioreanu's tables, only orders 5,6,9, and 12 are rotationally
       symmetric, which gives one extra order for integration and better
