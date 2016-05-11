@@ -546,6 +546,22 @@ def grad_simplex_monomial_basis(dims, n):
             as gnitstam
     return tuple(partial(grad_monomial, order) for order in gnitstam(n, dims))
 
+
+# undocumented for now
+def simplex_best_available_basis(dims, n):
+    if dims <= 3:
+        return simplex_onb(dims, n)
+    else:
+        return simplex_monomial_basis(dims, n)
+
+
+# undocumented for now
+def grad_simplex_best_available_basis(dims, n):
+    if dims <= 3:
+        return grad_simplex_onb(dims, n)
+    else:
+        return grad_simplex_monomial_basis(dims, n)
+
 # }}}
 
 # vim: foldmethod=marker

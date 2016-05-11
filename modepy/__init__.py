@@ -26,7 +26,8 @@ THE SOFTWARE.
 
 from modepy.modes import (
         jacobi, grad_jacobi, simplex_onb, grad_simplex_onb,
-        simplex_monomial_basis, grad_simplex_monomial_basis)
+        simplex_monomial_basis, grad_simplex_monomial_basis,
+        simplex_best_available_basis, grad_simplex_best_available_basis)
 from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
@@ -47,6 +48,7 @@ __all__ = [
         "jacobi", "grad_jacobi",
         "simplex_onb", "grad_simplex_onb",
         "simplex_monomial_basis", "grad_simplex_monomial_basis",
+        "simplex_best_available_basis", "grad_simplex_best_available_basis",
 
         "equidistant_nodes", "warp_and_blend_nodes",
 
