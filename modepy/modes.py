@@ -33,6 +33,59 @@ from modepy.tools import accept_scalar_or_vector
 
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
 derivatives on unit simplices.
+
+Jacobi polynomials
+------------------
+
+.. currentmodule:: modepy
+
+.. autofunction:: jacobi(alpha, beta, n, x)
+
+.. autofunction:: grad_jacobi(alpha, beta, n, x)
+
+Dimension-independent basis getters
+-----------------------------------
+
+.. |proriol-ref| replace::
+    Proriol, Joseph. "Sur une famille de polynomes á deux variables orthogonaux
+    dans un triangle." CR Acad. Sci. Paris 245 (1957): 2459-2461.
+
+.. |koornwinder-ref| replace::
+    Koornwinder, T. "Two-variable analogues of the classical orthogonal polynomials."
+    Theory and Applications of Special Functions. 1975, pp. 435-495.
+
+.. |dubiner-ref| replace::
+    Dubiner, Moshe. "Spectral Methods on Triangles and Other Domains." Journal of
+    Scientific Computing 6, no. 4 (December 1, 1991): 345–390.
+    http://dx.doi.org/10.1007/BF01060030
+
+.. autofunction:: simplex_onb
+
+.. autofunction:: grad_simplex_onb
+
+.. autofunction:: simplex_monomial_basis
+
+.. autofunction:: grad_simplex_monomial_basis
+
+Dimension-specific functions
+----------------------------
+
+.. currentmodule:: modepy.modes
+
+.. autofunction:: pkdo_2d(order, rs)
+
+.. autofunction:: grad_pkdo_2d(order, rs)
+
+.. autofunction:: pkdo_3d(order, rst)
+
+.. autofunction:: grad_pkdo_3d(order, rst)
+
+Monomials
+---------
+
+.. autofunction:: monomial(order, rst)
+
+.. autofunction:: grad_monomial(order, rst)
 """
 
 
@@ -322,6 +375,56 @@ def grad_pkdo_3d(order, rst):
 # }}}
 
 
+# {{{ monomials
+
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
+def monomial(order, rst):
+    """Evaluate the monomial of order *order* at the points *rst*.
+
+    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r,s,...)` coordinates.
+        (See :ref:`tri-coords`)
+    """
+    dim = len(order)
+    assert dim == rst.shape[0]
+
+    from pytools import product
+    return product(rst[i] ** order[i] for i in range(dim))
+
+
+@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
+def grad_monomial(order, rst):
+    """Evaluate the monomial of order *order* at the points *rst*.
+
+    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r,s,...)` coordinates.
+        (See :ref:`tri-coords`)
+    """
+    dim = len(order)
+    assert dim == rst.shape[0]
+
+    def diff_monomial(r, o):
+        if o == 0:
+            return 0*r
+        elif o == 1:
+            return 1+0*r
+        else:
+            return o * r**(o-1)
+
+    from pytools import product
+    return tuple(
+            product(
+                (
+                    diff_monomial(rst[i], order[i])
+                    if j == i else
+                    rst[i] ** order[i])
+                for i in range(dim)
+                )
+            for j in range(dim))
+
+# }}}
+
+
 # {{{ dimension-independent interface
 
 def simplex_onb(dims, n):
@@ -399,6 +502,41 @@ def grad_simplex_onb(dims, n):
         return tuple(partial(grad_pkdo_3d, order) for order in gnitstam(n, dims))
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
+
+
+def simplex_monomial_basis(dims, n):
+    """Return a list of monomial basis functions in dimension *dims* of maximal
+    total degree *n*.
+
+    :returns: a class:`tuple` of functions, each of  which
+        accepts arrays of shape *(dims, npts)*
+        and return the function values as an array of size *npts*.
+        'Scalar' evaluation, by passing just one vector of length *dims*,
+        is also supported.
+    """
+
+    from functools import partial
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+    return tuple(partial(monomial, order) for order in gnitstam(n, dims))
+
+
+def grad_simplex_monomial_basis(dims, n):
+    """Return the gradients of the functions returned by
+    :func:`simplex_monomial_basis`.
+
+    :returns: a :class:`tuple` of functions, each of  which
+        accepts arrays of shape *(dims, npts)*
+        and returns a :class:`tuple` of length *dims* containing
+        the derivatives along each axis as an array of size *npts*.
+        'Scalar' evaluation, by passing just one vector of length *dims*,
+        is also supported.
+    """
+
+    from functools import partial
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+    return tuple(partial(grad_monomial, order) for order in gnitstam(n, dims))
 
 # }}}
 

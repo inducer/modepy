@@ -27,6 +27,7 @@ from six.moves import range, zip
 import numpy as np
 import numpy.linalg as la
 import pytest
+import modepy.modes as m
 
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
@@ -111,9 +112,12 @@ def test_pkdo_orthogonality(dims, order, ebound):
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
-def test_simplex_basis_grad(dims, order):
+@pytest.mark.parametrize(("basis_getter", "grad_basis_getter"), [
+    (m.simplex_onb, m.grad_simplex_onb),
+    (m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
+    ])
+def test_simplex_basis_grad(dims, order, basis_getter, grad_basis_getter):
     """Do a simplistic FD-style check on the gradients of the basis."""
-    from modepy.modes import simplex_onb, grad_simplex_onb
 
     if dims == 3:
         err_factor = 3
@@ -125,8 +129,8 @@ def test_simplex_basis_grad(dims, order):
 
     from modepy.tools import pick_random_simplex_unit_coordinate
     for i_bf, (bf, gradbf) in enumerate(zip(
-                simplex_onb(dims, order),
-                grad_simplex_onb(dims, order),
+                basis_getter(dims, order),
+                grad_basis_getter(dims, order),
                 )):
         for i in range(10):
             r = pick_random_simplex_unit_coordinate(rng, dims)
@@ -139,7 +143,6 @@ def test_simplex_basis_grad(dims, order):
                 for unit in [np.array(unit) for unit in wandering_element(dims)]
                 ])
             err = la.norm(approx_gradbf_v-gradbf_v, np.Inf)
-            print((dims, order, i_bf, err))
             assert err < err_factor*h
 
 

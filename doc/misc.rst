@@ -22,13 +22,18 @@ In addition, you need to have :mod:`numpy` installed.
 User-visible Changes
 ====================
 
-Version 2013.3
+Version 2016.1
 --------------
 
 .. note::
 
     This version is currently under development. You can get snapshots from
     ModePy's `git repository <https://github.com/inducer/modepy>`_
+
+* Add monomial modes in :mod:`modepy.modes`.
+
+Version 2013.3
+--------------
 
 * Add :class:`modepy.VioreanuRokhlinSimplexQuadrature`.
 * Update nodes and weights for :class:`modepy.XiaoGimbutasSimplexQuadrature`.
