@@ -97,7 +97,26 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output ---------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
+try:
+    import sphinx_bootstrap_theme
+except:
+    from warnings import warn
+    warn("I would like to use the sphinx bootstrap theme, but can't find it.\n"
+            "'pip install sphinx_bootstrap_theme' to fix.")
+else:
+    # Activate the theme.
+    html_theme = 'bootstrap'
+    html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+
+    # Theme options are theme-specific and customize the look and feel of a theme
+    # further.  For a list of options available for each theme, see the
+    # documentation.
+    html_theme_options = {
+            "navbar_fixed_top": "true",
+            "navbar_site_name": "Contents",
+            'bootstrap_version': '3',
+            'source_link_position': 'footer',
+            }
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
