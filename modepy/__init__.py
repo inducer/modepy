@@ -24,7 +24,9 @@ THE SOFTWARE.
 """
 
 
-from modepy.modes import jacobi, grad_jacobi, simplex_onb, grad_simplex_onb
+from modepy.modes import (
+        jacobi, grad_jacobi, simplex_onb, grad_simplex_onb,
+        simplex_monomial_basis, grad_simplex_monomial_basis)
 from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
@@ -44,6 +46,7 @@ __all__ = [
 
         "jacobi", "grad_jacobi",
         "simplex_onb", "grad_simplex_onb",
+        "simplex_monomial_basis", "grad_simplex_monomial_basis",
 
         "equidistant_nodes", "warp_and_blend_nodes",
 

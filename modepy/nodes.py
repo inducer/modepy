@@ -233,17 +233,12 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 
 def warp_and_blend_nodes(dims, n, node_tuples=None):
-    """Return interpolation nodes as described in
+    """Return interpolation nodes as described in [warburton-nodes]_
 
-        Warburton, T. "An Explicit Construction of Interpolation Nodes on
-            the Simplex."
+    .. [warburton-nodes] Warburton, T.
+        "An Explicit Construction of Interpolation Nodes on the Simplex."
         Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
         http://dx.doi.org/10.1007/s10665-006-9086-6
-
-    The generated nodes have benign
-    `Lebesgue constants
-    <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
-    (See also :func:`modepy.tools.estimate_lebesgue_constant`)
 
     :arg dims: dimensionality of desired simplex
         (1, 2 or 3, i.e. interval, triangle or tetrahedron).
@@ -253,6 +248,11 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
     :returns: An array of shape *(dims, nnodes)* containing unit coordinates
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
+
+    The generated nodes have benign
+    `Lebesgue constants
+    <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
+    (See also :func:`modepy.tools.estimate_lebesgue_constant`)
     """
     if dims == 0:
         return np.empty((0, 1), dtype=np.float64)

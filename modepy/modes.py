@@ -394,11 +394,15 @@ def monomial(order, rst):
 
 @accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_monomial(order, rst):
-    """Evaluate the monomial of order *order* at the points *rst*.
+    """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
     :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r,s,...)` coordinates.
         (See :ref:`tri-coords`)
+    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same
+        length as the *rst* arrays.
+
+    .. versionadded:: 2016.1
     """
     dim = len(order)
     assert dim == rst.shape[0]
@@ -513,6 +517,8 @@ def simplex_monomial_basis(dims, n):
         and return the function values as an array of size *npts*.
         'Scalar' evaluation, by passing just one vector of length *dims*,
         is also supported.
+
+    .. versionadded:: 2016.1
     """
 
     from functools import partial
@@ -531,6 +537,8 @@ def grad_simplex_monomial_basis(dims, n):
         the derivatives along each axis as an array of size *npts*.
         'Scalar' evaluation, by passing just one vector of length *dims*,
         is also supported.
+
+    .. versionadded:: 2016.1
     """
 
     from functools import partial
