@@ -161,23 +161,23 @@ EQUILATERAL_TO_UNIT_MAP = {
 def equilateral_to_unit(equi):
     return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
 
+
+def unit_vertices(dim):
+    result = np.empty((dim+1, dim), np.float64)
+    result.fill(-1)
+
+    for i in range(dim):
+        result[i+1, i] = 1
+
+    return result
+
+
+# this should go away
 UNIT_VERTICES = {
-        0: np.empty((0, 0), dtype=np.float64),
-        1: np.array([
-            [-1],
-            [1],
-            ]),
-        2: np.array([
-            [-1, -1],
-            [1, -1],
-            [-1, 1],
-            ]),
-        3: np.array([
-            [-1, -1, -1],
-            [+1, -1, -1],
-            [-1, +1, -1],
-            [-1, -1, +1],
-            ])
+        0: unit_vertices(0),
+        1: unit_vertices(1),
+        2: unit_vertices(2),
+        3: unit_vertices(3),
         }
 
 
@@ -186,7 +186,7 @@ def barycentric_to_unit(bary):
     :arg bary: shaped ``(dims+1,npoints)``
     """
     dims = len(bary)-1
-    return np.dot(UNIT_VERTICES[dims].T, bary)
+    return np.dot(unit_vertices(dims).T, bary)
 
 
 def unit_to_barycentric(unit):

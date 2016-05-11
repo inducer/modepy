@@ -183,8 +183,8 @@ def test_diff_matrix(dims):
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_modal_face_mass_matrix(dim, order=3):
-    from modepy.tools import UNIT_VERTICES
-    all_verts = UNIT_VERTICES[dim].T
+    from modepy.tools import unit_vertices
+    all_verts = unit_vertices(dim).T
 
     basis = mp.simplex_onb(dim, order)
 
@@ -208,8 +208,8 @@ def test_modal_face_mass_matrix(dim, order=3):
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_nodal_face_mass_matrix(dim, order=3):
-    from modepy.tools import UNIT_VERTICES
-    all_verts = UNIT_VERTICES[dim].T
+    from modepy.tools import unit_vertices
+    all_verts = unit_vertices(dim).T
 
     basis = mp.simplex_onb(dim, order)
 
