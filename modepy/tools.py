@@ -1,8 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import print_function
-from six.moves import range
-from functools import reduce
+from __future__ import division, absolute_import, print_function
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -26,10 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from six.moves import range
+from functools import reduce
+
 import numpy as np
 import numpy.linalg as la
 from math import sqrt
-from pytools import memoize_method
+from pytools import memoize_method, MovedFunctionDeprecationWrapper
 
 
 try:
@@ -303,13 +302,16 @@ class accept_scalar_or_vector:  # noqa
 
 # {{{ submeshes, plotting helpers
 
-def submesh(node_tuples):
+def simplex_submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
 
     :arg node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
         returned list references indices in this list.
+
+        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
+        may be used to generate *node_tuples*.
     """
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
@@ -393,6 +395,8 @@ def submesh(node_tuples):
         # }}}
     else:
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
+
+submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
 
 
 @accept_scalar_or_vector(2, 2)
