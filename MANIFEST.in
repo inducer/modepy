@@ -10,5 +10,6 @@ include doc/_templates/*.html
 include examples/*.py
 
 include README.rst
+include LICENSE
 
 recursive-include contrib *.sh *.py
