@@ -3,7 +3,7 @@
 
 
 def main():
-    from setuptools import setup
+    from setuptools import setup, find_packages
 
     version_dict = {}
     init_filename = "modepy/version.py"
@@ -39,10 +39,7 @@ def main():
               'Topic :: Utilities',
               ],
 
-          packages=[
-              "modepy",
-              "modepy.quadrature",
-              ],
+          packages=find_packages(),
           install_requires=[
               "numpy",
               "pytools>=2013.1",
