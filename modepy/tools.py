@@ -197,6 +197,7 @@ def unit_to_barycentric(unit):
     first_bary = 1-np.sum(last_bary, axis=0)
     return np.vstack([first_bary, last_bary])
 
+
 # /!\ do not reorder these, stuff (node generation) *will* break.
 EQUILATERAL_VERTICES = {
         1: np.array([
@@ -395,6 +396,7 @@ def simplex_submesh(node_tuples):
         # }}}
     else:
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
+
 
 submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
 

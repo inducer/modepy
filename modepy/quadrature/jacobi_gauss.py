@@ -1,6 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-from six.moves import range
+from __future__ import division, absolute_import
 
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
@@ -24,14 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
-
+from six.moves import range
 
 import numpy as np
 import numpy.linalg as la
 from modepy.quadrature import Quadrature
-
-
 
 
 class JacobiGaussQuadrature(Quadrature):
@@ -47,12 +42,12 @@ class JacobiGaussQuadrature(Quadrature):
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
     """
-    def __init__(self, alpha, beta, N):
+    def __init__(self, alpha, beta, N):  # noqa
         x, w = self.compute_weights_and_nodes(N, alpha, beta)
         Quadrature.__init__(self, x, w)
 
     @staticmethod
-    def compute_weights_and_nodes(N, alpha, beta):
+    def compute_weights_and_nodes(N, alpha, beta):  # noqa
         """Return (nodes, weights) for an n-th order Gauss quadrature
         with the Jacobi polynomials of type (alpha, beta).
         """
@@ -97,16 +92,16 @@ class JacobiGaussQuadrature(Quadrature):
                         ((2*n+apb)*(2*n+apb+2))
                         )
 
-        T = np.zeros((N+1, N+1))
+        T = np.zeros((N+1, N+1))  # noqa
 
         for n in range(N+1):
-            T[n,n] = b(n)
+            T[n, n] = b(n)
             if n > 0:
-                T[n,n-1] = current_a
+                T[n, n-1] = current_a  # noqa
             if n < N:
                 next_a = a(n+1)
-                T[n,n+1] = next_a
-                current_a = next_a
+                T[n, n+1] = next_a
+                current_a = next_a  # noqa
 
         assert la.norm(T-T.T) < 1e-12
         eigval, eigvec = la.eigh(T)
@@ -115,13 +110,12 @@ class JacobiGaussQuadrature(Quadrature):
 
         from modepy.modes import jacobi
         from functools import partial
-        p0 = partial(jacobi, alpha, beta, 0) # that's a constant, sure
+        p0 = partial(jacobi, alpha, beta, 0)  # that's a constant, sure
         nodes = eigval
-        weights = np.array([eigvec[0,i]**2 / p0(nodes[i])**2 for i in range(N+1)])
+        weights = np.array(
+                [eigvec[0, i]**2 / p0(nodes[i])**2 for i in range(N+1)])
 
         return nodes, weights
-
-
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
@@ -133,13 +127,12 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
     """
-    def __init__(self, N):
+
+    def __init__(self, N):  # noqa
         JacobiGaussQuadrature.__init__(self, 0, 0, N)
 
 
-
-
-def jacobi_gauss_lobatto_nodes(alpha, beta, N):
+def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`JacobiGaussQuadrature`
     with the same parameters.
@@ -160,9 +153,7 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):
     return x
 
 
-
-
-def legendre_gauss_lobatto_nodes(N):
+def legendre_gauss_lobatto_nodes(N):  # noqa
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
 
     Exact to degree :math:`2N-1`.
