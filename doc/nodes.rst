@@ -99,8 +99,8 @@ Node sets for interpolation
 .. currentmodule:: modepy
 
 .. autofunction:: equidistant_nodes
-
 .. autofunction:: warp_and_blend_nodes
+.. autofunction:: tensor_product_nodes
 
 Also see :class:`modepy.VioreanuRokhlinSimplexQuadrature` if nodes on the
 boundary are not required.

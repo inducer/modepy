@@ -65,7 +65,7 @@ def warp_factor(n, output_nodes, scaled=True):
     from modepy.modes import simplex_onb
 
     basis = simplex_onb(1, n)
-    Veq = vandermonde(basis, equi_nodes)
+    Veq = vandermonde(basis, equi_nodes)  # noqa
 
     # create interpolator from equi_nodes to output_nodes
     eq_to_out = la.solve(Veq.T, vandermonde(basis, output_nodes).T).T
@@ -232,6 +232,8 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 # }}}
 
 
+# {{{ generic interface to warp-and-blend nodes
+
 def warp_and_blend_nodes(dims, n, node_tuples=None):
     """Return interpolation nodes as described in [warburton-nodes]_
 
@@ -279,6 +281,28 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
     else:
         raise NotImplementedError("%d-dimensional node sets" % dims)
+
+# }}}
+
+
+# {{{ tensor product nodes
+
+def tensor_product_nodes(dims, nodes_1d):
+    """
+    :returns: an array of shape ``(dims, nnodes_1d**dims)``. The
+        order of nodes is such that the nodes along the last
+        axis vary fastest.
+
+    .. versionadded:: 2017.1
+    """
+    nnodes_1d = len(nodes_1d)
+    result = np.empty((dims,) + (nnodes_1d,) * dims)
+    for d in range(dims):
+        result[-d] = nodes_1d.reshape(*((-1,) + (1,)*d))
+
+    return result.reshape(dims, -1)
+
+# }}}
 
 
 # vim: foldmethod=marker
