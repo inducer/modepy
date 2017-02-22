@@ -45,8 +45,8 @@ Jacobi polynomials
 
 .. autofunction:: grad_jacobi(alpha, beta, n, x)
 
-Dimension-independent basis getters
------------------------------------
+Dimension-independent basis getters for simplices
+-------------------------------------------------
 
 .. |proriol-ref| replace::
     Proriol, Joseph. "Sur une famille de polynomes á deux variables orthogonaux
@@ -68,6 +68,11 @@ Dimension-independent basis getters
 .. autofunction:: simplex_monomial_basis
 
 .. autofunction:: grad_simplex_monomial_basis
+
+Dimension-independent basis getters for tensor-product bases
+------------------------------------------------------------
+
+.. autofunction:: tensor_product_basis
 
 Dimension-specific functions
 ----------------------------
@@ -431,7 +436,7 @@ def grad_monomial(order, rst):
 # }}}
 
 
-# {{{ dimension-independent interface
+# {{{ dimension-independent interface for simplices
 
 def simplex_onb(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
@@ -563,6 +568,37 @@ def grad_simplex_best_available_basis(dims, n):
         return grad_simplex_onb(dims, n)
     else:
         return grad_simplex_monomial_basis(dims, n)
+
+# }}}
+
+
+# {{{ tensor product basis
+
+class _TensorProductBasisFunction(object):
+    def __init__(self, multi_index, per_dim_functions):
+        self.multi_index = multi_index
+        self.per_dim_functions = per_dim_functions
+
+    def __call__(self, x):
+        result = 1
+        for iaxis, per_dim_function in enumerate(self.per_dim_functions):
+            result = result * per_dim_function(x[iaxis])
+
+        return result
+
+
+def tensor_product_basis(dims, basis_1d):
+    """Adapt any iterable *basis_1d* of 1D basis functions into a *dims*-dimensional
+    tensor product basis.
+
+    :returns: a tuple of callables representing a *dims*-dimensional basis
+
+    .. versionadded:: 2017.1
+    """
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+    return tuple(
+            _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
+            for order in gnitb(len(basis_1d), dims))
 
 # }}}
 
