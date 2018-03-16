@@ -1,6 +1,8 @@
-modepy
-======
+modepy: Basis Functions and Node Sets for Interpolation
+=======================================================
 
+.. image:: https://gitlab.tiker.net/inducer/modepy/badges/master/pipeline.svg
+   :target: https://gitlab.tiker.net/inducer/modepy/commits/master
 .. image:: https://badge.fury.io/py/modepy.png
     :target: http://pypi.python.org/pypi/modepy
 
