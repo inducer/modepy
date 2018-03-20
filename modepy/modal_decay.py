@@ -42,8 +42,6 @@ The method implemented in this module follows this article:
 """
 
 
-
-
 def make_mode_number_vector(mode_order_tuples, ignored_modes):
     node_cnt = len(mode_order_tuples)
 
@@ -56,7 +54,6 @@ def make_mode_number_vector(mode_order_tuples, ignored_modes):
     return mode_number_vector
 
 
-
 def create_decay_baseline(mode_number_vector, n):
     """Create a vector of modal coefficients that exhibit 'optimal'
     (:math:`k^{-N}`) decay.
@@ -65,27 +62,23 @@ def create_decay_baseline(mode_number_vector, n):
     zeros = mode_number_vector == 0
 
     modal_coefficients = mode_number_vector**(-n)
-    modal_coefficients[zeros] = 1 # irrelevant, just keeps log from NaNing
+    modal_coefficients[zeros] = 1  # irrelevant, just keeps log from NaNing
 
     modal_coefficients /= la.norm(modal_coefficients)
 
     return modal_coefficients
 
 
-
-
 def get_decay_fit_matrix(mode_number_vector, ignored_modes, weight_vector):
     a = np.zeros((len(mode_number_vector), 2), dtype=np.float64)
-    a[:,0] = weight_vector
-    a[:,1] = weight_vector * np.log(mode_number_vector)
+    a[:, 0] = weight_vector
+    a[:, 1] = weight_vector * np.log(mode_number_vector)
 
     if ignored_modes == 0:
-        assert not np.isfinite(a[0,1])
-        a[0,1] = 0
+        assert not np.isfinite(a[0, 1])
+        a[0, 1] = 0
 
     return la.pinv(a)
-
-
 
 
 def skyline_pessimize(modal_values):
@@ -106,8 +99,6 @@ def skyline_pessimize(modal_values):
     return result
 
 
-
-
 def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
     """Fit a curve to the modal decay on each element.
 
@@ -117,7 +108,7 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
     :arg ignored_modes: the number of modal coefficients to ignore at the
         beginning. The default value of '1' ignores the constant.
     :returns: a tuple *(expn, constant)* of arrays of length *num_elements*,
-        where the modal decay is fit to the curve 
+        where the modal decay is fit to the curve
         ``constant * total_degree**exponent``.
 
     ``-exponent-1`` can be used as a rough indicator of how many continuous
@@ -131,7 +122,8 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
 
     coeffs_squared = skyline_pessimize(coeffs**2)
 
-    mode_number_vector_int = make_mode_number_vector(mode_order_tuples, ignored_modes)
+    mode_number_vector_int = make_mode_number_vector(
+            mode_order_tuples, ignored_modes)
     mode_number_vector = mode_number_vector_int.astype(np.float64)
     weight_vector = np.ones_like(mode_number_vector)
 
@@ -144,7 +136,7 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
             * el_norm_squared[:, np.newaxis])**2
     log_modal_coeffs = np.log(coeffs_squared[:, ignored_modes:] + scaled_baseline)/2
 
-    assert fit_mat.shape[0] == 2 # exponent and log(constant)
+    assert fit_mat.shape[0] == 2  # exponent and log(constant)
 
     fit_values = np.dot(fit_mat, (weight_vector*log_modal_coeffs).T).T
 
@@ -155,19 +147,18 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
         import matplotlib.pyplot as pt
         pt.plot(log_modal_coeffs.flat, "o-")
 
-        fit = np.log(const[:, np.newaxis] * mode_number_vector**exponent[:, np.newaxis])
+        fit = np.log(const[:, np.newaxis]
+                * mode_number_vector**exponent[:, np.newaxis])
 
         pt.plot(fit.flat)
 
-        #plot_expt = np.zeros_like(log_modal_coeffs)
-        #plot_expt[:] = exponent[:, np.newaxis]
-        #pt.plot(plot_expt.flat)
+        # plot_expt = np.zeros_like(log_modal_coeffs)
+        # plot_expt[:] = exponent[:, np.newaxis]
+        # pt.plot(plot_expt.flat)
 
         pt.show()
 
     return exponent, const
-
-
 
 
 def estimate_relative_expansion_residual(coeffs, dims, n, ignored_modes=1):
@@ -175,7 +166,7 @@ def estimate_relative_expansion_residual(coeffs, dims, n, ignored_modes=1):
     The arguments to this function exactly match :func:`fit_modal_decay`.
 
     :returns: An array of estimates of the fraction of the :math:`L^2` norm
-        contained in the (unrepresented) tail of 
+        contained in the (unrepresented) tail of
 
     An idea like this is described in this article:
 

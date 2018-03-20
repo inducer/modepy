@@ -5,7 +5,8 @@ from __future__ import absolute_import
 import numpy
 import six
 
-triangle_table = {1: {'points': [[-5.55111512312578e-17, 2.22044604925031e-16]],
+triangle_table = {  # noqa
+ 1: {'points': [[-5.55111512312578e-17, 2.22044604925031e-16]],
      'weights': [1.73205080756888]},
  2: {'points': [[-0.5, -0.288675134594813],
                 [0.5, -0.288675134594813],
@@ -16114,7 +16115,8 @@ triangle_table = dict(
     for order, rule in six.iteritems(triangle_table))
 
 
-tetrahedron_table = {1: {'points': [[0.0, 0.0, 0.0]], 'weights': [0.942809041582063]},
+tetrahedron_table = {  # noqa
+ 1: {'points': [[0.0, 0.0, 0.0]], 'weights': [0.942809041582063]},
  2: {'points': [[-0.267702858591007, 0.0593901700619949, -0.396942694114215],
                 [0.151093184153314, 0.435408773247631, 0.215171925430692],
                 [-0.136769919523739, -0.328034111559041, 0.295084651993713],
@@ -18786,4 +18788,3 @@ tetrahedron_table = {1: {'points': [[0.0, 0.0, 0.0]], 'weights': [0.942809041582
 tetrahedron_table = dict(
     (order, dict((name, numpy.array(ary)) for name, ary in six.iteritems(rule)))
     for order, rule in six.iteritems(tetrahedron_table))
-

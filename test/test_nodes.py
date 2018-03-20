@@ -23,13 +23,9 @@ THE SOFTWARE.
 """
 
 
-
-
 import numpy as np
 import numpy.linalg as la
 import pytest
-
-
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
@@ -60,8 +56,6 @@ def test_barycentric_coordinate_map(dims):
     assert la.norm(unit-unit3) < 1e-14
 
 
-
-
 def test_warp():
     """Check some assumptions on the node warp factor calculator"""
     n = 17
@@ -79,8 +73,6 @@ def test_warp():
 
     lgq = LegendreGaussQuadrature(n)
     assert abs(lgq(wfc)) < 6e-14
-
-
 
 
 def test_tri_face_node_distribution():
@@ -114,12 +106,10 @@ def test_tri_face_node_distribution():
         pfp = np.array([np.dot(direction, unodes[:, i]-start) for i in face_i])
         projected_face_points.append(pfp)
 
-    first_points =  projected_face_points[0]
+    first_points = projected_face_points[0]
     for points in projected_face_points[1:]:
         error = la.norm(points-first_points, np.Inf)
         assert error < 1e-15
-
-
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
@@ -135,14 +125,11 @@ def test_simp_nodes(dims, n):
     assert (np.sum(unodes) <= eps).all()
 
 
-
-
-
 def test_affine_map():
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
+    # for d in [3]:
     for d in range(1, 5):
-    #for d in [3]:
         for i in range(100):
             a = np.random.randn(d, d)+10*np.eye(d)
             b = np.random.randn(d)
@@ -151,8 +138,6 @@ def test_affine_map():
             x = np.random.randn(d, 10)
 
             assert la.norm(x-m.inverse(m(x))) < 1e-10
-
-
 
 
 # You can test individual routines by typing

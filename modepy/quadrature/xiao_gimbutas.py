@@ -23,11 +23,7 @@ THE SOFTWARE.
 """
 
 
-
-
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
-
-
 
 
 class XiaoGimbutasSimplexQuadrature(Quadrature):
