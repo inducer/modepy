@@ -120,12 +120,12 @@ def jacobi(alpha, beta, n, x):
     from modepy.tools import gamma
 
     n = np.int32(n)
-    Nx = len(x)
+    Nx = len(x)  # noqa: N806
     if x.shape[0] > 1:
         x = x.T
 
     # Storage for recursive construction
-    PL = np.zeros((Nx, n+1), np.float64)
+    PL = np.zeros((Nx, n+1), np.float64)  # noqa: N806
 
     # Initial values P_0(x) and P_1(x)
     gamma0 = (2**(alpha+beta+1)
@@ -266,7 +266,7 @@ def grad_pkdo_2d(order, rs):
 # {{{ 3D PKDO
 
 def _rsttoabc(r, s, t):
-    Np = len(r)
+    Np = len(r)  # noqa: N806
     tol = 1e-10
 
     a = np.zeros(Np)

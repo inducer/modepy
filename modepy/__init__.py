@@ -40,7 +40,7 @@ from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
 
-from modepy.version import VERSION_TEXT as __version__
+from modepy.version import VERSION_TEXT as __version__  # noqa: N811
 
 __all__ = [
         "__version__",

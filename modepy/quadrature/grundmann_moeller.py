@@ -42,12 +42,12 @@ def _extended_euclidean(q, r):
         p, a, b = _extended_euclidean(r, q)
         return p, b, a
 
-    Q = 1, 0
-    R = 0, 1
+    Q = 1, 0  # noqa: N806
+    R = 0, 1  # noqa: N806
 
     while r:
         quot, t = divmod(q, r)
-        T = Q[0] - quot*R[0], Q[1] - quot*R[1]
+        T = Q[0] - quot*R[0], Q[1] - quot*R[1]  # noqa: N806
         q, r = r, t
         Q, R = R, T
 
