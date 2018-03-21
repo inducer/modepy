@@ -61,9 +61,13 @@ Dimension-independent basis getters for simplices
     Scientific Computing 6, no. 4 (December 1, 1991): 345–390.
     http://dx.doi.org/10.1007/BF01060030
 
+.. autofunction:: simplex_onb_with_mode_ids
+
 .. autofunction:: simplex_onb
 
 .. autofunction:: grad_simplex_onb
+
+.. autofunction:: simplex_monomial_basis_with_mode_ids
 
 .. autofunction:: simplex_monomial_basis
 
@@ -438,6 +442,52 @@ def grad_monomial(order, rst):
 
 # {{{ dimension-independent interface for simplices
 
+def simplex_onb_with_mode_ids(dims, n):
+    """Return a list of orthonormal basis functions in dimension *dims* of maximal
+    total degree *n*.
+
+    :returns: a tuple ``(mode_ids, basis)``, where *basis* is a class:`tuple`
+        of functions, each of  which accepts arrays of shape *(dims, npts)* and
+        return the function values as an array of size *npts*.  'Scalar'
+        evaluation, by passing just one vector of length *dims*, is also supported.
+        *mode_ids* is a tuple of the same length as *basis*, where each entry
+        is a tuple of integers describing the order of the mode along the coordinate
+        axes.
+
+    See the following publications:
+
+    * |proriol-ref|
+    * |koornwinder-ref|
+    * |dubiner-ref|
+
+    ... versionadded: 2018.1
+    """
+    from functools import partial
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+
+    if dims == 0:
+        def zerod_basis(x):
+            if len(x.shape) == 1:
+                return 1
+            else:
+                return np.ones(x.shape[1])
+
+        return ((0,),), (zerod_basis,)
+
+    elif dims == 1:
+        mode_ids = tuple(range(n+1))
+        return mode_ids, tuple(partial(jacobi, 0, 0, i) for i in mode_ids)
+    elif dims == 2:
+        mode_ids = tuple(gnitstam(n, dims))
+        return mode_ids, tuple(partial(pkdo_2d, order) for order in mode_ids)
+    elif dims == 3:
+        mode_ids = tuple(gnitstam(n, dims))
+        return mode_ids, tuple(partial(pkdo_3d, order) for order in mode_ids)
+    else:
+        raise NotImplementedError("%d-dimensional bases" % dims)
+
+
 def simplex_onb(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
     total degree *n*.
@@ -458,27 +508,8 @@ def simplex_onb(dims, n):
 
         Made return value a tuple, to make bases hashable.
     """
-    from functools import partial
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
-
-    if dims == 0:
-        def zerod_basis(x):
-            if len(x.shape) == 1:
-                return 1
-            else:
-                return np.ones(x.shape[1])
-
-        return (zerod_basis,)
-
-    elif dims == 1:
-        return tuple(partial(jacobi, 0, 0, i) for i in range(n+1))
-    elif dims == 2:
-        return tuple(partial(pkdo_2d, order) for order in gnitstam(n, dims))
-    elif dims == 3:
-        return tuple(partial(pkdo_3d, order) for order in gnitstam(n, dims))
-    else:
-        raise NotImplementedError("%d-dimensional bases" % dims)
+    mode_ids, basis = simplex_onb_with_mode_ids(dims, n)
+    return basis
 
 
 def grad_simplex_onb(dims, n):
@@ -515,6 +546,27 @@ def grad_simplex_onb(dims, n):
         raise NotImplementedError("%d-dimensional bases" % dims)
 
 
+def simplex_monomial_basis_with_mode_ids(dims, n):
+    """Return a list of monomial basis functions in dimension *dims* of maximal
+    total degree *n*.
+
+    :returns: a tuple ``(mode_ids, basis)``, where *basis* is a class:`tuple`
+        of functions, each of  which accepts arrays of shape *(dims, npts)* and
+        return the function values as an array of size *npts*.  'Scalar'
+        evaluation, by passing just one vector of length *dims*, is also supported.
+        *mode_ids* is a tuple of the same length as *basis*, where each entry
+        is a tuple of integers describing the order of the mode along the coordinate
+        axes.
+
+    .. versionadded:: 2018.1
+    """
+    from functools import partial
+    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
+            as gnitstam
+    mode_ids = tuple(gnitstam(n, dims))
+    return mode_ids, tuple(partial(monomial, order) for order in mode_ids)
+
+
 def simplex_monomial_basis(dims, n):
     """Return a list of monomial basis functions in dimension *dims* of maximal
     total degree *n*.
@@ -527,11 +579,8 @@ def simplex_monomial_basis(dims, n):
 
     .. versionadded:: 2016.1
     """
-
-    from functools import partial
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
-    return tuple(partial(monomial, order) for order in gnitstam(n, dims))
+    mode_ids, basis = simplex_monomial_basis_with_mode_ids(dims, n)
+    return basis
 
 
 def grad_simplex_monomial_basis(dims, n):

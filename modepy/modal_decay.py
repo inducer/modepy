@@ -1,6 +1,4 @@
-from __future__ import division
-from __future__ import absolute_import
-from six.moves import range
+from __future__ import division, absolute_import
 
 __copyright__ = "Copyright (C) 2010-2012 Andreas Kloeckner"
 
@@ -24,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from six.moves import range
+
 import numpy as np
 import numpy.linalg as la
 
@@ -39,7 +39,40 @@ The method implemented in this module follows this article:
     http://arxiv.org/abs/1102.3190
 
 .. versionadded:: 2013.2
+
+.. autofunction:: simplex_interp_error_coefficient_estimator_matrix
+.. autofunction:: fit_modal_decay
+.. autofunction:: estimate_relative_expansion_residual
 """
+
+
+def simplex_interp_error_coefficient_estimator_matrix(
+        unit_nodes, order, n_tail_orders):
+    """Return a matrix :math:`C` that, when multiplied by a vector of nodal values,
+    yields the coeffiicients belonging to the basis functions of the *n_tail_orders*
+    highest orders.
+
+    The 2-norm of the resulting coefficents can be used as an estimate of the
+    interpolation error.
+
+    .. versionadded:: 2018.1
+    """
+
+    from modepy.matrices import vandermonde
+    from modepy.modes import simplex_onb_with_mode_ids
+
+    dim, nunit_nodes = unit_nodes.shape
+
+    mode_ids, basis = simplex_onb_with_mode_ids(dim, order)
+    vdm = vandermonde(basis, unit_nodes)
+    vdm_inv = la.inv(vdm)
+
+    order_vector = np.array([sum(mode_id) for mode_id in mode_ids])
+
+    max_order = np.max(order_vector)
+    assert max_order == order
+
+    return vdm_inv[order_vector > max_order-n_tail_orders]
 
 
 def make_mode_number_vector(mode_order_tuples, ignored_modes):
