@@ -39,6 +39,10 @@ The method implemented in this module follows this article:
     http://arxiv.org/abs/1102.3190
 
 .. versionadded:: 2013.2
+
+.. autofunction:: simplex_interp_error_coefficient_estimator_matrix
+.. autofunction:: fit_modal_decay
+.. autofunction:: estimate_relative_expansion_residual
 """
 
 
