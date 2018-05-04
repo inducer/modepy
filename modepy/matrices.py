@@ -204,7 +204,7 @@ def inverse_mass_matrix(basis, nodes):
 
 
 def mass_matrix(basis, nodes):
-    """Return a mass matrix :math:`M`, which obeys
+    r"""Return a mass matrix :math:`M`, which obeys
 
     .. math::
 
