@@ -120,20 +120,24 @@ class JacobiGaussQuadrature(Quadrature):
 
 class GaussLegendreQuadrature(JacobiGaussQuadrature):
     """Gauss–Legendre quadrature is a special case of Gauss–Jacobi quadrature
-    with α = β = 0.5.
+    with α = β = 0.
     """
 
     def __init__(self, N):  # noqa
-        JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N)
+        JacobiGaussQuadrature.__init__(self, 0, 0, N)
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
-    """Chebyshev-Gauss quadrature is a special case of Gauss–Jacobi quadrature
-    with α = β = 1.
+    """Chebyshev-Gauss quadrature of the first/second kind are special cases
+    of Gauss–Jacobi quadrature with α = β = -0.5/0.5.
     """
 
-    def __init__(self, N):  # noqa
-        JacobiGaussQuadrature.__init__(self, 1, 1, N)
+    def __init__(self, N, kind=1):  # noqa
+        if kind == 1:
+            # FIXME: division by zero
+            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N)
+        elif kind == 2:
+            JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N)
 
 
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
