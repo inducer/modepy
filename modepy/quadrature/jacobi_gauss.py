@@ -136,6 +136,15 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
         JacobiGaussQuadrature.__init__(self, 1, 1, N)
 
 
+class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
+    """Gauss-Gegenbauer quadrature is a special case of Gauss–Jacobi quadrature
+    with α = β.
+    """
+
+    def __init__(self, alpha, N):  # noqa
+        JacobiGaussQuadrature.__init__(self, alpha, alpha, N)
+
+
 def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`JacobiGaussQuadrature`
