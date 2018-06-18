@@ -34,8 +34,7 @@ from modepy.matrices import (vandermonde,
         inverse_mass_matrix, mass_matrix,
         modal_face_mass_matrix, nodal_face_mass_matrix)
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
-from modepy.quadrature.jacobi_gauss import (
-        JacobiGaussQuadrature, LegendreGaussQuadrature)
+from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature

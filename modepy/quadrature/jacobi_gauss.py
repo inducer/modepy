@@ -118,18 +118,22 @@ class JacobiGaussQuadrature(Quadrature):
         return nodes, weights
 
 
-class LegendreGaussQuadrature(JacobiGaussQuadrature):
-    """An Gauss quadrature associated with weight 1.
-
-    Integrates on the interval (-1,1).
-    The quadrature rule is exact up to degree :math:`2N+1`.
-
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
+class GaussLegendreQuadrature(JacobiGaussQuadrature):
+    """Gauss–Legendre quadrature is a special case of Gauss–Jacobi quadrature
+    with α = β = 0.5.
     """
 
     def __init__(self, N):  # noqa
-        JacobiGaussQuadrature.__init__(self, 0, 0, N)
+        JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N)
+
+
+class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
+    """Chebyshev-Gauss quadrature is a special case of Gauss–Jacobi quadrature
+    with α = β = 1.
+    """
+
+    def __init__(self, N):  # noqa
+        JacobiGaussQuadrature.__init__(self, 1, 1, N)
 
 
 def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
