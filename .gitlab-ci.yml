@@ -40,7 +40,7 @@ Python 3.6:
     reports:
       junit: test/pytest.xml
 
-Python 3.7
+Python 3.7:
   script:
   - py_version=3.7m
   - EXTRA_INSTALL=numpy
