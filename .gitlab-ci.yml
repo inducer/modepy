@@ -1,25 +1,3 @@
-Python 2.7:
-  script:
-  - py_version=2.7
-  - EXTRA_INSTALL=numpy
-  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
-  - ". ./build-and-test-py-project.sh"
-  tags:
-  - python2.7
-  except:
-  - tags
-
-Python 3.6:
-  script:
-  - py_version=3.6
-  - EXTRA_INSTALL=numpy
-  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
-  - ". ./build-and-test-py-project.sh"
-  tags:
-  - python3.5
-  except:
-  - tags
-
 Python 2.6:
   script:
   - py_version=2.6
@@ -30,6 +8,51 @@ Python 2.6:
   - python2.6
   except:
   - tags
+  artifacts:
+    reports:
+      junit: test/pytest.xml
+
+Python 2.7:
+  script:
+  - py_version=2.7
+  - EXTRA_INSTALL=numpy
+  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
+  - ". ./build-and-test-py-project.sh"
+  tags:
+  - python2.7
+  except:
+  - tags
+  artifacts:
+    reports:
+      junit: test/pytest.xml
+
+Python 3.6:
+  script:
+  - py_version=3.6
+  - EXTRA_INSTALL=numpy
+  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
+  - ". ./build-and-test-py-project.sh"
+  tags:
+  - python3.6
+  except:
+  - tags
+  artifacts:
+    reports:
+      junit: test/pytest.xml
+
+Python 3.7
+  script:
+  - py_version=3.7m
+  - EXTRA_INSTALL=numpy
+  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
+  - ". ./build-and-test-py-project.sh"
+  tags:
+  - python3.7
+  except:
+  - tags
+  artifacts:
+    reports:
+      junit: test/pytest.xml
 
 Documentation:
   script:
