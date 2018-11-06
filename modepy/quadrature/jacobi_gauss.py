@@ -31,25 +31,31 @@ from modepy.quadrature import Quadrature
 
 class JacobiGaussQuadrature(Quadrature):
     r"""An Gauss quadrature of order *N* associated with the
-    Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
+    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`.
 
-    Assumes :math:`\alpha,\beta > -1` with
-    :math:`(\alpha,\beta)\not\in\{(-1/2,-1/2)\}`.
+    Assumes :math:`\alpha, \beta > -1` with
+    :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`.
 
-    Integrates on the interval (-1,1).
-    The quadrature rule is exact up to degree :math:`2N+1`.
+    Integrates on the interval :math:`(-1, 1)`.
+    The quadrature rule is exact up to degree :math:`2N + 1`.
 
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
     """
+
     def __init__(self, alpha, beta, N):  # noqa
         x, w = self.compute_weights_and_nodes(N, alpha, beta)
         Quadrature.__init__(self, x, w)
 
     @staticmethod
     def compute_weights_and_nodes(N, alpha, beta):  # noqa
-        """Return (nodes, weights) for an n-th order Gauss quadrature
-        with the Jacobi polynomials of type (alpha, beta).
+        """
+        :arg N: order of the Gauss quadrature (the order of exactly
+            integrated polynomials is :math:`2 N + 1`).
+        :arg alpha: power of :math:`1 - x` in the Jacobi polynomial weight.
+        :arg beta: power of :math:`1 + x` in the Jacobi polynomial weight.
+
+        :return: a tuple ``(nodes, weights)`` of quadrature notes and weights.
         """
 
         # FIXME: This could stand to be upgraded to the Rokhlin algorithm.
@@ -117,12 +123,16 @@ class JacobiGaussQuadrature(Quadrature):
 
         return nodes, weights
 
+    @property
+    def exact_to(self):
+        return 2 * self.nodes.size + 1
+
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
     """An Gauss quadrature associated with weight 1.
 
-    Integrates on the interval (-1,1).
-    The quadrature rule is exact up to degree :math:`2N+1`.
+    Integrates on the interval :math:`(-1, 1)`.
+    The quadrature rule is exact up to degree :math:`2N + 1`.
 
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
@@ -137,7 +147,7 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
     nodes corresponding to the :class:`JacobiGaussQuadrature`
     with the same parameters.
 
-    Exact to degree :math:`2N-3`.
+    Exact to degree :math:`2N - 3`.
     """
 
     x = np.zeros((N+1,))
@@ -156,6 +166,6 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
 def legendre_gauss_lobatto_nodes(N):  # noqa
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
 
-    Exact to degree :math:`2N-1`.
+    Exact to degree :math:`2N - 1`.
     """
     return jacobi_gauss_lobatto_nodes(0, 0, N)

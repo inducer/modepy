@@ -45,7 +45,12 @@ class Quadrature(object):
     .. attribute :: weights
 
         A vector of length *nnodes*.
+
+    .. attribute :: exact_to
+
+        Total polynomial degree up to which the quadrature is exact.
     """
+
     def __init__(self, nodes, weights):
         self.nodes = nodes
         self.weights = weights
@@ -59,9 +64,13 @@ class Quadrature(object):
         """
         return np.dot(self.weights, f(self.nodes))
 
+    @property
+    def exact_to(self):
+        raise NotImplementedError("unknown quadrature order")
+
 
 class Transformed1DQuadrature(Quadrature):
-    """A quadrature rule on an arbitrary interval :math:`(a,b)`. """
+    """A quadrature rule on an arbitrary interval :math:`(a, b)`."""
 
     def __init__(self, quad, left, right):
         """Transform a given 1D quadrature rule *quad* onto the
@@ -71,8 +80,9 @@ class Transformed1DQuadrature(Quadrature):
         self.right = right
 
         length = right-left
-        assert length > 0
         half_length = length / 2
+        assert length > 0
+
         Quadrature.__init__(self,
-                left + (quad.nodes+1)/2*length,
-                quad.weights*half_length)
+                left + (quad.nodes + 1) / 2 * length,
+                quad.weights * half_length)
