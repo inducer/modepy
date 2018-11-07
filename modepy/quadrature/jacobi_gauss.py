@@ -74,42 +74,28 @@ class JacobiGaussQuadrature(Quadrature):
 
         # see Appendix A of Hesthaven/Warburton for these formulas
         def a(n):
-            return (
-                    2/(2*n+apb)
-                    *
-                    sqrt(
-                        (n*(n+apb)*(n+alpha)*(n+beta))
-                        /
-                        ((2*n+apb-1)*(2*n+apb+1))
-                        )
-                    )
+            return (2 / (2*n + apb)
+                    * sqrt((n * (n+apb) * (n+alpha) * (n+beta))
+                        / ((2*n + apb - 1) * (2*n + apb + 1))))
 
         def b(n):
             if n == 0:
-                return (
-                        -(alpha-beta)
-                        /
-                        (apb+2)
-                        )
+                return -(alpha-beta) / (apb+2)
             else:
-                return (
-                        -(alpha**2-beta**2)
-                        /
-                        ((2*n+apb)*(2*n+apb+2))
-                        )
+                return -(alpha**2 - beta**2) / ((2*n + apb) * (2*n + apb + 2))
 
-        T = np.zeros((N+1, N+1))  # noqa
+        T = np.zeros((N + 1, N + 1))    # noqa: N806
 
-        for n in range(N+1):
+        for n in range(N + 1):
             T[n, n] = b(n)
             if n > 0:
-                T[n, n-1] = current_a  # noqa
+                T[n, n-1] = current_a   # noqa: F821
             if n < N:
-                next_a = a(n+1)
+                next_a = a(n + 1)
                 T[n, n+1] = next_a
-                current_a = next_a  # noqa
+                current_a = next_a      # noqa: F841
 
-        assert la.norm(T-T.T) < 1e-12
+        assert la.norm(T - T.T) < 1.0e-12
         eigval, eigvec = la.eigh(T)
 
         assert la.norm(np.dot(T, eigvec) - np.dot(eigvec, np.diag(eigval))) < 1e-12
@@ -119,13 +105,13 @@ class JacobiGaussQuadrature(Quadrature):
         p0 = partial(jacobi, alpha, beta, 0)  # that's a constant, sure
         nodes = eigval
         weights = np.array(
-                [eigvec[0, i]**2 / p0(nodes[i])**2 for i in range(N+1)])
+                [eigvec[0, i]**2 / p0(nodes[i])**2 for i in range(N + 1)])
 
         return nodes, weights
 
     @property
     def exact_to(self):
-        return 2 * self.nodes.size + 1
+        return 2*self.nodes.size + 1
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
@@ -150,16 +136,14 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
     Exact to degree :math:`2N - 3`.
     """
 
-    x = np.zeros((N+1,))
+    x = np.zeros((N + 1,))
     x[0] = -1
     x[-1] = 1
 
     if N == 1:
         return x
 
-    x[1:-1] = np.array(
-            JacobiGaussQuadrature(alpha+1, beta+1, N-2).nodes
-            ).real
+    x[1:-1] = np.array(JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2).nodes).real
     return x
 
 

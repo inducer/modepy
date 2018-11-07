@@ -79,10 +79,10 @@ class Transformed1DQuadrature(Quadrature):
         self.left = left
         self.right = right
 
-        length = right-left
+        length = right - left
         half_length = length / 2
         assert length > 0
 
         Quadrature.__init__(self,
-                left + (quad.nodes + 1) / 2 * length,
+                left + (quad.nodes+1) / 2 * length,
                 quad.weights * half_length)
