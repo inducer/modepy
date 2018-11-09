@@ -64,10 +64,6 @@ class Quadrature(object):
         """
         return np.dot(self.weights, f(self.nodes))
 
-    @property
-    def exact_to(self):
-        raise NotImplementedError("unknown quadrature order")
-
 
 class Transformed1DQuadrature(Quadrature):
     """A quadrature rule on an arbitrary interval :math:`(a, b)`."""
