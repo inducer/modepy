@@ -45,6 +45,8 @@ class JacobiGaussQuadrature(Quadrature):
 
     def __init__(self, alpha, beta, N):  # noqa
         x, w = self.compute_weights_and_nodes(N, alpha, beta)
+        self.exact_to = 2*N + 1
+
         Quadrature.__init__(self, x, w)
 
     @staticmethod
@@ -108,10 +110,6 @@ class JacobiGaussQuadrature(Quadrature):
                 [eigvec[0, i]**2 / p0(nodes[i])**2 for i in range(N + 1)])
 
         return nodes, weights
-
-    @property
-    def exact_to(self):
-        return 2*self.nodes.size + 1
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
