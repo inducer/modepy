@@ -25,6 +25,10 @@ Jacobi-Gauss quadrature in one dimension
 
 .. autoclass:: LegendreGaussQuadrature
 
+.. autoclass:: ChebyshevGaussQuadrature
+
+.. autoclass:: GaussGegenbauerQuadrature
+
 .. currentmodule:: modepy.quadrature.jacobi_gauss
 
 .. autofunction:: jacobi_gauss_lobatto_nodes

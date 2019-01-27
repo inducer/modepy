@@ -126,10 +126,39 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
+
+    (NOTE: Gauss–Legendre quadrature is a special case of Gauss–Jacobi
+    quadrature with α = β = 0.)
     """
 
     def __init__(self, N):  # noqa
         JacobiGaussQuadrature.__init__(self, 0, 0, N)
+
+
+class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
+    """Chebyshev-Gauss quadrature of the first/second kind are special cases
+    of Gauss–Jacobi quadrature with α = β = -0.5/0.5.
+
+    .. versionadded:: 2019.1
+    """
+
+    def __init__(self, N, kind=1):  # noqa
+        if kind == 1:
+            # FIXME: division by zero
+            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N)
+        elif kind == 2:
+            JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N)
+
+
+class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
+    """Gauss-Gegenbauer quadrature is a special case of Gauss–Jacobi quadrature
+    with α = β.
+
+    .. versionadded:: 2019.1
+    """
+
+    def __init__(self, alpha, N):  # noqa
+        JacobiGaussQuadrature.__init__(self, alpha, alpha, N)
 
 
 def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa

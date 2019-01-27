@@ -35,12 +35,15 @@ from modepy.matrices import (vandermonde,
         modal_face_mass_matrix, nodal_face_mass_matrix)
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 from modepy.quadrature.jacobi_gauss import (
-        JacobiGaussQuadrature, LegendreGaussQuadrature)
+        JacobiGaussQuadrature, LegendreGaussQuadrature, ChebyshevGaussQuadrature,
+        GaussGegenbauerQuadrature)
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
 
 from modepy.version import VERSION_TEXT as __version__  # noqa: N811
+
+GaussLegendreQuadrature = LegendreGaussQuadrature
 
 __all__ = [
         "__version__",
@@ -59,6 +62,7 @@ __all__ = [
 
         "Quadrature", "QuadratureRuleUnavailable",
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
+        "GaussLegendreQuadrature", "ChebyshevGaussQuadrature",
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
         ]
