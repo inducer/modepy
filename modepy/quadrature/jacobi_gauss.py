@@ -119,8 +119,16 @@ class JacobiGaussQuadrature(Quadrature):
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
-    """Gauss–Legendre quadrature is a special case of Gauss–Jacobi quadrature
-    with α = β = 0.
+    """An Gauss quadrature associated with weight 1.
+
+    Integrates on the interval (-1,1).
+    The quadrature rule is exact up to degree :math:`2N+1`.
+
+    Inherits from :class:`modepy.Quadrature`. See there for the interface
+    to obtain nodes and weights.
+
+    (NOTE: Gauss–Legendre quadrature is a special case of Gauss–Jacobi
+    quadrature with α = β = 0.)
     """
 
     def __init__(self, N):  # noqa
