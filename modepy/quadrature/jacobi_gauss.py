@@ -138,6 +138,8 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     """Chebyshev-Gauss quadrature of the first/second kind are special cases
     of Gauss–Jacobi quadrature with α = β = -0.5/0.5.
+
+    .. versionadded:: 2019.1
     """
 
     def __init__(self, N, kind=1):  # noqa
@@ -151,6 +153,8 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     """Gauss-Gegenbauer quadrature is a special case of Gauss–Jacobi quadrature
     with α = β.
+
+    .. versionadded:: 2019.1
     """
 
     def __init__(self, alpha, N):  # noqa
