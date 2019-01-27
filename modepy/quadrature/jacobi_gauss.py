@@ -118,7 +118,7 @@ class JacobiGaussQuadrature(Quadrature):
         return nodes, weights
 
 
-class GaussLegendreQuadrature(JacobiGaussQuadrature):
+class LegendreGaussQuadrature(JacobiGaussQuadrature):
     """Gauss–Legendre quadrature is a special case of Gauss–Jacobi quadrature
     with α = β = 0.
     """
