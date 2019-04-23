@@ -49,7 +49,7 @@ def _extended_euclidean(q, r):
         quot, t = divmod(q, r)
         T = Q[0] - quot*R[0], Q[1] - quot*R[1]  # noqa: N806
         q, r = r, t
-        Q, R = R, T
+        Q, R = R, T     # noqa: N806
 
     return q, Q[0], Q[1]
 
@@ -68,7 +68,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
     r"""Cubature on an *n*-simplex.
 
     This cubature rule has both negative and positive weights.
-    It is exact for polynomials up to order :math:`2s+1`, where
+    It is exact for polynomials up to order :math:`2s + 1`, where
     :math:`s` is given as *order*.
 
     The integration domain is the unit simplex. (see :ref:`tri-coords`
@@ -82,7 +82,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
     * A. Grundmann and H.M. Moeller,
       Invariant integration formulas for the n-simplex by combinatorial methods,
-      SIAM J. Numer. Anal.  15 (1978), 282--290.
+      SIAM J. Numer. Anal. 15 (1978), 282--290.
       http://dx.doi.org/10.1137/0715019
 
     """
@@ -96,7 +96,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
         """
         s = order
         n = dimension
-        d = 2*s+1
+        d = 2*s + 1
 
         self.exact_to = d
 
@@ -115,17 +115,17 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
         points_to_weights = {}
 
-        for i in range(s+1):
+        for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
-                    * (d + n-2*i)**d \
+                    * (d + n - 2*i)**d \
                     / factorial(i) \
-                    / factorial(d+n-i)
+                    / factorial(d + n - i)
 
-            for t in generate_decreasing_nonnegative_tuples_summing_to(s-i, n+1):
+            for t in generate_decreasing_nonnegative_tuples_summing_to(s - i, n + 1):
                 for beta in generate_unique_permutations(t):
-                    denominator = d+n-2*i
+                    denominator = d + n - 2*i
                     point = tuple(
-                            _simplify_fraction((2*beta_i+1, denominator))
+                            _simplify_fraction((2*beta_i + 1, denominator))
                             for beta_i in beta)
 
                     points_to_weights[point] = \
@@ -133,17 +133,17 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
         from operator import add
 
-        vertices = [-1 * np.ones((n,))] \
+        vertices = ([-1 * np.ones((n,))]
                 + [np.array(x)
-                        for x in wandering_element(n, landscape=-1, wanderer=1)]
+                    for x in wandering_element(n, landscape=-1, wanderer=1)])
 
         nodes = []
         weights = []
 
         dim_factor = 2**n
         for p, w in six.iteritems(points_to_weights):
-            real_p = reduce(add, (a/b*v for (a, b), v in zip(p, vertices)))
+            real_p = reduce(add, (a/b * v for (a, b), v in zip(p, vertices)))
             nodes.append(real_p)
-            weights.append(dim_factor*w)
+            weights.append(dim_factor * w)
 
         Quadrature.__init__(self, np.array(nodes).T, np.array(weights))

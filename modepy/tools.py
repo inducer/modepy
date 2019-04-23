@@ -100,10 +100,9 @@ class Monomial:
         from pytools import factorial
         from operator import mul
 
-        return (self.factor*2**len(self.exponents) *
-            reduce(mul, (factorial(alpha) for alpha in self.exponents))
-            /
-            factorial(len(self.exponents)+sum(self.exponents)))
+        return (self.factor * 2**len(self.exponents)
+                * reduce(mul, (factorial(alpha) for alpha in self.exponents))
+                / factorial(len(self.exponents)+sum(self.exponents)))
 
     def diff(self, coordinate):
         diff_exp = list(self.exponents)
@@ -146,14 +145,14 @@ class AffineMap:
 EQUILATERAL_TO_UNIT_MAP = {
         1: AffineMap([[1]], [0]),
         2: AffineMap([
-            [1, -1 / sqrt(3)],
-            [0, 2 / sqrt(3)]],
-            [-1/3, -1/3]),
+            [1, -1/sqrt(3)],
+            [0,  2/sqrt(3)]],
+            [-1/3,   -1/3]),
         3: AffineMap([
             [1, -1/sqrt(3), -1/sqrt(6)],
             [0,  2/sqrt(3), -1/sqrt(6)],
             [0,         0,  sqrt(6)/2]],
-            [-1/2, -1/2, -1/2])
+            [-1/2,   -1/2,       -1/2])
         }
 
 
@@ -206,14 +205,14 @@ EQUILATERAL_VERTICES = {
             ]),
         2: np.array([
             [-1, -1/sqrt(3)],
-            [1, -1/sqrt(3)],
-            [0, 2/sqrt(3)],
+            [1,  -1/sqrt(3)],
+            [0,   2/sqrt(3)],
             ]),
         3: np.array([
             [-1, -1/sqrt(3), -1/sqrt(6)],
-            [1, -1/sqrt(3), -1/sqrt(6)],
-            [0, 2/sqrt(3), -1/sqrt(6)],
-            [0,         0, 3/sqrt(6)],
+            [1,  -1/sqrt(3), -1/sqrt(6)],
+            [0,   2/sqrt(3), -1/sqrt(6)],
+            [0,          0,   3/sqrt(6)],
             ])
         }
 
@@ -232,7 +231,7 @@ def pick_random_simplex_unit_coordinate(rng, dims):
     r = np.zeros(dims, np.float64)
     for j in range(dims):
         rn = rng.uniform(0, remaining)
-        r[j] = base+rn
+        r[j] = base + rn
         remaining -= rn
     return r
 
