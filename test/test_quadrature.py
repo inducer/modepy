@@ -33,31 +33,33 @@ def test_transformed_quadrature():
     """Test 1D quadrature on arbitrary intervals"""
 
     def gaussian_density(x, mu, sigma):
-        return 1/(sigma*np.sqrt(2*np.pi))*np.exp(-(x-mu)**2/(2*sigma**2))
+        return 1 / (sigma * np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2 / (2 * sigma**2))
 
     from modepy.quadrature import Transformed1DQuadrature
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     mu = 17
     sigma = 12
-    tq = Transformed1DQuadrature(LegendreGaussQuadrature(20), mu-6*sigma, mu+6*sigma)
+    tq = Transformed1DQuadrature(LegendreGaussQuadrature(20),
+            mu - 6*sigma, mu + 6*sigma)
 
     result = tq(lambda x: gaussian_density(x, mu, sigma))
-    assert abs(result - 1) < 1e-9
+    assert abs(result - 1) < 1.0e-9
 
 
 def test_gauss_quadrature():
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
-    for s in range(9+1):
-        cub = LegendreGaussQuadrature(s)
-        for deg in range(2*s+1 + 1):
+    for s in range(9 + 1):
+        quad = LegendreGaussQuadrature(s)
+        for deg in range(quad.exact_to + 1):
             def f(x):
                 return x**deg
-            i_f = cub(f)
-            i_f_true = 1/(deg+1)*(1-(-1)**(deg+1))
+
+            i_f = quad(f)
+            i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
             err = abs(i_f - i_f_true)
-            assert err < 2e-15
+            assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
 
 
 @pytest.mark.parametrize(("quad_class", "highest_order"), [
@@ -77,7 +79,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
         try:
             quad = quad_class(order, dim)
         except mp.QuadratureRuleUnavailable:
-            print(("UNAVAIL", quad_class, order))
+            print(("UNAVAILABLE", quad_class, order))
             break
 
         if isinstance(quad_class, mp.VioreanuRokhlinSimplexQuadrature):

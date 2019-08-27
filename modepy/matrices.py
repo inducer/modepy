@@ -235,10 +235,8 @@ class _FaceMap(object):
         self.face_dim = vol_dim - 1
 
     def __call__(self, points):
-        return (
-                self.origin[:, np.newaxis]
-                +
-                np.einsum("ad,dn->an", self.span, points*0.5 + 0.5))
+        return (self.origin[:, np.newaxis]
+                + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5))
 
 
 def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):

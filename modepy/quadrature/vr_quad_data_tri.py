@@ -23,6 +23,7 @@ def process_rule(table):
 
     return result
 
+
 triangle_data = process_rule({  # noqa
     0: {points: [[0.00000000000000000000000000000000e+00],
                 [0.00000000000000000000000000000000e+00],
