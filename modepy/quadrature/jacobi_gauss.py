@@ -27,7 +27,6 @@ from six.moves import range
 import numpy as np
 import numpy.linalg as la
 from modepy.quadrature import Quadrature
-from scipy.special.orthogonal import roots_jacobi
 
 
 class JacobiGaussQuadrature(Quadrature):
@@ -51,6 +50,7 @@ class JacobiGaussQuadrature(Quadrature):
         if backend == 'builtin':
             x, w = self.compute_weights_and_nodes(N, alpha, beta)
         elif backend== 'scipy':
+            from scipy.special.orthogonal import roots_jacobi
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
             raise NotImplementedError("Unsupported backend: %s" % backend)
