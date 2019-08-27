@@ -31,11 +31,14 @@ from modepy.quadrature import Quadrature
 
 class JacobiGaussQuadrature(Quadrature):
     r"""An Gauss quadrature of order *N* associated with the
-    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`.
-    The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
-
-    Assumes :math:`\alpha, \beta > -1` with
+    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`,
+    where :math:`\alpha, \beta > -1`.
+    In addition, the builtin backend assumes
     :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`.
+
+    The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
+    Nodes and weights can be obtained from one of the supported backends
+    (builtin, scipy).
 
     Integrates on the interval :math:`(-1, 1)`.
     The quadrature rule is exact up to degree :math:`2N + 1`.
