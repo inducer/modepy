@@ -47,11 +47,12 @@ def test_transformed_quadrature():
     assert abs(result - 1) < 1.0e-9
 
 
-def test_gauss_quadrature():
+@pytest.mark.parametrize("backend", [None, "builtin", "scipy"])
+def test_gauss_quadrature(backend):
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     for s in range(9 + 1):
-        quad = LegendreGaussQuadrature(s)
+        quad = LegendreGaussQuadrature(s, backend)
         for deg in range(quad.exact_to + 1):
             def f(x):
                 return x**deg
