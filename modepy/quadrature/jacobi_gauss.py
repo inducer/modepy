@@ -32,7 +32,7 @@ from scipy.special.orthogonal import roots_jacobi
 
 class JacobiGaussQuadrature(Quadrature):
     r"""An Gauss quadrature of order *N* associated with the
-    Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
+    Jacobi weight :math:`(1-x)^\alpha (1+x)^\beta`.
     The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
 
     Assumes :math:`\alpha, \beta > -1` with
