@@ -33,8 +33,12 @@ class JacobiGaussQuadrature(Quadrature):
     r"""An Gauss quadrature of order *N* associated with the
     Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`,
     where :math:`\alpha, \beta > -1`.
-    In addition, the builtin backend assumes
-    :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`.
+
+    :arg backend: Either ``"builtin"`` or ``"scipy"``.
+    
+    When the ``"builtin"`` back-end is in use, there is an additional requirement
+    that :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`. The ``"scipy"``
+    backend has no such restriction.
 
     The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
     Nodes and weights can be obtained from one of the supported backends
