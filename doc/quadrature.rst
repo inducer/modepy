@@ -35,6 +35,17 @@ Jacobi-Gauss quadrature in one dimension
 
 .. autofunction:: legendre_gauss_lobatto_nodes
 
+Clenshaw-Curtis and Fejér quadrature in one dimension
+-----------------------------------------------------
+
+.. automodule:: modepy.quadrature.clenshaw_curtis
+
+.. currentmodule:: modepy
+
+.. autoclass:: ClenshawCurtisQuadrature
+
+.. autoclass:: FejerQuadrature
+
 Quadratures on the simplex
 --------------------------
 

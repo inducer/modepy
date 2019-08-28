@@ -40,6 +40,8 @@ from modepy.quadrature.jacobi_gauss import (
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
+from modepy.quadrature.clenshaw_curtis import (
+        ClenshawCurtisQuadrature, FejerQuadrature)
 
 from modepy.version import VERSION_TEXT as __version__  # noqa: N811
 
