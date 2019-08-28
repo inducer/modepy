@@ -31,10 +31,18 @@ from modepy.quadrature import Quadrature
 
 class JacobiGaussQuadrature(Quadrature):
     r"""An Gauss quadrature of order *N* associated with the
-    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`.
+    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`,
+    where :math:`\alpha, \beta > -1`.
 
-    Assumes :math:`\alpha, \beta > -1` with
-    :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`.
+    :arg backend: Either ``"builtin"`` or ``"scipy"``.
+    
+    When the ``"builtin"`` back-end is in use, there is an additional requirement
+    that :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`. The ``"scipy"``
+    backend has no such restriction.
+
+    The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
+    Nodes and weights can be obtained from one of the supported backends
+    (builtin, scipy).
 
     Integrates on the interval :math:`(-1, 1)`.
     The quadrature rule is exact up to degree :math:`2N + 1`.
@@ -42,11 +50,19 @@ class JacobiGaussQuadrature(Quadrature):
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
     """
+    def __init__(self, alpha, beta, N, backend=None):  # noqa
+        # default backend
+        if backend is None:
+            backend = 'builtin'
+        if backend == 'builtin':
+            x, w = self.compute_weights_and_nodes(N, alpha, beta)
+        elif backend== 'scipy':
+            from scipy.special.orthogonal import roots_jacobi
+            x, w = roots_jacobi(N + 1, alpha, beta)
+        else:
+            raise NotImplementedError("Unsupported backend: %s" % backend)
 
-    def __init__(self, alpha, beta, N):  # noqa
-        x, w = self.compute_weights_and_nodes(N, alpha, beta)
         self.exact_to = 2*N + 1
-
         Quadrature.__init__(self, x, w)
 
     @staticmethod
@@ -125,8 +141,8 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
     quadrature with α = β = 0.)
     """
 
-    def __init__(self, N):  # noqa
-        JacobiGaussQuadrature.__init__(self, 0, 0, N)
+    def __init__(self, N, backend=None):  # noqa
+        JacobiGaussQuadrature.__init__(self, 0, 0, N, backend)
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
@@ -136,12 +152,12 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, N, kind=1):  # noqa
+    def __init__(self, N, kind=1, backend=None):  # noqa
         if kind == 1:
-            # FIXME: division by zero
-            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N)
+            # FIXME: division by zero using built-in backend
+            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N, backend='scipy')
         elif kind == 2:
-            JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N)
+            JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N, backend=backend)
 
 
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
@@ -151,11 +167,11 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, alpha, N):  # noqa
-        JacobiGaussQuadrature.__init__(self, alpha, alpha, N)
+    def __init__(self, alpha, N, backend=None):  # noqa
+        JacobiGaussQuadrature.__init__(self, alpha, alpha, N, backend)
 
 
-def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
+def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`JacobiGaussQuadrature`
     with the same parameters.
@@ -170,13 +186,13 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N):  # noqa
     if N == 1:
         return x
 
-    x[1:-1] = np.array(JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2).nodes).real
+    x[1:-1] = np.array(JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2, backend).nodes).real
     return x
 
 
-def legendre_gauss_lobatto_nodes(N):  # noqa
+def legendre_gauss_lobatto_nodes(N, backend=None):  # noqa
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
 
     Exact to degree :math:`2N - 1`.
     """
-    return jacobi_gauss_lobatto_nodes(0, 0, N)
+    return jacobi_gauss_lobatto_nodes(0, 0, N, backend)
