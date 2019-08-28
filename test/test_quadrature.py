@@ -47,7 +47,15 @@ def test_transformed_quadrature():
     assert abs(result - 1) < 1.0e-9
 
 
-@pytest.mark.parametrize("backend", [None, "builtin", "scipy"])
+try:
+    import scipy  # noqa
+except ImportError:
+    BACKENDS = [None, "builtin"]
+else:
+    BACKENDS = [None, "builtin", "scipy"]
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
 def test_gauss_quadrature(backend):
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
