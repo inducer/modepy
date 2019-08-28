@@ -67,6 +67,7 @@ __all__ = [
         "GaussLegendreQuadrature", "ChebyshevGaussQuadrature",
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
+        "ClenshawCurtisQuadrature", "FejerQuadrature",
         ]
 
 from pytools import MovedFunctionDeprecationWrapper
