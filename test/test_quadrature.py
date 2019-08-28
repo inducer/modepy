@@ -93,6 +93,7 @@ def test_fejer_quadrature(kind):
     for deg in range(1, 9 + 1):
         s = deg * 3
         quad = FejerQuadrature(s, kind)
+
         def f(x):
             return x**deg
 
