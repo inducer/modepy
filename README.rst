@@ -3,7 +3,7 @@ modepy: Basis Functions and Node Sets for Interpolation
 
 .. image:: https://gitlab.tiker.net/inducer/modepy/badges/master/pipeline.svg
     :alt: Gitlab Build Status
-   :target: https://gitlab.tiker.net/inducer/modepy/commits/master
+    :target: https://gitlab.tiker.net/inducer/modepy/commits/master
 .. image:: https://dev.azure.com/ak-spam/inducer/_apis/build/status/inducer.modepy?branchName=master
     :alt: Azure Build Status
     :target: https://dev.azure.com/ak-spam/inducer/_build/latest?definitionId=1&branchName=master
