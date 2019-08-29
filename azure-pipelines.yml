@@ -19,10 +19,31 @@ jobs:
     -
         script: |
             set -e
-            set -x
             py_version=$PYTON_VERSION
             EXTRA_INSTALL="numpy scipy"
             curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
             . ./build-and-test-py-project.sh
 
-        displayName: 'Run Pytest'
+        displayName: 'Pytest'
+-
+    job: 'Flake8'
+    pool:
+        vmImage: 'ubuntu-16.04' # other options: 'macOS-10.13', 'vs2017-win2016'
+    strategy:
+        matrix:
+            Python36:
+                python.version: '3.6'
+
+    steps:
+    -
+        task: UsePythonVersion@0
+        inputs:
+            versionSpec: '$(python.version)'
+
+    -
+        script: |
+            set -e
+            curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/prepare-and-run-flake8.sh
+            . ./prepare-and-run-flake8.sh pyopencl test"
+
+        displayName: 'Flake8'
