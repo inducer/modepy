@@ -298,7 +298,7 @@ def tensor_product_nodes(dims, nodes_1d):
     nnodes_1d = len(nodes_1d)
     result = np.empty((dims,) + (nnodes_1d,) * dims)
     for d in range(dims):
-        result[-d] = nodes_1d.reshape(*((-1,) + (1,)*d))
+        result[-d - 1] = nodes_1d.reshape(*((-1,) + (1,)*d))
 
     return result.reshape(dims, -1)
 
