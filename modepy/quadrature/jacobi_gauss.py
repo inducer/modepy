@@ -35,7 +35,7 @@ class JacobiGaussQuadrature(Quadrature):
     where :math:`\alpha, \beta > -1`.
 
     :arg backend: Either ``"builtin"`` or ``"scipy"``.
-    
+
     When the ``"builtin"`` back-end is in use, there is an additional requirement
     that :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`. The ``"scipy"``
     backend has no such restriction.
@@ -56,7 +56,7 @@ class JacobiGaussQuadrature(Quadrature):
             backend = 'builtin'
         if backend == 'builtin':
             x, w = self.compute_weights_and_nodes(N, alpha, beta)
-        elif backend== 'scipy':
+        elif backend == 'scipy':
             from scipy.special.orthogonal import roots_jacobi
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
@@ -186,7 +186,9 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
     if N == 1:
         return x
 
-    x[1:-1] = np.array(JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2, backend).nodes).real
+    x[1:-1] = np.array(
+            JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2, backend).nodes
+            ).real
     return x
 
 

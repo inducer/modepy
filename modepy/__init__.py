@@ -63,6 +63,7 @@ __all__ = [
         "Quadrature", "QuadratureRuleUnavailable",
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
         "GaussLegendreQuadrature", "ChebyshevGaussQuadrature",
+        "GaussGegenbauerQuadrature",
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
         ]
