@@ -20,10 +20,9 @@ jobs:
         script: |
             set -e
             set -x
-            export py_version=$PYTON_VERSION
-            export EXTRA_INSTALL="numpy scipy"
+            py_version=$PYTON_VERSION
+            EXTRA_INSTALL="numpy scipy"
             curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
-            ls
-            ". ./build-and-test-py-project.sh"
+            . ./build-and-test-py-project.sh
 
         displayName: 'Run Pytest'
