@@ -140,6 +140,17 @@ def test_affine_map():
             assert la.norm(x-m.inverse(m(x))) < 1e-10
 
 
+@pytest.mark.parametrize("dim", [1, 2, 3, 4])
+def test_tensor_product_nodes(dim):
+    from modepy.nodes import tensor_product_nodes
+    nnodes = 10
+    nodes_1d = np.arange(nnodes)
+    nodes = tensor_product_nodes(dim, nodes_1d)
+    assert np.allclose(
+            nodes[-1],
+            np.array(nodes_1d.tolist() * nnodes**(dim - 1)))
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 
