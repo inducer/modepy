@@ -187,9 +187,8 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
         return x
 
     x[1:-1] = np.array(
-            JacobiGaussQuadrature(
-                alpha + 1, beta + 1, N - 2, backend
-                ).nodes).real
+            JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2, backend).nodes
+            ).real
     return x
 
 

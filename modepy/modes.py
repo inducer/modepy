@@ -150,14 +150,14 @@ def jacobi(alpha, beta, n, x):
 
     # Forward recurrence using the symmetry of the recurrence.
     for i in range(1, n):
-            h1 = 2.*i+alpha+beta
+        h1 = 2.*i+alpha+beta
 
-            foo = (i+1.)*(i+1.+alpha+beta)*(i+1.+alpha)*(i+1.+beta)/(h1+1.)/(h1+3.)
-            anew = 2./(h1+2.)*sqrt(foo)
+        foo = (i+1.)*(i+1.+alpha+beta)*(i+1.+alpha)*(i+1.+beta)/(h1+1.)/(h1+3.)
+        anew = 2./(h1+2.)*sqrt(foo)
 
-            bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
-            PL[:, i+1] = (-aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]))/anew
-            aold = anew
+        bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
+        PL[:, i+1] = (-aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]))/anew
+        aold = anew
 
     return PL[:, n].reshape(out_shape)
 
