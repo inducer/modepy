@@ -145,4 +145,4 @@ class FejerQuadrature(Quadrature):
         else:
             raise ValueError("kind must be either 1 or 2")
 
-        Quadrature.__init__(self, x, w)
+        super(FejerQuadrature, self).__init__(x, w)
