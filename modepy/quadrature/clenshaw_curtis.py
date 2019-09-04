@@ -146,3 +146,8 @@ class FejerQuadrature(Quadrature):
             raise ValueError("kind must be either 1 or 2")
 
         Quadrature.__init__(self, x, w)
+
+    @property
+    def exact_to(self):
+        raise ValueError("%s has no known exact_to information"
+                         % str(self.__class__.__name__))
