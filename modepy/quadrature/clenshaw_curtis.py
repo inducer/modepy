@@ -150,4 +150,4 @@ class FejerQuadrature(Quadrature):
     @property
     def exact_to(self):
         raise ValueError("%s has no known exact_to information"
-                         % str(self.__class__.__name__))
+                         % type(self).__name__))
