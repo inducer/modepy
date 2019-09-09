@@ -71,6 +71,38 @@ def test_gauss_quadrature(backend):
             assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
 
 
+def test_clenshaw_curtis_quadrature():
+    from modepy.quadrature.clenshaw_curtis import ClenshawCurtisQuadrature
+
+    for s in range(1, 9 + 1):
+        quad = ClenshawCurtisQuadrature(s)
+        for deg in range(quad.exact_to + 1):
+            def f(x):
+                return x**deg
+
+            i_f = quad(f)
+            i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
+            err = abs(i_f - i_f_true)
+            assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
+
+
+@pytest.mark.parametrize("kind", [1, 2])
+def test_fejer_quadrature(kind):
+    from modepy.quadrature.clenshaw_curtis import FejerQuadrature
+
+    for deg in range(1, 9 + 1):
+        s = deg * 3
+        quad = FejerQuadrature(s, kind)
+
+        def f(x):
+            return x**deg
+
+        i_f = quad(f)
+        i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
+        err = abs(i_f - i_f_true)
+        assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
+
+
 @pytest.mark.parametrize(("quad_class", "highest_order"), [
     (mp.XiaoGimbutasSimplexQuadrature, None),
     (mp.VioreanuRokhlinSimplexQuadrature, None),
