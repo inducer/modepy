@@ -4,9 +4,9 @@ modepy: Basis Functions and Node Sets for Interpolation
 .. image:: https://gitlab.tiker.net/inducer/modepy/badges/master/pipeline.svg
     :alt: Gitlab Build Status
     :target: https://gitlab.tiker.net/inducer/modepy/commits/master
-.. image:: https://github.com/inducer/modepy/workflows/CI/badge.svg?branch=master
+.. image:: https://github.com/inducer/modepy/workflows/CI/badge.svg?branch=master&event=push
     :alt: Github Build Status
-    :target: https://github.com/inducer/modepy/actions?query=branch%3Amaster+workflow%3ACI
+    :target: https://github.com/inducer/modepy/actions?query=branch%3Amaster+workflow%3ACI+event%3Apush
 .. image:: https://badge.fury.io/py/modepy.png
     :alt: Python Package Index Release Page
     :target: https://pypi.org/project/modepy/
