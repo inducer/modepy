@@ -1,4 +1,5 @@
-from __future__ import division, absolute_import
+# coding=utf-8
+from __future__ import division, absolute_import, unicode_literals
 
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
