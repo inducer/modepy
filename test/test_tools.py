@@ -181,6 +181,27 @@ def test_diff_matrix(dims):
     assert la.norm(df_dx-df_dx_num) < 1e-3
 
 
+@pytest.mark.parametrize("dims", [2, 3])
+def test_diff_matrix_permutation(dims):
+    order = 5
+
+    from pytools import \
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
+    node_tuples = list(gnitstam(order, dims))
+
+    simplex_onb = mp.simplex_onb(dims, order)
+    grad_simplex_onb = mp.grad_simplex_onb(dims, order)
+    nodes = np.array(mp.warp_and_blend_nodes(dims, order, node_tuples=node_tuples))
+    diff_matrices = mp.differentiation_matrices(simplex_onb, grad_simplex_onb, nodes)
+
+    for iref_axis in range(dims):
+        perm = mp.diff_matrix_permutation(node_tuples, iref_axis)
+
+        assert la.norm(
+                diff_matrices[iref_axis]
+                - diff_matrices[0][perm][:, perm]) < 1e-10
+
+
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_modal_face_mass_matrix(dim, order=3):
     from modepy.tools import unit_vertices
