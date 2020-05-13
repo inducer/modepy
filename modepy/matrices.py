@@ -62,6 +62,8 @@ obtain modal values and then using a Vandermonde matrix for the derivatives
 of the basis to return to nodal values.
 
 .. autofunction:: differentiation_matrices
+
+.. autofunction:: diff_matrix_permutation
 """
 
 
@@ -191,6 +193,29 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
                 order="C")
 
 
+def diff_matrix_permutation(node_tuples, ref_axis):
+    """Return a :mod:`numpy` array *permutation* of integers so that::
+
+        diff_matrices[ref_axis] == diff_matrices[0][permutation][:, permutation]
+
+    .. versionadded:: 2020.1
+    """
+    ntup_index_lookup = {nt: i for i, nt in enumerate(node_tuples)}
+
+    if ref_axis == 0:
+        return np.arange(len(node_tuples), dtype=np.intp)
+
+    permutation = np.zeros(len(node_tuples), dtype=np.intp)
+    for i, nt in enumerate(node_tuples):
+        swapped = list(nt)
+        swapped[0], swapped[ref_axis] = swapped[ref_axis], swapped[0]
+        swapped = tuple(swapped)
+        flipped_idx = ntup_index_lookup[swapped]
+        permutation[i] = flipped_idx
+
+    return permutation
+
+
 def inverse_mass_matrix(basis, nodes):
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
     by :func:`mass_matrix`.
@@ -292,5 +317,6 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
     modal_fmm = modal_face_mass_matrix(
             trial_basis, order, face_vertices, test_basis=test_basis)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
+
 
 # vim: foldmethod=marker

@@ -1,7 +1,7 @@
 import numpy as np
 import modepy as mp
 
-n = 17 # use this total degree
+n = 17  # use this total degree
 dimensions = 2
 
 # Get a basis of orthonormal functions, and their derivatives.

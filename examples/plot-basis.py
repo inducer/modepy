@@ -49,9 +49,10 @@ mlab.triangular_mesh(
         0.2*all_values,
         all_triangles)
 
-x, y = np.mgrid[-1:p*stretch_factor +1:20j, -1:p*stretch_factor +1:20j]
-mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4), line_width=0.6)
+x, y = np.mgrid[-1:p*stretch_factor + 1:20j, -1:p*stretch_factor + 1:20j]
+mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4),
+        line_width=0.6)
 
-mlab.view(-153, 58, 10, np.array([ 1.61,  2.49, -0.59]))
+mlab.view(-153, 58, 10, np.array([1.61,  2.49, -0.59]))
 
 mlab.show()

@@ -31,6 +31,7 @@ from modepy.modes import (
 from modepy.nodes import equidistant_nodes, warp_and_blend_nodes
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
+        diff_matrix_permutation,
         inverse_mass_matrix, mass_matrix,
         modal_face_mass_matrix, nodal_face_mass_matrix)
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
@@ -59,6 +60,7 @@ __all__ = [
         "equidistant_nodes", "warp_and_blend_nodes",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
+        "diff_matrix_permutation",
         "inverse_mass_matrix", "mass_matrix", "modal_face_mass_matrix",
         "nodal_face_mass_matrix",
 
