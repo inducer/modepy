@@ -67,7 +67,10 @@ def simplex_interp_error_coefficient_estimator_matrix(
     vdm = vandermonde(basis, unit_nodes)
     vdm_inv = la.inv(vdm)
 
-    order_vector = np.array([sum(mode_id) for mode_id in mode_ids])
+    if dim > 1:
+        order_vector = np.array([sum(mode_id) for mode_id in mode_ids])
+    else:
+        order_vector = mode_ids
 
     max_order = np.max(order_vector)
     assert max_order == order
