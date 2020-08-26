@@ -174,7 +174,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 
 def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
     """Compute the Gauss-Lobatto quadrature
-    nodes corresponding to the :class:`JacobiGaussQuadrature`
+    nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters.
 
     Exact to degree :math:`2N - 3`.

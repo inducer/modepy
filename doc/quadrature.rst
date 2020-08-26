@@ -19,8 +19,6 @@ Jacobi-Gauss quadrature in one dimension
 
 .. currentmodule:: modepy
 
-.. autoclass:: Quadrature
-
 .. autoclass:: JacobiGaussQuadrature
 
 .. autoclass:: LegendreGaussQuadrature
