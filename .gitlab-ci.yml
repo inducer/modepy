@@ -19,8 +19,6 @@ Documentation:
   - ". ./build-docs.sh"
   tags:
   - python3
-  only:
-  - master
 
 Flake8:
   script:
