@@ -127,7 +127,7 @@ def test_residual_estimation(case_name, test_func, dims, n):
 
     resid = estimate_resid(n)
     resid2 = estimate_resid(2*n)
-    print(f"{case_name}: {resid:g} -> {resid2:g}")
+    print(f"{case_name}: {float(resid):g} -> {float(resid2):g}")
     assert resid2 < resid
 
 
