@@ -1,6 +1,3 @@
-# coding=utf-8
-from __future__ import division, absolute_import, unicode_literals
-
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
 __license__ = """
@@ -23,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from six.moves import range
 
 import numpy as np
 import numpy.linalg as la

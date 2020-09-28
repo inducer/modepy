@@ -1,5 +1,3 @@
-from __future__ import division, absolute_import
-
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
 __license__ = """
@@ -22,9 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import six
-from six.moves import range
-from six.moves import zip
 from functools import reduce
 
 import numpy as np
@@ -141,7 +136,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
         weights = []
 
         dim_factor = 2**n
-        for p, w in six.iteritems(points_to_weights):
+        for p, w in points_to_weights.items():
             real_p = reduce(add, (a/b * v for (a, b), v in zip(p, vertices)))
             nodes.append(real_p)
             weights.append(dim_factor * w)

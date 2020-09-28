@@ -1,7 +1,3 @@
-# - encoding: utf-8 -
-
-from __future__ import division, absolute_import
-
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 "
 "Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu")
 
@@ -26,7 +22,6 @@ THE SOFTWARE.
 """
 
 
-from six.moves import range
 
 from math import sqrt
 import numpy as np
@@ -623,7 +618,7 @@ def grad_simplex_best_available_basis(dims, n):
 
 # {{{ tensor product basis
 
-class _TensorProductBasisFunction(object):
+class _TensorProductBasisFunction:
     def __init__(self, multi_index, per_dim_functions):
         self.multi_index = multi_index
         self.per_dim_functions = per_dim_functions

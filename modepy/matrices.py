@@ -1,5 +1,3 @@
-from __future__ import division
-
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
 __license__ = """
@@ -244,7 +242,7 @@ def mass_matrix(basis, nodes):
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-class _FaceMap(object):
+class _FaceMap:
     def __init__(self, face_vertices):
         """
         :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*

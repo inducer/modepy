@@ -1,10 +1,7 @@
-from __future__ import absolute_import
-
 # GENERATED, DO NOT EDIT
 # Xiao-Gimbutas quadratures
 # http://dx.doi.org/10.1016/j.camwa.2009.10.027
 import numpy
-import six
 
 triangle_table = {  # noqa
     1: {
@@ -16406,10 +16403,10 @@ triangle_table = {  # noqa
 }
 
 
-triangle_table = dict(
-    (order, dict((name, numpy.array(ary)) for name, ary in six.iteritems(rule)))
-    for order, rule in six.iteritems(triangle_table)
-)
+triangle_table = {
+    order: {name: numpy.array(ary) for name, ary in rule.items()}
+    for order, rule in triangle_table.items()
+}
 
 
 tetrahedron_table = {  # noqa
@@ -18537,7 +18534,7 @@ tetrahedron_table = {  # noqa
 }
 
 
-tetrahedron_table = dict(
-    (order, dict((name, numpy.array(ary)) for name, ary in six.iteritems(rule)))
-    for order, rule in six.iteritems(tetrahedron_table)
-)
+tetrahedron_table = {
+    order: {name: numpy.array(ary) for name, ary in rule.items()}
+    for order, rule in tetrahedron_table.items()
+}

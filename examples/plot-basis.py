@@ -1,8 +1,6 @@
-from __future__ import absolute_import
 import numpy as np
 from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
         as gnitstam
-from six.moves import zip
 
 # prepare plot and eval nodes on triangle
 dims = 2

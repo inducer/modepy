@@ -1,7 +1,5 @@
-from __future__ import absolute_import
 import matplotlib.pyplot as pt
 import numpy as np
-from six.moves import range
 
 x = np.linspace(-1, 1, 200)
 from modepy.nodes import warp_factor

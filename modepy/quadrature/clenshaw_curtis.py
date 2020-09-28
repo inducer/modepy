@@ -1,6 +1,3 @@
-# coding=utf-8
-from __future__ import division, absolute_import, unicode_literals
-
 __copyright__ = "Copyright (C) 2019 Xiaoyu Wei"
 
 __license__ = """
@@ -146,7 +143,7 @@ class FejerQuadrature(Quadrature):
         else:
             raise ValueError("kind must be either 1 or 2")
 
-        super(FejerQuadrature, self).__init__(x, w)
+        super().__init__(x, w)
 
     @property
     def exact_to(self):
