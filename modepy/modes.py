@@ -22,7 +22,6 @@ THE SOFTWARE.
 """
 
 
-
 from math import sqrt
 import numpy as np
 from modepy.tools import accept_scalar_or_vector
