@@ -55,17 +55,17 @@ def _fejer(n, rule):
     K = np.arange(0, m)  # noqa
 
     if not n >= 1:
-        raise RuntimeError('Invalid n = %d (must be n >= 1)' % n)
+        raise RuntimeError("Invalid n = %d (must be n >= 1)" % n)
 
-    if rule not in ['f1', 'f2', 'cc']:
-        raise NotImplementedError('Invalide rule: %s' % rule)
+    if rule not in ["f1", "f2", "cc"]:
+        raise NotImplementedError("Invalide rule: %s" % rule)
 
-    if rule == 'f2' or rule == 'cc':
+    if rule == "f2" or rule == "cc":
 
         v0 = np.concatenate([2 / N / (N - 2), 1 / N[-1:], np.zeros(m)])
         v2 = 0 - v0[:-1] - v0[-1:0:-1]
 
-        if rule == 'f2':
+        if rule == "f2":
             # Fejer2 nodes: k=0,1,...,n; weights: wf2, wf2_n=wf2_0=0
             # nodes with zero weights are not included in the return values
             if n == 1:
@@ -76,7 +76,7 @@ def _fejer(n, rule):
             xf2 = np.cos(np.arange(1, n) * np.pi / n)
             return xf2, wf2
 
-        if rule == 'cc':
+        if rule == "cc":
             # Clenshaw-Curtis nodes: k=0,1,...,n; weights: wcc, wcc_n=wcc_0
             if n == 1:
                 return np.array([-1, 1]), np.array([1, 1])
@@ -90,7 +90,7 @@ def _fejer(n, rule):
             xcc = np.cos(np.arange(0, n + 1) * np.pi / n)
             return xcc, wcc
 
-    if rule == 'f1':
+    if rule == "f1":
         # Fejer1 nodes: k=1/2,3/2,...,n-1/2; vector of weights: wf1
         v0 = np.concatenate(
                 [2 * np.exp(1j * np.pi * K / n) / (1 - 4 * (K**2)),
@@ -116,7 +116,7 @@ class ClenshawCurtisQuadrature(Quadrature):
     to :math:`2N + 1`.
     """
     def __init__(self, N):  # noqa
-        x, w = _fejer(N, 'cc')
+        x, w = _fejer(N, "cc")
         self.exact_to = N
         Quadrature.__init__(self, x, w)
 
@@ -140,9 +140,9 @@ class FejerQuadrature(Quadrature):
     """
     def __init__(self, N, kind=1):  # noqa
         if kind == 1:
-            x, w = _fejer(N, 'f1')
+            x, w = _fejer(N, "f1")
         elif kind == 2:
-            x, w = _fejer(N, 'f2')
+            x, w = _fejer(N, "f2")
         else:
             raise ValueError("kind must be either 1 or 2")
 
