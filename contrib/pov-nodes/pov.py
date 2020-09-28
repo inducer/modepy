@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 import sys, os
 import numpy
-from six.moves import range
 
 class File:
   def __init__(self,fnam="out.pov",*items):

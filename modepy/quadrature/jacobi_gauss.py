@@ -1,6 +1,3 @@
-# coding=utf-8
-from __future__ import division, absolute_import, unicode_literals
-
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
 __license__ = """
@@ -23,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from six.moves import range
 
 import numpy as np
 import numpy.linalg as la
@@ -54,10 +50,10 @@ class JacobiGaussQuadrature(Quadrature):
     def __init__(self, alpha, beta, N, backend=None):  # noqa
         # default backend
         if backend is None:
-            backend = 'builtin'
-        if backend == 'builtin':
+            backend = "builtin"
+        if backend == "builtin":
             x, w = self.compute_weights_and_nodes(N, alpha, beta)
-        elif backend == 'scipy':
+        elif backend == "scipy":
             from scipy.special.orthogonal import roots_jacobi
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
@@ -156,7 +152,7 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     def __init__(self, N, kind=1, backend=None):  # noqa
         if kind == 1:
             # FIXME: division by zero using built-in backend
-            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N, backend='scipy')
+            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N, backend="scipy")
         elif kind == 2:
             JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N, backend=backend)
 

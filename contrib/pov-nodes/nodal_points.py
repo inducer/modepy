@@ -5,9 +5,6 @@ from pov import Sphere, Cylinder, File, Union, Texture, Pigment, \
         Camera, LightSource, Plane, Background, Finish
 import numpy as np
 import modepy as mp
-import six
-from six.moves import range
-from six.moves import zip
 
 n = 8
 
@@ -25,11 +22,12 @@ faces = [
         ]
 
 from modepy.tools import unit_to_barycentric, barycentric_to_equilateral
-nodes = [(n[0],n[2], n[1]) for n in
+nodes = [(n[0], n[2], n[1]) for n in
         barycentric_to_equilateral(
             unit_to_barycentric(
                 mp.warp_and_blend_nodes(3, n, node_tuples))).T]
 id_to_node = dict(list(zip(node_tuples, nodes)))
+
 
 def get_ball_radius(nid):
     in_faces = len([f for f in faces if nid in f])
@@ -38,18 +36,19 @@ def get_ball_radius(nid):
     else:
         return ball_radius
 
+
 def get_ball_color(nid):
     in_faces = len([f for f in faces if nid in f])
     if in_faces >= 2:
-        return (1,0,1)
+        return (1, 0, 1)
     else:
-        return (0,0,1)
+        return (0, 0, 1)
+
 
 balls = Union(*[
     Sphere(node, get_ball_radius(nid),
-        Texture(Pigment(color=get_ball_color(nid)))
-        )
-    for nid, node in six.iteritems(id_to_node)
+        Texture(Pigment(color=get_ball_color(nid))))
+    for nid, node in id_to_node.items()
     ])
 
 links = Union()
@@ -72,10 +71,10 @@ for nid in node_tuples:
 
     for i, nid2 in enumerate(child_nids):
         connect_nids(nid, nid2)
-        connect_nids(nid2, child_nids[(i+1)%len(child_nids)])
+        connect_nids(nid2, child_nids[(i+1) % len(child_nids)])
 
 links.append(Texture(
-    Pigment(color=(0.8,0.8,0.8)),
+    Pigment(color=(0.8, 0.8, 0.8)),
     Finish(
         specular=1,
         ),
@@ -83,17 +82,17 @@ links.append(Texture(
 
 outf = File("nodes.pov")
 
-Camera(location=0.65*np.array((4,0.8,-1)), look_at=(0,0.1,0)).write(outf)
+Camera(location=0.65*np.array((4, 0.8, -1)), look_at=(0, 0.1, 0)).write(outf)
 LightSource(
-        (10,5,0),
-        color=(1,1,1),
+        (10, 5, 0),
+        color=(1, 1, 1),
         ).write(outf)
 Background(
-        color=(1,1,1)
+        color=(1, 1, 1)
         ).write(outf)
 if False:
     Plane(
-            (0,1,0), min(n[1] for n in nodes)-ball_radius,
+            (0, 1, 0), min(n[1] for n in nodes)-ball_radius,
             Texture(Pigment(color=np.ones(3,)))
             ).write(outf)
 balls.write(outf)

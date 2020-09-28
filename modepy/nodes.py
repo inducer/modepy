@@ -1,5 +1,3 @@
-from __future__ import division
-
 __copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, " \
         "Tim Warburton, Jan Hesthaven, Xueyu Zhu"
 
@@ -89,7 +87,7 @@ def _2d_equilateral_shift(n, bary, alpha):
     result = np.zeros((2, bary.shape[1]))
 
     for i1 in range(3):
-        i2, i3 = set(range(3)) - set([i1])
+        i2, i3 = set(range(3)) - {i1}
 
         # Compute blending function at each node for each edge
         blend = 4*bary[i2]*bary[i3]

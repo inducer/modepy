@@ -19,20 +19,20 @@ def main():
           license="MIT",
           url="http://documen.tician.de/modepy",
           classifiers=[
-              'Development Status :: 3 - Alpha',
-              'Intended Audience :: Developers',
-              'Intended Audience :: Other Audience',
-              'Intended Audience :: Science/Research',
-              'License :: OSI Approved :: MIT License',
-              'Natural Language :: English',
-              'Programming Language :: Python',
-              'Programming Language :: Python :: 3',
-              'Topic :: Scientific/Engineering',
-              'Topic :: Scientific/Engineering :: Information Analysis',
-              'Topic :: Scientific/Engineering :: Mathematics',
-              'Topic :: Scientific/Engineering :: Visualization',
-              'Topic :: Software Development :: Libraries',
-              'Topic :: Utilities',
+              "Development Status :: 3 - Alpha",
+              "Intended Audience :: Developers",
+              "Intended Audience :: Other Audience",
+              "Intended Audience :: Science/Research",
+              "License :: OSI Approved :: MIT License",
+              "Natural Language :: English",
+              "Programming Language :: Python",
+              "Programming Language :: Python :: 3",
+              "Topic :: Scientific/Engineering",
+              "Topic :: Scientific/Engineering :: Information Analysis",
+              "Topic :: Scientific/Engineering :: Mathematics",
+              "Topic :: Scientific/Engineering :: Visualization",
+              "Topic :: Software Development :: Libraries",
+              "Topic :: Utilities",
               ],
 
           packages=find_packages(),
@@ -41,9 +41,8 @@ def main():
               "numpy",
               "pytools>=2013.1",
               "pytest>=2.3",
-              "six",
               ])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

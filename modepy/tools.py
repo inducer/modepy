@@ -1,5 +1,3 @@
-from __future__ import division, absolute_import, print_function
-
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
 __license__ = """
@@ -22,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from six.moves import range
 from functools import reduce
 
 import numpy as np
@@ -316,9 +313,9 @@ def simplex_submesh(node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 
-    node_dict = dict(
-            (ituple, idx)
-            for idx, ituple in enumerate(node_tuples))
+    node_dict = {
+            ituple: idx
+            for idx, ituple in enumerate(node_tuples)}
 
     if dims == 1:
         result = []

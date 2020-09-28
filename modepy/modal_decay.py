@@ -1,5 +1,3 @@
-from __future__ import division, absolute_import
-
 __copyright__ = "Copyright (C) 2010-2012 Andreas Kloeckner"
 
 __license__ = """
@@ -22,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from six.moves import range
 
 import numpy as np
 import numpy.linalg as la
@@ -220,7 +217,7 @@ def estimate_relative_expansion_residual(coeffs, dims, n, ignored_modes=1):
     exponent, const = fit_modal_decay(coeffs, dims, n, ignored_modes)
 
     # sqrt(integral from (n+1) to infty : (x**exponent)**2)
-    residuals = const * np.sqrt((-(n+1)**(2*exponent+1)/(2*exponent+1)))
+    residuals = const * np.sqrt(-(n+1)**(2*exponent+1)/(2*exponent+1))
 
     result = residuals/l2_norms
     result[result > 1] = 0

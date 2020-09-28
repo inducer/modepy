@@ -1,13 +1,8 @@
 #! /usr/bin/env python
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
-
 import sys
-from six.moves import range
 with open(sys.argv[1]) as inf:
-    lines = [l.strip() for l in inf.readlines() if l.strip()]
+    lines = [ln.strip() for ln in inf.readlines() if ln.strip()]
 
 rule_name = sys.argv[2]
 
@@ -15,23 +10,23 @@ table = {}
 
 i = 0
 while i < len(lines):
-    l = lines[i]
+    ln = lines[i]
     i += 1
-    order, point_count = [int(x) for x in l.split()]
+    order, point_count = [int(x) for x in ln.split()]
 
     points = []
     weights = []
 
     for j in range(point_count):
-        l = lines[i]
+        ln = lines[i]
         i += 1
-        data = [float(x) for x in l.split()]
+        data = [float(x) for x in ln.split()]
         points.append(data[:-1])
         weights.append(data[-1])
 
-    table[order] = { 
+    table[order] = {
             "points": points,
-            "weights": weights }
+            "weights": weights}
 
 from pprint import pformat
 print("%s = %s" % (rule_name, pformat(table)))
