@@ -474,23 +474,44 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
     lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
     lebesgue_constant = np.max(lebesgue_worst)
 
-    if visualize:
+    if visualize and dims == 2:
         print("Lebesgue constant: %g" % lebesgue_constant)
-        from modepy.tools import submesh
+        try:
+            import mayavi.mlab as mlab
+            mlab.figure(bgcolor=(1, 1, 1))
+            mlab.triangular_mesh(
+                    tons_of_equi_nodes[0],
+                    tons_of_equi_nodes[1],
+                    lebesgue_worst / lebesgue_constant,
+                    simplex_submesh(equi_node_tuples))
 
-        import mayavi.mlab as mlab
-        mlab.figure(bgcolor=(1, 1, 1))
-        mlab.triangular_mesh(
-                tons_of_equi_nodes[0],
-                tons_of_equi_nodes[1],
-                lebesgue_worst / lebesgue_constant,
-                submesh(equi_node_tuples))
+            x, y = np.mgrid[-1:1:20j, -1:1:20j]
+            mlab.mesh(x, y, 0*x,
+                    representation="wireframe",
+                    color=(0.4, 0.4, 0.4),
+                    line_width=0.6)
+            cb = mlab.colorbar()
+            cb.label_text_property.color = (0, 0, 0)
 
-        x, y = np.mgrid[-1:1:20j, -1:1:20j]
-        mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4),
-                line_width=0.6)
+            mlab.show()
+        except ImportError:
+            import matplotlib.pyplot as plt
 
-        mlab.show()
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.grid()
+            ax.plot(nodes[0], nodes[1], "ko")
+            # NOTE: might be tempted to use `plot_trisurf` here to get a plot
+            # like mayavi, but that will be horrendously slow
+            p = ax.tricontourf(
+                    tons_of_equi_nodes[0],
+                    tons_of_equi_nodes[1],
+                    lebesgue_worst / lebesgue_constant,
+                    triangles=simplex_submesh(equi_node_tuples),
+                    levels=16)
+            fig.colorbar(p)
+            ax.set_aspect("equal")
+            plt.show()
 
     return lebesgue_constant
 
