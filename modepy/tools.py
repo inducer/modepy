@@ -474,8 +474,11 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
     lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
     lebesgue_constant = np.max(lebesgue_worst)
 
-    if visualize and dims == 2:
-        print("Lebesgue constant: %g" % lebesgue_constant)
+    if not visualize:
+        return lebesgue_constant
+
+    if dims == 2:
+        print(f"Lebesgue constant: {lebesgue_constant}")
         try:
             import mayavi.mlab as mlab
             mlab.figure(bgcolor=(1, 1, 1))
@@ -512,6 +515,8 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
             fig.colorbar(p)
             ax.set_aspect("equal")
             plt.show()
+    else:
+        raise ValueError(f"visualization is not supported in {dims}D")
 
     return lebesgue_constant
 
