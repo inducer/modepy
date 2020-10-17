@@ -474,23 +474,49 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
     lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
     lebesgue_constant = np.max(lebesgue_worst)
 
-    if visualize:
-        print("Lebesgue constant: %g" % lebesgue_constant)
-        from modepy.tools import submesh
+    if not visualize:
+        return lebesgue_constant
 
-        import mayavi.mlab as mlab
-        mlab.figure(bgcolor=(1, 1, 1))
-        mlab.triangular_mesh(
-                tons_of_equi_nodes[0],
-                tons_of_equi_nodes[1],
-                lebesgue_worst / lebesgue_constant,
-                submesh(equi_node_tuples))
+    if dims == 2:
+        print(f"Lebesgue constant: {lebesgue_constant}")
+        try:
+            import mayavi.mlab as mlab
+            mlab.figure(bgcolor=(1, 1, 1))
+            mlab.triangular_mesh(
+                    tons_of_equi_nodes[0],
+                    tons_of_equi_nodes[1],
+                    lebesgue_worst / lebesgue_constant,
+                    simplex_submesh(equi_node_tuples))
 
-        x, y = np.mgrid[-1:1:20j, -1:1:20j]
-        mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4),
-                line_width=0.6)
+            x, y = np.mgrid[-1:1:20j, -1:1:20j]
+            mlab.mesh(x, y, 0*x,
+                    representation="wireframe",
+                    color=(0.4, 0.4, 0.4),
+                    line_width=0.6)
+            cb = mlab.colorbar()
+            cb.label_text_property.color = (0, 0, 0)
 
-        mlab.show()
+            mlab.show()
+        except ImportError:
+            import matplotlib.pyplot as plt
+
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.grid()
+            ax.plot(nodes[0], nodes[1], "ko")
+            # NOTE: might be tempted to use `plot_trisurf` here to get a plot
+            # like mayavi, but that will be horrendously slow
+            p = ax.tricontourf(
+                    tons_of_equi_nodes[0],
+                    tons_of_equi_nodes[1],
+                    lebesgue_worst / lebesgue_constant,
+                    triangles=simplex_submesh(equi_node_tuples),
+                    levels=16)
+            fig.colorbar(p)
+            ax.set_aspect("equal")
+            plt.show()
+    else:
+        raise ValueError(f"visualization is not supported in {dims}D")
 
     return lebesgue_constant
 
