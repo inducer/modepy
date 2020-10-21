@@ -126,9 +126,11 @@ def jacobi(alpha, beta, n, x):
     PL = np.zeros((Nx, n+1), np.float64)  # noqa: N806
 
     # Initial values P_0(x) and P_1(x)
-    gamma0 = (2**(alpha+beta+1)
-            / (alpha+beta+1.)
-            * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
+    if abs(alpha + beta + 1) < 1.0e-4:
+        gamma0 = np.pi
+    else:
+        gamma0 = (2**(alpha+beta+1) / (alpha+beta+1.)
+                * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
     PL[:, 0] = 1.0/sqrt(gamma0)
     if n == 0:

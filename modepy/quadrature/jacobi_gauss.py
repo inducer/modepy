@@ -83,15 +83,26 @@ class JacobiGaussQuadrature(Quadrature):
         # see also doc/hedge-notes.tm for correspondence with the Jacobi
         # recursion from Hesthaven/Warburton's book
 
-        from math import sqrt
-
         apb = alpha+beta
+
+        if abs(alpha + 0.5) < 1.0e-14 and abs(beta + 0.5) < 1.0e-14:
+            # NOTE: these are hardcoded for two reasons:
+            #   * the algorithm below doesn't work for alpha = beta = -0.5
+            #   * and, well, we know them explicitly so why not..
+            return (
+                    np.cos(np.pi / (2 * (N+1)) * (2*np.arange(N+1, 0, -1) - 1)),
+                    np.full(N+1, np.pi / (N + 1))
+                    )
+        elif abs(apb + 1.0) < 1.0e-14:
+            raise ValueError("cannot generate quadrature rules for"
+                    f"alpha + beta = 1: ({alpha}, {beta})")
 
         # see Appendix A of Hesthaven/Warburton for these formulas
         def a(n):
-            return (2 / (2*n + apb)
-                    * sqrt((n * (n+apb) * (n+alpha) * (n+beta))
-                        / ((2*n + apb - 1) * (2*n + apb + 1))))
+            return 2 / (2*n + apb) * np.sqrt(
+                (n * (n+apb) * (n+alpha) * (n+beta))
+                / ((2*n + apb - 1) * (2*n + apb + 1))
+                )
 
         def b(n):
             if n == 0:

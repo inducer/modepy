@@ -26,9 +26,14 @@ import numpy.linalg as la
 import pytest
 import modepy.modes as m
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
-    (0, 0, 5e-14),
+    (0, 0, 5e-14),              # Legendre polynomials
+    (-0.5, -0.5, 6e-15),        # Chebyshev polynomials (first kind)
+    (0.5, 0.5, 6e-15),          # Chebyshev polynomials (second kind)
     (1, 0, 4e-14),
     (3, 2, 3e-14),
     (0, 2, 3e-13),
@@ -37,28 +42,19 @@ import modepy.modes as m
     ])
 def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     """Verify that the Jacobi polymials are orthogonal in 1D."""
-    from modepy.modes import jacobi
-    from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
+    from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature
+    logging.basicConfig(level=logging.INFO)
 
     max_n = 10
-    quad = LegendreGaussQuadrature(4*max_n)  # overkill...
-
-    class WeightFunction:
-        def __init__(self, alpha, beta):
-            self.alpha = alpha
-            self.beta = beta
-
-        def __call__(self, x):
-            return (1-x)**self.alpha * (1+x)**self.beta
+    quad = JacobiGaussQuadrature(alpha, beta, 4*max_n)
 
     from functools import partial
-    jac_f = [partial(jacobi, alpha, beta, n) for n in range(max_n)]
-    wf = WeightFunction(alpha, beta)
+    jac_f = [partial(m.jacobi, alpha, beta, n) for n in range(max_n)]
     maxerr = 0
 
     for i, fi in enumerate(jac_f):
         for j, fj in enumerate(jac_f):
-            result = quad(lambda x: wf(x)*fi(x)*fj(x))
+            result = quad(lambda x: fi(x)*fj(x))
 
             if i == j:
                 true_result = 1
@@ -66,8 +62,9 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
                 true_result = 0
             err = abs(result-true_result)
             maxerr = max(maxerr, err)
-            if abs(result-true_result) > ebound:
-                print(("bad", alpha, beta, i, j, abs(result-true_result)))
+            if abs(result - true_result) > ebound:
+                logger.info("[FAILED] (%g, %g): (%d, %d) error %.5e",
+                        alpha, beta, i, j, abs(result - true_result))
 
             assert abs(result-true_result) < ebound
 
