@@ -59,7 +59,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
             err = abs(result-true_result)
             maxerr = max(maxerr, err)
             if abs(result - true_result) > ebound:
-                logger.info("[FAILED] (%g, %g): (%d, %d) error %.5e",
+                logger.error("[FAILED] (%g, %g): (%d, %d) error %.5e",
                         alpha, beta, i, j, abs(result - true_result))
 
             assert abs(result-true_result) < ebound
