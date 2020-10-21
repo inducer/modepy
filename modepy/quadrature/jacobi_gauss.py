@@ -98,7 +98,7 @@ class JacobiGaussQuadrature(Quadrature):
                     np.full(N+1, np.pi / (N + 1))
                     )
         elif abs(apb + 1.0) < 1.0e-14:
-            raise ValueError("cannot generate quadrature rules for"
+            raise ValueError("cannot generate Gauss-Jacobi quadrature rules for "
                     f"alpha + beta = 1: ({alpha}, {beta})")
 
         # see Appendix A of Hesthaven/Warburton for these formulas
