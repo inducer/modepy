@@ -156,7 +156,7 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
 
     The Chebyshev-Gauss quadrature rules of the first kind and second kind
     correspond to Gauss-Jacobi quadrature rules with
-    :math:`\alpha = \beta = 0.5` and :math:`\alpha = \beta = 0.5`,
+    :math:`\alpha = \beta = -0.5` and :math:`\alpha = \beta = 0.5`,
     respectively.
 
     .. versionadded:: 2019.1
