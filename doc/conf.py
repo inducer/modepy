@@ -272,4 +272,4 @@ intersphinx_mapping = {
         "https://documen.tician.de/pytools": None,
         }
 
-autoclass_content = "both"
+autoclass_content = "class"

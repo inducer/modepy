@@ -27,30 +27,34 @@ from modepy.quadrature import Quadrature
 
 
 class JacobiGaussQuadrature(Quadrature):
-    r"""An Gauss quadrature of order *N* associated with the
-    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`,
-    where :math:`\alpha, \beta > -1`.
+    r"""A Gauss quadrature of order *N* associated with the Jacobi polynomials.
 
-    :arg backend: Either ``"builtin"`` or ``"scipy"``.
+    The quadrature rule can be used for weighted integrals of the form
 
-    When the ``"builtin"`` back-end is in use, there is an additional requirement
-    that :math:`(\alpha, \beta) \not \in \{(-1/2, -1/2)\}`. The ``"scipy"``
-    backend has no such restriction.
+    .. math::
 
-    The sample points are the roots of the (N+1)-th degree Jacobi polynomial.
-    Nodes and weights can be obtained from one of the supported backends
-    (builtin, scipy).
+        I[f] = \int_{-1}^1 f(x) (1 - x)^\alpha (1 + x)^\beta\, \mathrm{d}x,
 
-    Integrates on the interval :math:`(-1, 1)`.
-    The quadrature rule is exact up to degree :math:`2N + 1`.
+    where :math:`\alpha, \beta > -1`. The quadrature rule is exact
+    up to degree :math:`2N + 1`.
 
     Inherits from :class:`modepy.Quadrature`. See there for the interface
     to obtain nodes and weights.
+
+    .. automethod:: __init__
     """
-    def __init__(self, alpha, beta, N, backend=None):  # noqa
-        # default backend
+
+    def __init__(self, alpha, beta, N, backend=None):  # noqa: N803
+        r"""
+        :arg backend: Either ``"builtin"`` or ``"scipy"``. When the
+            ``"builtin"`` backend is in use, there is an additional
+            requirement that :math:`\alpha + \beta \ne -1`, with the exception
+            of the Chebyshev quadrature :math:`\alpha = \beta = -1/2`. The
+            ``"scipy"`` backend has no such restriction.
+        """
         if backend is None:
             backend = "builtin"
+
         if backend == "builtin":
             x, w = self.compute_weights_and_nodes(N, alpha, beta)
         elif backend == "scipy":
@@ -63,7 +67,7 @@ class JacobiGaussQuadrature(Quadrature):
         Quadrature.__init__(self, x, w)
 
     @staticmethod
-    def compute_weights_and_nodes(N, alpha, beta):  # noqa
+    def compute_weights_and_nodes(N, alpha, beta):  # noqa: N803
         """
         :arg N: order of the Gauss quadrature (the order of exactly
             integrated polynomials is :math:`2 N + 1`).
@@ -137,30 +141,28 @@ class JacobiGaussQuadrature(Quadrature):
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
-    """An Gauss quadrature associated with weight 1.
+    r"""A Gauss quadrature rule with weight :math:`1`.
 
-    Integrates on the interval :math:`(-1, 1)`.
-    The quadrature rule is exact up to degree :math:`2N + 1`.
-
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
-
-    (NOTE: Gauss–Legendre quadrature is a special case of Gauss–Jacobi
-    quadrature with α = β = 0.)
+    Corresponds to a Gauss-Jacobi quadrature rule with
+    :math:`\alpha = \beta = 0`.
     """
 
-    def __init__(self, N, backend=None):  # noqa
+    def __init__(self, N, backend=None):  # noqa: N803
         JacobiGaussQuadrature.__init__(self, 0, 0, N, backend)
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
-    """Chebyshev-Gauss quadrature of the first/second kind are special cases
-    of Gauss–Jacobi quadrature with α = β = -0.5/0.5.
+    r"""A Gauss quadrature rule with a square root weight.
+
+    The Chebyshev-Gauss quadrature rules of the first kind and second kind
+    correspond to Gauss-Jacobi quadrature rules with
+    :math:`\alpha = \beta = 0.5` and :math:`\alpha = \beta = 0.5`,
+    respectively.
 
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, N, kind=1, backend=None):  # noqa
+    def __init__(self, N, kind=1, backend=None):  # noqa: N803
         if kind == 1:
             # FIXME: division by zero using built-in backend
             JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N, backend="scipy")
@@ -169,17 +171,17 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
 
 
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
-    """Gauss-Gegenbauer quadrature is a special case of Gauss–Jacobi quadrature
-    with α = β.
+    r"""Gauss-Gegenbauer quadrature is a special case of Gauss-Jacobi quadrature
+    with :math:`\alpha = \beta`.
 
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, alpha, N, backend=None):  # noqa
+    def __init__(self, alpha, N, backend=None):  # noqa: N803
         JacobiGaussQuadrature.__init__(self, alpha, alpha, N, backend)
 
 
-def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
+def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa: N803
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters.
@@ -200,7 +202,7 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa
     return x
 
 
-def legendre_gauss_lobatto_nodes(N, backend=None):  # noqa
+def legendre_gauss_lobatto_nodes(N, backend=None):  # noqa: N803
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
 
     Exact to degree :math:`2N - 1`.
