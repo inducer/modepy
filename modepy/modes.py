@@ -126,7 +126,7 @@ def jacobi(alpha, beta, n, x):
     PL = np.zeros((Nx, n+1), np.float64)  # noqa: N806
 
     # Initial values P_0(x) and P_1(x)
-    if abs(alpha + beta + 1) < 1.0e-4:
+    if abs(alpha + beta + 1) < 1.0e-14:
         gamma0 = np.pi
     else:
         gamma0 = (2**(alpha+beta+1) / (alpha+beta+1.)

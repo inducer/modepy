@@ -31,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
-    (0, 0, 5e-14),              # Legendre polynomials
-    (-0.5, -0.5, 6e-15),        # Chebyshev polynomials (first kind)
-    (0.5, 0.5, 6e-15),          # Chebyshev polynomials (second kind)
+    (0, 0, 5e-14),              # Gauss-Legendre
+    (-0.5, -0.5, 6e-15),        # Chebyshev-Gauss (first kind)
+    (0.5, 0.5, 6e-15),          # Chebyshev-Gauss (second kind)
     (1, 0, 4e-14),
     (3, 2, 3e-14),
     (0, 2, 3e-13),
@@ -43,7 +43,6 @@ logger = logging.getLogger(__name__)
 def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     """Verify that the Jacobi polymials are orthogonal in 1D."""
     from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature
-    logging.basicConfig(level=logging.INFO)
 
     max_n = 10
     quad = JacobiGaussQuadrature(alpha, beta, 4*max_n)
@@ -55,11 +54,8 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     for i, fi in enumerate(jac_f):
         for j, fj in enumerate(jac_f):
             result = quad(lambda x: fi(x)*fj(x))
+            true_result = 1.0 if i == j else 0.0
 
-            if i == j:
-                true_result = 1
-            else:
-                true_result = 0
             err = abs(result-true_result)
             maxerr = max(maxerr, err)
             if abs(result - true_result) > ebound:
