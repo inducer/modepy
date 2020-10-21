@@ -152,7 +152,7 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
-    r"""A Gauss quadrature rule with a square root weight.
+    r"""A Gauss quadrature rule with weight :math:`\sqrt{1-x^2}^{\mp 1}`.
 
     The Chebyshev-Gauss quadrature rules of the first kind and second kind
     correspond to Gauss-Jacobi quadrature rules with
