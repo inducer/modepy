@@ -80,6 +80,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
       SIAM J. Numer. Anal. 15 (1978), 282--290.
       http://dx.doi.org/10.1137/0715019
 
+    .. automethod:: __init__
+    .. automethod:: __call__
     """
 
     def __init__(self, order, dimension):

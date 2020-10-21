@@ -10,8 +10,6 @@ Base classes
 
 .. autoclass:: Quadrature
 
-    .. automethod:: __call__
-
 Jacobi-Gauss quadrature in one dimension
 ----------------------------------------
 
@@ -53,14 +51,8 @@ Quadratures on the simplex
 
 .. autoclass:: GrundmannMoellerSimplexQuadrature
 
-    .. automethod:: __call__
-
 .. autoclass:: XiaoGimbutasSimplexQuadrature
 
-    .. automethod:: __call__
-
 .. autoclass:: VioreanuRokhlinSimplexQuadrature
-
-    .. automethod:: __call__
 
 .. vim: sw=4

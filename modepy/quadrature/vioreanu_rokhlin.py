@@ -66,6 +66,9 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
           `Dissertation <http://gradworks.umi.com/3525285.pdf>`_
 
     .. versionadded :: 2013.3
+
+    .. automethod:: __init__
+    .. automethod:: __call__
     """
 
     def __init__(self, order, dims):

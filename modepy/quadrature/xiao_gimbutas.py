@@ -47,6 +47,9 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
         efficient quadrature rules in two and higher dimensions," Computers &
         Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
         http://dx.doi.org/10.1016/j.camwa.2009.10.027
+
+    .. automethod:: __init__
+    .. automethod:: __call__
     """
 
     def __init__(self, order, dims):

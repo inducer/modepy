@@ -47,6 +47,8 @@ class Quadrature:
     .. attribute :: exact_to
 
         Total polynomial degree up to which the quadrature is exact.
+
+    .. automethod:: __call__
     """
 
     def __init__(self, nodes, weights):
