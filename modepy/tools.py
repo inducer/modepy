@@ -101,6 +101,13 @@ class Monomial:
                 * reduce(mul, (factorial(alpha) for alpha in self.exponents))
                 / factorial(len(self.exponents)+sum(self.exponents)))
 
+    def hypercube_integral(self):
+        """Integral over the unit hypercube."""
+        from functools import reduce
+        return reduce(
+                lambda integral, n: integral * 1 / (n + 1),
+                self.exponents, 1.0)
+
     def diff(self, coordinate):
         diff_exp = list(self.exponents)
         orig_exp = diff_exp[coordinate]

@@ -28,7 +28,7 @@ class WitherdenVincentQuadrature(Quadrature):
     """Symmetric quadrature rules with positive weights for rectangles and
     hexahedra.
 
-    The integration domain is the unit box :math:`[-1, 1]^d`, where :math:`d`
+    The integration domain is the unit hypercube :math:`[-1, 1]^d`, where :math:`d`
     is the dimension. The quadrature rules are adapted from::
 
         F. D. Witherden, P. E. Vincent,
@@ -45,12 +45,13 @@ class WitherdenVincentQuadrature(Quadrature):
 
     def __init__(self, order, dims):
         if order % 2 == 0:
+            # NOTE: only odd orders are provided, so we cheat a bit
             order = order + 1
 
         if dims == 2:
             from modepy.quadrature.witherden_vincent_quad_data import \
                     quad_data as table
-        elif dim == 3:
+        elif dims == 3:
             from modepy.quadrature.witherden_vincent_quad_data import \
                     hex_data as table
         else:
@@ -61,5 +62,5 @@ class WitherdenVincentQuadrature(Quadrature):
         except KeyError:
             raise QuadratureRuleUnavailable
 
-        super().__init__(rule["points"], rule["weight"])
+        super().__init__(rule["points"], rule["weights"])
         self.exact_to = rule["quad_degree"]

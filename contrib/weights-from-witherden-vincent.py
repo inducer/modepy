@@ -60,7 +60,7 @@ def generate_witherden_vincent_quadrature_rules(outfile):
         quad_rules[degree] = {
                 "quad_degree": degree,
                 "points": txt[:, :-1].T.tolist(),
-                "weights": (txt[:, -1] / 4.0).tolist()
+                "weights": txt[:, -1].tolist()
                 }
 
         assert abs(np.sum(txt[:, -1]) - 4.0) < 1.0e-12
