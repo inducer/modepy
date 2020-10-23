@@ -47,6 +47,7 @@ from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
 from modepy.quadrature.clenshaw_curtis import (
         ClenshawCurtisQuadrature, FejerQuadrature)
+from modepy.quadrature.witherden_vincent import WitherdenVincentQuadrature
 
 from modepy.version import VERSION_TEXT as __version__  # noqa: N811
 
@@ -78,6 +79,7 @@ __all__ = [
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
         "ClenshawCurtisQuadrature", "FejerQuadrature",
+        "WitherdenVincentQuadrature",
         ]
 
 from pytools import MovedFunctionDeprecationWrapper
