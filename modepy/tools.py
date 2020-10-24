@@ -233,6 +233,9 @@ def pick_random_simplex_unit_coordinate(rng, dims):
     return r
 
 
+def pick_random_hypercube_unit_coordinate(rng, dims):
+    return np.array([rng.uniform(-1.0, 1.0) for _ in range(dims)])
+
 # {{{ accept_scalar_or_vector decorator
 
 class accept_scalar_or_vector:  # noqa
