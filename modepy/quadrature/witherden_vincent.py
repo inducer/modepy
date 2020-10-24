@@ -44,10 +44,6 @@ class WitherdenVincentQuadrature(Quadrature):
     """
 
     def __init__(self, order, dims):
-        if order % 2 == 0:
-            # NOTE: only odd orders are provided, so we cheat a bit
-            order = order + 1
-
         if dims == 2:
             from modepy.quadrature.witherden_vincent_quad_data import \
                     quad_data as table
