@@ -58,7 +58,7 @@ __all__ = [
         "simplex_monomial_basis", "grad_simplex_monomial_basis",
         "simplex_monomial_basis_with_mode_ids",
         "simplex_best_available_basis", "grad_simplex_best_available_basis",
-        "tensor_product_basis", "grad_tensor_product_basis"
+        "tensor_product_basis", "grad_tensor_product_basis",
 
         "equidistant_nodes", "warp_and_blend_nodes",
         "tensor_product_nodes",

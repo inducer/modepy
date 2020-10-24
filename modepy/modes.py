@@ -641,7 +641,7 @@ class _TensorProductGradientBasisFunction:
         self.per_dim_derivatives = tuple(per_dim_derivatives)
 
     def __call__(self, x):
-        result = [1,] * len(self.per_dim_derivatives)
+        result = [1] * len(self.per_dim_derivatives)
         for ider, per_dim_functions in enumerate(self.per_dim_derivatives):
             for iaxis, per_dim_function in enumerate(per_dim_functions):
                 result[ider] *= per_dim_function(x[iaxis])
