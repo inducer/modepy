@@ -400,6 +400,42 @@ def simplex_submesh(node_tuples):
 submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
 
 
+def hypercube_submesh(node_tuples):
+    """Return a list of tuples of indices into the node list that
+    generate a tesselation of the reference element.
+
+    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
+        indicating node positions inside the unit element. The
+        returned list references indices in this list.
+
+        :func:`pytools.generate_nonnegative_integer_tuples_below`
+        may be used to generate *node_tuples*.
+
+    See also :func:`simplex_submesh`.
+    """
+
+    from pytools import single_valued, add_tuples
+    dims = single_valued(len(nt) for nt in node_tuples)
+
+    node_dict = {
+            ituple: idx
+            for idx, ituple in enumerate(node_tuples)}
+
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+
+    result = []
+    for current in node_tuples:
+        try:
+            result.append(tuple(
+                    node_dict[add_tuples(current, offset)]
+                    for offset in gnitb(2, dims)))
+
+        except KeyError:
+            pass
+
+    return result
+
+
 @accept_scalar_or_vector(2, 2)
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
@@ -442,7 +478,40 @@ def plot_element_values(n, nodes, values, resample_n=None,
 
 # {{{ lebesgue constant
 
-def estimate_lebesgue_constant(n, nodes, visualize=False):
+def _evaluate_lebesgue_function(n, nodes, domain):
+    dims = len(nodes)
+    huge_n = 30*n
+
+    if domain == "simplex":
+        from modepy.modes import simplex_onb as domain_basis_onb
+        from pytools import (
+                generate_nonnegative_integer_tuples_summing_to_at_most
+                as generate_node_tuples)
+    elif domain == "hypercube":
+        from modepy.modes import (
+                legendre_tensor_product_basis as domain_basis_onb)
+        from pytools import (
+                generate_nonnegative_integer_tuples_below
+                as generate_node_tuples)
+    else:
+        raise ValueError(f"unknown domain: '{domain}'")
+
+    basis = domain_basis_onb(dims, n)
+    equi_node_tuples = list(generate_node_tuples(huge_n, dims))
+    equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
+
+    from modepy.matrices import vandermonde
+    vdm = vandermonde(basis, nodes)
+
+    eq_vdm = vandermonde(basis, equi_nodes)
+    eq_to_out = la.solve(vdm.T, eq_vdm.T).T
+
+    lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
+
+    return lebesgue_worst, equi_node_tuples, equi_nodes
+
+
+def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
     """Estimate the
     `Lebesgue constant
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
@@ -456,25 +525,12 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
 
     .. versionadded:: 2013.2
     """
-    from modepy.matrices import vandermonde
-    from modepy.modes import simplex_onb
+    if domain is None:
+        domain = "simplex"
 
     dims = len(nodes)
-    basis = simplex_onb(dims, n)
-    vdm = vandermonde(basis, nodes)
-
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
-    huge_n = 30*n
-    equi_node_tuples = list(gnitstam(huge_n, dims))
-    tons_of_equi_nodes = (
-            np.array(equi_node_tuples, dtype=np.float64)
-            / huge_n * 2 - 1).T
-
-    eq_vdm = vandermonde(basis, tons_of_equi_nodes)
-    eq_to_out = la.solve(vdm.T, eq_vdm.T).T
-
-    lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
+    lebesgue_worst, equi_node_tuples, equi_nodes = \
+            _evaluate_lebesgue_function(n, nodes, domain)
     lebesgue_constant = np.max(lebesgue_worst)
 
     if not visualize:
@@ -482,14 +538,20 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
 
     if dims == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
+
+        if domain == "simplex":
+            triangles = simplex_submesh(equi_node_tuples)
+        elif domain == "hypercube":
+            triangles = hypercube_submesh(equi_node_tuples)
+        else:
+            triangles = None
+
         try:
             import mayavi.mlab as mlab
             mlab.figure(bgcolor=(1, 1, 1))
             mlab.triangular_mesh(
-                    tons_of_equi_nodes[0],
-                    tons_of_equi_nodes[1],
-                    lebesgue_worst / lebesgue_constant,
-                    simplex_submesh(equi_node_tuples))
+                    equi_nodes[0], equi_nodes[1], lebesgue_worst / lebesgue_constant,
+                    triangles)
 
             x, y = np.mgrid[-1:1:20j, -1:1:20j]
             mlab.mesh(x, y, 0*x,
@@ -510,10 +572,8 @@ def estimate_lebesgue_constant(n, nodes, visualize=False):
             # NOTE: might be tempted to use `plot_trisurf` here to get a plot
             # like mayavi, but that will be horrendously slow
             p = ax.tricontourf(
-                    tons_of_equi_nodes[0],
-                    tons_of_equi_nodes[1],
-                    lebesgue_worst / lebesgue_constant,
-                    triangles=simplex_submesh(equi_node_tuples),
+                    equi_nodes[0], equi_nodes[1], lebesgue_worst / lebesgue_constant,
+                    triangles=triangles,
                     levels=16)
             fig.colorbar(p)
             ax.set_aspect("equal")

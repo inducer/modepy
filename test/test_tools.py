@@ -303,6 +303,57 @@ def test_nodal_face_mass_matrix(dim, order=3):
 # }}}
 
 
+# {{{ test_estimate_lebesgue_constant
+
+@pytest.mark.parametrize("dims", [1, 2])
+@pytest.mark.parametrize("order", [3, 5, 8])
+@pytest.mark.parametrize("domain", ["simplex", "hypercube"])
+def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
+    logging.basicConfig(level=logging.INFO)
+
+    if domain == "simplex":
+        nodes = mp.warp_and_blend_nodes(dims, order)
+    elif domain == "hypercube":
+        from modepy.nodes import legendre_gauss_lobatto_tensor_produt_nodes
+        nodes = legendre_gauss_lobatto_tensor_produt_nodes(dims, order)
+    else:
+        raise ValueError(f"unknown domain: '{domain}'")
+
+    from modepy.tools import estimate_lebesgue_constant
+    lebesgue_constant = estimate_lebesgue_constant(order, nodes, domain=domain)
+    logger.info("%s-%d/%s: %.5e", domain, dims, order, lebesgue_constant)
+
+    if not visualize:
+        return
+
+    from modepy.tools import _evaluate_lebesgue_function
+    lebesgue, equi_node_tuples, equi_nodes = \
+            _evaluate_lebesgue_function(order, nodes, domain)
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.grid()
+
+    if dims == 1:
+        ax.plot(equi_nodes[0], lebesgue)
+        ax.set_xlabel("$x$")
+        ax.set_ylabel(fr"$\lambda_{order}$")
+    elif dims == 2:
+        ax.plot(nodes[0], nodes[1], "ko")
+        p = ax.tricontourf(equi_nodes[0], equi_nodes[1], lebesgue, levels=16)
+        fig.colorbar(p)
+        ax.set_xlim([-1.1, 1.1])
+        ax.set_ylim([-1.1, 1.1])
+        ax.set_aspect("equal")
+    else:
+        raise ValueError(f"unsupported dimension: {dims}")
+
+    fig.savefig(f"estimate_lebesgue_constant_{domain}_{dims}_order_{order}")
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
