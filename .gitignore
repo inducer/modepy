@@ -12,5 +12,6 @@ setuptools.pth
 distribute*egg
 distribute*tar.gz
 a.out
+tags
 
 .cache
