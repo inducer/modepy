@@ -42,8 +42,17 @@ def equidistant_nodes(dims, n, node_tuples=None):
                 as gnitstam
         node_tuples = list(gnitstam(n, dims))
     else:
-        if len(node_tuples) != (n+1)*(n+2)//2:
-            raise ValueError("node_tuples list does not have the correct length")
+        try:
+            from math import comb       # comb is v3.8+
+            node_count = comb(n + dims, dims)
+        except ImportError:
+            from functools import reduce
+            from operator import mul
+            node_count = reduce(mul, range(n + 1, n + dims + 1), 1) \
+                    // reduce(mul, range(1, dims + 1), 1)
+
+        if len(node_tuples) != node_count:
+            raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (2, nnodes)
     return (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
