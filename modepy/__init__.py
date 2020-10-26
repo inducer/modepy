@@ -28,9 +28,11 @@ from modepy.modes import (
         simplex_monomial_basis, grad_simplex_monomial_basis,
         simplex_monomial_basis_with_mode_ids,
         simplex_best_available_basis, grad_simplex_best_available_basis,
-        tensor_product_basis, grad_tensor_product_basis)
-from modepy.nodes import (equidistant_nodes, warp_and_blend_nodes,
-        tensor_product_nodes)
+        tensor_product_basis, grad_tensor_product_basis,
+        legendre_tensor_product_basis, grad_legendre_tensor_product_basis)
+from modepy.nodes import (
+        equidistant_nodes, warp_and_blend_nodes,
+        tensor_product_nodes, legendre_gauss_lobatto_tensor_product_nodes)
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
         diff_matrix_permutation,
@@ -59,9 +61,10 @@ __all__ = [
         "simplex_monomial_basis_with_mode_ids",
         "simplex_best_available_basis", "grad_simplex_best_available_basis",
         "tensor_product_basis", "grad_tensor_product_basis",
+        "legendre_tensor_product_basis", "grad_legendre_tensor_product_basis",
 
         "equidistant_nodes", "warp_and_blend_nodes",
-        "tensor_product_nodes",
+        "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
         "diff_matrix_permutation",
