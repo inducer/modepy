@@ -314,8 +314,8 @@ def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
     if domain == "simplex":
         nodes = mp.warp_and_blend_nodes(dims, order)
     elif domain == "hypercube":
-        from modepy.nodes import legendre_gauss_lobatto_tensor_produt_nodes
-        nodes = legendre_gauss_lobatto_tensor_produt_nodes(dims, order)
+        from modepy.nodes import legendre_gauss_lobatto_tensor_product_nodes
+        nodes = legendre_gauss_lobatto_tensor_product_nodes(dims, order)
     else:
         raise ValueError(f"unknown domain: '{domain}'")
 
