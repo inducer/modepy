@@ -354,6 +354,30 @@ def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
 # }}}
 
 
+# {{{ test_hypercube_submesh
+
+@pytest.mark.parametrize("dims", [2, 3, 4])
+def test_hypercube_submesh(dims):
+    from modepy.tools import hypercube_submesh
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+
+    node_tuples = list(gnitb(3, dims))
+
+    for i, nt in enumerate(node_tuples):
+        logger.info("[%4d] nodes %s", i, nt)
+
+    assert len(node_tuples) == 3**dims
+
+    elements = hypercube_submesh(node_tuples)
+
+    for e in elements:
+        logger.info("element: %s", e)
+
+    assert len(elements) == 2**dims
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
