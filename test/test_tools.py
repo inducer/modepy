@@ -153,15 +153,11 @@ def test_resampling_matrix(dims, eltype):
         coarse_basis = mp.simplex_onb(dims, ncoarse)
         fine_basis = mp.simplex_onb(dims, nfine)
     elif eltype == "tensor":
-        coarse_nodes = mp.tensor_product_nodes(dims,
-                mp.warp_and_blend_nodes(1, ncoarse)[0])
-        fine_nodes = mp.tensor_product_nodes(dims,
-                mp.warp_and_blend_nodes(1, nfine)[0])
+        coarse_nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, ncoarse)
+        fine_nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, nfine)
 
-        coarse_basis = mp.tensor_product_basis(dims,
-                mp.simplex_onb(1, ncoarse))
-        fine_basis = mp.tensor_product_basis(dims,
-                mp.simplex_onb(1, nfine))
+        coarse_basis = mp.legendre_tensor_product_basis(dims, ncoarse)
+        fine_basis = mp.legendre_tensor_product_basis(dims, nfine)
     else:
         raise ValueError(f"unknown element type: {eltype}")
 
@@ -194,12 +190,9 @@ def test_diff_matrix(dims, eltype):
         basis = mp.simplex_onb(dims, n)
         grad_basis = mp.grad_simplex_onb(dims, n)
     elif eltype == "tensor":
-        nodes = mp.tensor_product_nodes(dims,
-                mp.warp_and_blend_nodes(1, n)[0])
-        basis = mp.tensor_product_basis(dims,
-                mp.simplex_onb(1, n))
-        grad_basis = mp.grad_tensor_product_basis(dims,
-                mp.simplex_onb(1, n), mp.grad_simplex_onb(1, n))
+        nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, n)
+        basis = mp.legendre_tensor_product_basis(dims, n)
+        grad_basis = mp.grad_legendre_tensor_product_basis(dims, n)
     else:
         raise ValueError(f"unknown element type: {eltype}")
 
