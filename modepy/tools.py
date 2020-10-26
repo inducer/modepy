@@ -412,6 +412,8 @@ def hypercube_submesh(node_tuples):
         may be used to generate *node_tuples*.
 
     See also :func:`simplex_submesh`.
+
+    .. versionadded:: 2020.2
     """
 
     from pytools import single_valued, add_tuples
@@ -519,11 +521,18 @@ def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
 
     :arg nodes: an array of shape *(dims, nnodes)* as returned by
         :func:`modepy.warp_and_blend_nodes`.
+    :arg domain: represents the domain of the reference element and can be
+        either ``"simplex"`` or ``"hypercube"``.
     :arg visualize: visualize the function that gives rise to the
         returned Lebesgue constant. (2D only for now)
-    :return: the Lebesgue constant, a scalar
+    :return: the Lebesgue constant, a scalar.
 
     .. versionadded:: 2013.2
+
+    .. versionchanged:: 2020.2
+
+        *domain* parameter was added with support for nodes on the unit
+        hypercube (i.e. unit square in 2D and unit cube in 3D).
     """
     if domain is None:
         domain = "simplex"

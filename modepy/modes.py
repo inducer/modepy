@@ -71,6 +71,7 @@ Dimension-independent basis getters for tensor-product bases
 ------------------------------------------------------------
 
 .. autofunction:: tensor_product_basis
+.. autofunction:: grad_tensor_product_basis
 
 Dimension-specific functions
 ----------------------------
@@ -670,7 +671,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
     :returns: a :class:`tuple` of callables, where each one returns a
         *dims*-dimensional :class:`tuple`, one for each derivative.
 
-    .. versionadded: 2020.3
+    .. versionadded: 2020.2
     """
     from pytools import (
             wandering_element,
