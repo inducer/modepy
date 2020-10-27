@@ -309,6 +309,12 @@ def tensor_product_nodes(dims, nodes_1d):
 
     return result.reshape(dims, -1)
 
+
+def legendre_gauss_lobatto_tensor_product_nodes(dims, n):
+    from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
+    return tensor_product_nodes(dims,
+            legendre_gauss_lobatto_nodes(n))
+
 # }}}
 
 

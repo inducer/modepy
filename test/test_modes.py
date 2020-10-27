@@ -102,38 +102,50 @@ def test_pkdo_orthogonality(dims, order, ebound):
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
-@pytest.mark.parametrize(("basis_getter", "grad_basis_getter"), [
-    (m.simplex_onb, m.grad_simplex_onb),
-    (m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
+@pytest.mark.parametrize(("eltype", "basis_getter", "grad_basis_getter"), [
+    ("simplex", m.simplex_onb, m.grad_simplex_onb),
+    ("simplex", m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
+    ("tensor", m.legendre_tensor_product_basis, m.grad_legendre_tensor_product_basis)
     ])
-def test_simplex_basis_grad(dims, order, basis_getter, grad_basis_getter):
+def test_basis_grad(dims, order, eltype, basis_getter, grad_basis_getter):
     """Do a simplistic FD-style check on the gradients of the basis."""
 
-    if dims == 3:
-        err_factor = 3
+    h = 1.0e-4
+    if eltype == "simplex" and order == 8 and dims == 3:
+        factor = 3.0
     else:
-        err_factor = 1
+        factor = 1.0
+
+    if eltype == "simplex":
+        from modepy.tools import \
+                pick_random_simplex_unit_coordinate as pick_random_unit_coordinate
+    elif eltype == "tensor":
+        from modepy.tools import \
+                pick_random_hypercube_unit_coordinate as pick_random_unit_coordinate
+    else:
+        raise ValueError(f"unknown element type: {eltype}")
 
     from random import Random
     rng = Random(17)
 
-    from modepy.tools import pick_random_simplex_unit_coordinate
+    from pytools import wandering_element
     for i_bf, (bf, gradbf) in enumerate(zip(
                 basis_getter(dims, order),
                 grad_basis_getter(dims, order),
                 )):
         for i in range(10):
-            r = pick_random_simplex_unit_coordinate(rng, dims)
+            r = pick_random_unit_coordinate(rng, dims)
 
-            from pytools import wandering_element
-            h = 1e-4
             gradbf_v = np.array(gradbf(r))
-            approx_gradbf_v = np.array([
+            gradbf_v_num = np.array([
                 (bf(r+h*unit) - bf(r-h*unit))/(2*h)
-                for unit in [np.array(unit) for unit in wandering_element(dims)]
+                for unit_tuple in wandering_element(dims)
+                for unit in (np.array(unit_tuple),)
                 ])
-            err = la.norm(approx_gradbf_v-gradbf_v, np.Inf)
-            assert err < err_factor*h
+
+            err = la.norm(gradbf_v_num - gradbf_v)
+            logger.info("error: %.5", err)
+            assert err < factor * h, (err, i_bf)
 
 
 # You can test individual routines by typing

@@ -27,6 +27,9 @@ import modepy as mp
 from functools import partial
 import pytest
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # {{{ modal decay test functions
 
@@ -64,6 +67,8 @@ def constant(x):
 
 # }}}
 
+
+# {{{ test_modal_decay
 
 @pytest.mark.parametrize(("case_name", "test_func", "dims", "n", "expected_expn"), [
     ("jump-1d", partial(jump, 0), 1, 10, -1),
@@ -130,23 +135,37 @@ def test_residual_estimation(case_name, test_func, dims, n):
     print(f"{case_name}: {float(resid):g} -> {float(resid2):g}")
     assert resid2 < resid
 
+# }}}
+
+
+# {{{ test_resampling_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-def test_resampling_matrix(dims):
+@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
+def test_resampling_matrix(dims, eltype):
     ncoarse = 5
     nfine = 10
 
-    coarse_nodes = mp.warp_and_blend_nodes(dims, ncoarse)
-    fine_nodes = mp.warp_and_blend_nodes(dims, nfine)
+    if eltype == "simplex":
+        coarse_nodes = mp.warp_and_blend_nodes(dims, ncoarse)
+        fine_nodes = mp.warp_and_blend_nodes(dims, nfine)
 
-    coarse_basis = mp.simplex_onb(dims, ncoarse)
-    fine_basis = mp.simplex_onb(dims, nfine)
+        coarse_basis = mp.simplex_onb(dims, ncoarse)
+        fine_basis = mp.simplex_onb(dims, nfine)
+    elif eltype == "tensor":
+        coarse_nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, ncoarse)
+        fine_nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, nfine)
+
+        coarse_basis = mp.legendre_tensor_product_basis(dims, ncoarse)
+        fine_basis = mp.legendre_tensor_product_basis(dims, nfine)
+    else:
+        raise ValueError(f"unknown element type: {eltype}")
 
     my_eye = np.dot(
             mp.resampling_matrix(fine_basis, coarse_nodes, fine_nodes),
             mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes))
 
-    assert la.norm(my_eye - np.eye(len(my_eye))) < 1e-13
+    assert la.norm(my_eye - np.eye(len(my_eye))) < 3e-13
 
     my_eye_least_squares = np.dot(
             mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes,
@@ -156,25 +175,39 @@ def test_resampling_matrix(dims):
 
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
 
+# }}}
+
+
+# {{{ test_diff_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-def test_diff_matrix(dims):
+@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
+def test_diff_matrix(dims, eltype):
     n = 5
-    nodes = mp.warp_and_blend_nodes(dims, n)
 
-    f = np.sin(nodes[0])
-    df_dx = np.cos(nodes[0])
+    if eltype == "simplex":
+        nodes = mp.warp_and_blend_nodes(dims, n)
+        basis = mp.simplex_onb(dims, n)
+        grad_basis = mp.grad_simplex_onb(dims, n)
+    elif eltype == "tensor":
+        nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, n)
+        basis = mp.legendre_tensor_product_basis(dims, n)
+        grad_basis = mp.grad_legendre_tensor_product_basis(dims, n)
+    else:
+        raise ValueError(f"unknown element type: {eltype}")
 
-    diff_mat = mp.differentiation_matrices(
-            mp.simplex_onb(dims, n),
-            mp.grad_simplex_onb(dims, n),
-            nodes)
+    diff_mat = mp.differentiation_matrices(basis, grad_basis, nodes)
     if isinstance(diff_mat, tuple):
         diff_mat = diff_mat[0]
+
+    f = np.sin(nodes[0])
+
+    df_dx = np.cos(nodes[0])
     df_dx_num = np.dot(diff_mat, f)
 
-    print(la.norm(df_dx-df_dx_num))
-    assert la.norm(df_dx-df_dx_num) < 1e-3
+    error = la.norm(df_dx - df_dx_num) / la.norm(df_dx)
+    logger.info("error: %.5e", error)
+    assert error < 2.0e-4, error
 
 
 @pytest.mark.parametrize("dims", [2, 3])
@@ -197,6 +230,10 @@ def test_diff_matrix_permutation(dims):
                 diff_matrices[iref_axis]
                 - diff_matrices[0][perm][:, perm]) < 1e-10
 
+# }}}
+
+
+# {{{ test_face_mass_matrix
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_modal_face_mass_matrix(dim, order=3):
@@ -255,6 +292,83 @@ def test_nodal_face_mass_matrix(dim, order=3):
     print(mp.mass_matrix(
         mp.simplex_onb(dim-1, order),
         mp.warp_and_blend_nodes(dim-1, order), ))
+
+# }}}
+
+
+# {{{ test_estimate_lebesgue_constant
+
+@pytest.mark.parametrize("dims", [1, 2])
+@pytest.mark.parametrize("order", [3, 5, 8])
+@pytest.mark.parametrize("domain", ["simplex", "hypercube"])
+def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
+    logging.basicConfig(level=logging.INFO)
+
+    if domain == "simplex":
+        nodes = mp.warp_and_blend_nodes(dims, order)
+    elif domain == "hypercube":
+        from modepy.nodes import legendre_gauss_lobatto_tensor_product_nodes
+        nodes = legendre_gauss_lobatto_tensor_product_nodes(dims, order)
+    else:
+        raise ValueError(f"unknown domain: '{domain}'")
+
+    from modepy.tools import estimate_lebesgue_constant
+    lebesgue_constant = estimate_lebesgue_constant(order, nodes, domain=domain)
+    logger.info("%s-%d/%s: %.5e", domain, dims, order, lebesgue_constant)
+
+    if not visualize:
+        return
+
+    from modepy.tools import _evaluate_lebesgue_function
+    lebesgue, equi_node_tuples, equi_nodes = \
+            _evaluate_lebesgue_function(order, nodes, domain)
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.grid()
+
+    if dims == 1:
+        ax.plot(equi_nodes[0], lebesgue)
+        ax.set_xlabel("$x$")
+        ax.set_ylabel(fr"$\lambda_{order}$")
+    elif dims == 2:
+        ax.plot(nodes[0], nodes[1], "ko")
+        p = ax.tricontourf(equi_nodes[0], equi_nodes[1], lebesgue, levels=16)
+        fig.colorbar(p)
+        ax.set_xlim([-1.1, 1.1])
+        ax.set_ylim([-1.1, 1.1])
+        ax.set_aspect("equal")
+    else:
+        raise ValueError(f"unsupported dimension: {dims}")
+
+    fig.savefig(f"estimate_lebesgue_constant_{domain}_{dims}_order_{order}")
+
+# }}}
+
+
+# {{{ test_hypercube_submesh
+
+@pytest.mark.parametrize("dims", [2, 3, 4])
+def test_hypercube_submesh(dims):
+    from modepy.tools import hypercube_submesh
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+
+    node_tuples = list(gnitb(3, dims))
+
+    for i, nt in enumerate(node_tuples):
+        logger.info("[%4d] nodes %s", i, nt)
+
+    assert len(node_tuples) == 3**dims
+
+    elements = hypercube_submesh(node_tuples)
+
+    for e in elements:
+        logger.info("element: %s", e)
+
+    assert len(elements) == 2**dims
+
+# }}}
 
 
 # You can test individual routines by typing
