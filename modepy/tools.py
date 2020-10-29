@@ -93,13 +93,21 @@ class Monomial:
                     for i, expn in enumerate(self.exponents)))
 
     def simplex_integral(self):
-        """Integral over the unit simplex."""
+        r"""Integral over the simplex
+        :math:`\{\mathbf{x} \in [0, 1]^n: \sum x_i \le 1 \}`."""
         from pytools import factorial
         from operator import mul
 
         return (self.factor * 2**len(self.exponents)
                 * reduce(mul, (factorial(alpha) for alpha in self.exponents))
                 / factorial(len(self.exponents)+sum(self.exponents)))
+
+    def hypercube_integral(self):
+        """Integral over the hypercube :math:`[0, 1]^n`."""
+        from functools import reduce
+        return reduce(
+                lambda integral, n: integral * 1 / (n + 1),
+                self.exponents, 1.0)
 
     def diff(self, coordinate):
         diff_exp = list(self.exponents)

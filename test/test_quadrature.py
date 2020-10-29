@@ -25,6 +25,9 @@ import numpy as np
 import pytest
 import modepy as mp
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def test_transformed_quadrature():
     """Test 1D quadrature on arbitrary intervals"""
@@ -139,6 +142,46 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
         order += 1
         if highest_order is not None and order >= highest_order:
             break
+
+
+@pytest.mark.parametrize("cls", [
+    mp.WitherdenVincentQuadrature
+    ])
+@pytest.mark.parametrize("dim", [2, 3])
+def test_hypercube_quadrature(cls, dim):
+    from pytools import \
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
+    from modepy.tools import Monomial
+
+    def _check_monomial(quad, comb):
+        f = Monomial(comb)
+        int_approx = quad(f)
+        int_exact = 2**dim * f.hypercube_integral()
+
+        error = abs(int_approx - int_exact) / abs(int_exact)
+        logger.info("%s: %.5e %.5e / rel error %.5e",
+                comb, int_approx, int_exact, error)
+
+        return error
+
+    order = 1
+    while True:
+        try:
+            quad = cls(order, dim)
+        except mp.QuadratureRuleUnavailable:
+            logger.info("UNAVAILABLE at order %d", order)
+            break
+
+        assert np.all(quad.weights > 0)
+
+        logger.info("quadrature: %s %d %d", cls, order, quad.exact_to)
+        for comb in gnitstam(quad.exact_to, dim):
+            assert _check_monomial(quad, comb) < 5.0e-15
+
+        comb = (0,) * (dim - 1) + (quad.exact_to + 1,)
+        assert _check_monomial(quad, comb) > 5.0e-15
+
+        order += 2
 
 
 # You can test individual routines by typing
