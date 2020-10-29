@@ -144,7 +144,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
             break
 
 
-@pytest.mark.parametrie("cls", [
+@pytest.mark.parametrize("cls", [
     mp.WitherdenVincentQuadrature
     ])
 @pytest.mark.parametrize("dim", [2, 3])
@@ -152,7 +152,6 @@ def test_hypercube_quadrature(cls, dim):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
     from modepy.tools import Monomial
-    logging.basicConfig(level=logging.INFO)
 
     def _check_monomial(quad, comb):
         f = Monomial(comb)

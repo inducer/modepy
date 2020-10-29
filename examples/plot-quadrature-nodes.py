@@ -91,7 +91,7 @@ def plot_quadrature_rule_nodes(name, order, dims, show=False):
     # {{{ plot
 
     if dims == 3:
-        from mpl_toolkits.mplot3d import Axes3D
+        from mpl_toolkits.mplot3d import Axes3D     # noqa: F401
         projection = "3d"
     else:
         projection = None
