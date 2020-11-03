@@ -146,6 +146,10 @@ class AffineMap:
         """The inverse :class:`AffineMap` of *self*."""
         return AffineMap(la.inv(self.a), -la.solve(self.a, self.b))
 
+# }}}
+
+
+# {{{ simplex coordinate mapping
 
 EQUILATERAL_TO_UNIT_MAP = {
         1: AffineMap([[1]], [0]),
@@ -225,6 +229,50 @@ EQUILATERAL_VERTICES = {
 def barycentric_to_equilateral(bary):
     dims = len(bary)-1
     return np.dot(EQUILATERAL_VERTICES[dims].T, bary)
+
+
+def simplex_face_vertex_indices(dims):
+    result = np.empty((dims + 1, dims), dtype=np.int)
+    indices = np.arange(dims + 1)
+
+    for iface in range(dims + 1):
+        result[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
+
+    return result
+
+# }}}
+
+
+# {{{ hypercube coordinate mapping
+
+_HYPERCUBE_UNIT_FACE_VERTICES = {
+        1: ((0b0,), (0b1,)),
+        2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
+        3: (
+            (0b000, 0b001, 0b010, 0b011,),
+            (0b100, 0b101, 0b110, 0b111,),
+
+            (0b000, 0b010, 0b100, 0b110,),
+            (0b001, 0b011, 0b101, 0b111,),
+
+            (0b000, 0b001, 0b100, 0b101,),
+            (0b010, 0b011, 0b110, 0b111,),
+            )
+        }
+
+
+def hypercube_unit_vertices(dims):
+    from pytools import flatten, generate_nonnegative_integer_tuples_below as gnitb
+    vertices_01 = np.fromiter(
+            flatten(gnitb(2, dims)),
+            dtype=np.float64,
+            count=dims * 2**dims)
+
+    return -1.0 + 2.0 * vertices_01.reshape(-1, dims)
+
+
+def hypercube_face_vertex_indices(dims):
+    return np.array(_HYPERCUBE_UNIT_FACE_VERTICES[dims])
 
 # }}}
 

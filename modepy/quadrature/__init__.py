@@ -82,3 +82,29 @@ class Transformed1DQuadrature(Quadrature):
         Quadrature.__init__(self,
                 left + (quad.nodes+1) / 2 * length,
                 quad.weights * half_length)
+
+
+class TensorProductQuadrature(Quadrature):
+    def __init__(self, dims, quad):
+        """
+        :arg quad: a :class:`Quadrature` class for one-dimensional intervals.
+        """
+
+        from modepy.nodes import tensor_product_nodes
+        x = tensor_product_nodes(dims, quad.nodes)
+        from itertools import product
+        w = np.fromiter(
+                (np.prod(w) for w in product(quad.weights, repeat=dims)),
+                dtype=np.float,
+                count=quad.weights.size**dims)
+        assert w.size == x.shape[1]
+
+        super().__init__(x, w)
+        self.exact_to = quad.exact_to
+
+
+class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
+    def __init__(self, dims, N, backend=None):      # noqa: N803
+        from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
+        super().__init__(
+                dims, LegendreGaussQuadrature(N, backend=backend))

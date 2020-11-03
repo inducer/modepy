@@ -242,7 +242,7 @@ def mass_matrix(basis, nodes):
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-class _FaceMap:
+class _SimplexFaceMap:
     def __init__(self, face_vertices):
         """
         :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
@@ -252,33 +252,68 @@ class _FaceMap:
         if npts != vol_dim:
             raise ValueError("face_vertices has wrong shape")
 
-        self.origin = face_vertices[:, 0]
-        self.span = face_vertices[:, 1:] - self.origin[:, np.newaxis]
+        self.origin = face_vertices[:, 0].reshape(-1, 1)
+        self.span = face_vertices[:, 1:] - self.origin
 
         self.face_dim = vol_dim - 1
 
     def __call__(self, points):
-        return (self.origin[:, np.newaxis]
-                + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5))
+        return self.origin + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5)
 
 
-def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
+class _HypercubeFaceMap:
+    def __init__(self, face_vertices):
+        """
+        :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
+            should equal `2**(dim - 1)`.
+        """
+        vol_dim, npts = face_vertices.shape
+        if npts != 2**(vol_dim-1):
+            raise ValueError("face_vertices has wrong shape")
+
+        self.origin = face_vertices[:, 0].reshape(-1, 1)
+        self.span = face_vertices[:, -2:0:-1] - self.origin
+
+        self.face_dim = vol_dim - 1
+
+    def __call__(self, points):
+        return self.origin + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5)
+
+
+def modal_face_mass_matrix(trial_basis, order, face_vertices,
+        test_basis=None, domain=None):
     """
     :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
         should equal *dim*.
+    :arg domain: identifier for the reference element, can be one of
+        `"simplex"` or `"hypercube"`.
 
     .. versionadded :: 2016.1
+
+    .. versionchanged:: 2020.5
+
+        Added *domain* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
         test_basis = trial_basis
 
-    fmap = _FaceMap(face_vertices)
+    if domain is None:
+        domain = "simplex"
 
-    from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
-    quad = GrundmannMoellerSimplexQuadrature(order, fmap.face_dim)
+    if domain == "simplex":
+        from modepy.quadrature.grundmann_moeller import \
+                GrundmannMoellerSimplexQuadrature
+        fmap = _SimplexFaceMap(face_vertices)
+        quad = GrundmannMoellerSimplexQuadrature(order, fmap.face_dim)
+    elif domain == "hypercube":
+        from modepy.quadrature import LegendreGaussTensorProductQuadrature
+        fmap = _HypercubeFaceMap(face_vertices)
+        quad = LegendreGaussTensorProductQuadrature(fmap.face_dim, order)
+    else:
+        raise ValueError(f"unknown domain: '{domain}'")
+
     assert quad.exact_to > order*2
-
     mapped_nodes = fmap(quad.nodes)
 
     nrows = len(test_basis)
@@ -296,7 +331,7 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
 
 
 def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
-        face_vertices, test_basis=None):
+        face_vertices, test_basis=None, domain=None):
     """
     :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
         should equal *dim*.
@@ -307,13 +342,22 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
     if test_basis is None:
         test_basis = trial_basis
 
-    fmap = _FaceMap(face_vertices)
+    if domain is None:
+        domain = "simplex"
+
+    if domain == "simplex":
+        fmap = _SimplexFaceMap(face_vertices)
+    elif domain == "hypercube":
+        fmap = _HypercubeFaceMap(face_vertices)
+    else:
+        raise ValueError(f"unknown domain: '{domain}'")
 
     face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
     vol_vdm = vandermonde(test_basis, volume_nodes)
 
     modal_fmm = modal_face_mass_matrix(
-            trial_basis, order, face_vertices, test_basis=test_basis)
+            trial_basis, order, face_vertices,
+            test_basis=test_basis, domain=domain)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
 
 

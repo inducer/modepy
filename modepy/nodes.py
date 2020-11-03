@@ -302,6 +302,10 @@ def tensor_product_nodes(dims, nodes_1d):
 
     .. versionadded:: 2017.1
     """
+    if dims == 0:
+        # NOTE: using this to maintain consistency in the 0d case
+        return warp_and_blend_nodes(dims, 1)
+
     nnodes_1d = len(nodes_1d)
     result = np.empty((dims,) + (nnodes_1d,) * dims)
     for d in range(dims):
