@@ -236,13 +236,8 @@ def barycentric_to_equilateral(bary):
 # {{{ hypercube coordinate mapping
 
 def hypercube_unit_vertices(dims):
-    from pytools import flatten, generate_nonnegative_integer_tuples_below as gnitb
-    vertices_01 = np.fromiter(
-            flatten(gnitb(2, dims)),
-            dtype=np.float64,
-            count=dims * 2**dims)
-
-    return -1.0 + 2.0 * vertices_01.reshape(-1, dims)
+    from modepy.nodes import tensor_product_nodes
+    return tensor_product_nodes(dims, np.array([-1.0, 1.0])).T
 
 # }}}
 
