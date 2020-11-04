@@ -155,7 +155,7 @@ class _SimplexElement:
 
     @property
     def nodes(self):
-        return mp.warp_and_blend_nodes(dims, self.order)
+        return mp.warp_and_blend_nodes(self.dims, self.order)
 
     @property
     def nfaces(self):

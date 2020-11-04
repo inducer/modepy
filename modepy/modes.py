@@ -658,6 +658,10 @@ def tensor_product_basis(dims, basis_1d):
 
     .. versionadded:: 2017.1
     """
+    if dims == 0:
+        # NOTE: using to maintain consistency in the 0d case
+        return simplex_onb(dims, len(basis_1d))
+
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     return tuple(
             _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
@@ -673,6 +677,10 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
     .. versionadded:: 2020.2
     """
+    if dims == 0:
+        # NOTE: using to maintain consistency in the 0d case
+        return grad_simplex_onb(dims, len(basis_1d))
+
     from pytools import (
             wandering_element,
             generate_nonnegative_integer_tuples_below as gnitb)
