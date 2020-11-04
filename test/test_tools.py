@@ -145,30 +145,16 @@ class _SimplexElement:
         self.dims = dims
         self.order = order
 
-    @property
-    def basis(self):
-        return mp.simplex_onb(self.dims, self.order)
+        self.basis = mp.simplex_onb(dims, order)
+        if dims > 0:
+            self.grad_basis = mp.grad_simplex_onb(dims, order)
+        self.nodes = mp.warp_and_blend_nodes(dims, order)
 
-    @property
-    def grad_basis(self):
-        return mp.grad_simplex_onb(self.dims, self.order)
+        self.nfaces = dims + 1
+        self.domain = "simplex"
 
-    @property
-    def nodes(self):
-        return mp.warp_and_blend_nodes(self.dims, self.order)
-
-    @property
-    def nfaces(self):
-        return self.dims + 1
-
-    @property
-    def domain(self):
-        return "simplex"
-
-    @property
-    def unit_vertices(self):
         from modepy.tools import unit_vertices
-        return unit_vertices(self.dims).T
+        self.unit_vertices = unit_vertices(dims).T
 
     @property
     def face_vertex_indices(self):
@@ -186,30 +172,16 @@ class _TensorProductElement:
         self.dims = dims
         self.order = order
 
-    @property
-    def basis(self):
-        return mp.legendre_tensor_product_basis(self.dims, self.order)
+        self.basis = mp.legendre_tensor_product_basis(dims, order)
+        if dims > 0:
+            self.grad_basis = mp.grad_legendre_tensor_product_basis(dims, order)
+        self.nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, order)
 
-    @property
-    def grad_basis(self):
-        return mp.grad_legendre_tensor_product_basis(self.dims, self.order)
+        self.nfaces = 2 * dims
+        self.domain = "hypercube"
 
-    @property
-    def nodes(self):
-        return mp.legendre_gauss_lobatto_tensor_product_nodes(self.dims, self.order)
-
-    @property
-    def nfaces(self):
-        return 2 * self.dims
-
-    @property
-    def domain(self):
-        return "hypercube"
-
-    @property
-    def unit_vertices(self):
         from modepy.tools import hypercube_unit_vertices
-        return hypercube_unit_vertices(self.dims).T
+        self.unit_vertices = hypercube_unit_vertices(dims).T
 
     @property
     def face_vertex_indices(self):
