@@ -172,8 +172,13 @@ class _SimplexElement:
 
     @property
     def face_vertex_indices(self):
-        from modepy.tools import simplex_face_vertex_indices
-        return simplex_face_vertex_indices(self.dims)
+        result = np.empty((self.dims + 1, self.dims), dtype=np.int)
+        indices = np.arange(self.dims + 1)
+
+        for iface in range(self.nfaces):
+            result[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
+
+        return result
 
 
 class _TensorProductElement:
@@ -208,8 +213,22 @@ class _TensorProductElement:
 
     @property
     def face_vertex_indices(self):
-        from modepy.tools import hypercube_face_vertex_indices
-        return hypercube_face_vertex_indices(self.dims)
+        fvi = {
+                1: ((0b0,), (0b1,)),
+                2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
+                3: (
+                    (0b000, 0b001, 0b010, 0b011,),
+                    (0b100, 0b101, 0b110, 0b111,),
+
+                    (0b000, 0b010, 0b100, 0b110,),
+                    (0b001, 0b011, 0b101, 0b111,),
+
+                    (0b000, 0b001, 0b100, 0b101,),
+                    (0b010, 0b011, 0b110, 0b111,),
+                    )
+                }[self.dims]
+
+        return np.array(fvi)
 
 # }}}
 
