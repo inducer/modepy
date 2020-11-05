@@ -243,10 +243,12 @@ def mass_matrix(basis, nodes):
 
 
 class _FaceMap:
-    def __init__(self, origin, span):
-        self.origin = origin
-        self.span = span
-        self.face_dim = span.shape[0] - 1
+    def __init__(self, face_vertices):
+        vol_dim = face_vertices.shape[0]
+
+        self.origin = face_vertices[:, 0].reshape(-1, 1)
+        self.span = face_vertices[:, 1:vol_dim] - self.origin
+        self.face_dim = vol_dim - 1
 
     def __call__(self, points):
         return self.origin + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5)
@@ -256,38 +258,32 @@ class _SimplexFaceMap(_FaceMap):
     def __init__(self, face_vertices):
         """
         :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-            should equal *dim*.
+            should equal ``dim``.
         """
         vol_dim, npts = face_vertices.shape
         if npts != vol_dim:
             raise ValueError("'face_vertices' has wrong shape")
 
-        origin = face_vertices[:, 0].reshape(-1, 1)
-        span = face_vertices[:, 1:] - origin
-        super().__init__(origin, span)
+        super().__init__(face_vertices)
 
 
 class _HypercubeFaceMap(_FaceMap):
     def __init__(self, face_vertices):
         """
         :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-            should equal `2**(dim - 1)`.
+            should equal ``2**(dim - 1)``.
         """
         vol_dim, npts = face_vertices.shape
         if npts != 2**(vol_dim-1):
             raise ValueError("'face_vertices' has wrong shape")
 
-        origin = face_vertices[:, 0].reshape(-1, 1)
-        span = face_vertices[:, -2:0:-1] - origin
-
-        super().__init__(origin, span)
+        super().__init__(face_vertices)
 
 
 def modal_face_mass_matrix(trial_basis, order, face_vertices,
         test_basis=None, domain=None):
     """
-    :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-        should equal *dim*.
+    :arg face_vertices: an array of shape ``[dim, npts]``.
     :arg domain: identifier for the reference element, can be one of
         `"simplex"` or `"hypercube"`.
 
@@ -336,10 +332,15 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
 def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
         face_vertices, test_basis=None, domain=None):
     """
-    :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-        should equal *dim*.
+    :arg face_vertices: an array of shape ``[dim, npts]``.
+    :arg domain: identifier for the reference element, can be one of
+        `"simplex"` or `"hypercube"`.
 
     .. versionadded :: 2016.1
+
+    .. versionchanged:: 2020.5
+
+        Added *domain* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
