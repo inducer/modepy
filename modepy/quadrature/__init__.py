@@ -104,7 +104,7 @@ class TensorProductQuadrature(Quadrature):
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
-    def __init__(self, dims, N, backend=None):      # noqa: N803
+    def __init__(self, N, dims, backend=None):      # noqa: N803
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
         super().__init__(
                 dims, LegendreGaussQuadrature(N, backend=backend))

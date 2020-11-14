@@ -23,6 +23,7 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 import modepy as mp
+from modepy.shapes import Simplex, Hypercube
 
 from functools import partial
 import pytest
@@ -138,100 +139,30 @@ def test_residual_estimation(case_name, test_func, dims, n):
 # }}}
 
 
-# {{{ bases and nodes and things
-
-class _SimplexElement:
-    def __init__(self, dims, order):
-        self.dims = dims
-        self.order = order
-
-        self.basis = mp.simplex_onb(dims, order)
-        if dims > 0:
-            self.grad_basis = mp.grad_simplex_onb(dims, order)
-        self.nodes = mp.warp_and_blend_nodes(dims, order)
-
-        self.nfaces = dims + 1
-        self.domain = "simplex"
-
-        from modepy.tools import unit_vertices
-        self.unit_vertices = unit_vertices(dims).T
-
-    @property
-    def face_vertex_indices(self):
-        result = np.empty((self.dims + 1, self.dims), dtype=np.int)
-        indices = np.arange(self.dims + 1)
-
-        for iface in range(self.nfaces):
-            result[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
-
-        return result
-
-
-class _TensorProductElement:
-    def __init__(self, dims, order):
-        self.dims = dims
-        self.order = order
-
-        self.basis = mp.legendre_tensor_product_basis(dims, order)
-        if dims > 0:
-            self.grad_basis = mp.grad_legendre_tensor_product_basis(dims, order)
-        self.nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(dims, order)
-
-        self.nfaces = 2 * dims
-        self.domain = "hypercube"
-
-        from modepy.tools import hypercube_unit_vertices
-        self.unit_vertices = hypercube_unit_vertices(dims).T
-
-    @property
-    def face_vertex_indices(self):
-        fvi = {
-                1: ((0b0,), (0b1,)),
-                2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
-                3: (
-                    (0b000, 0b001, 0b010, 0b011,),
-                    (0b100, 0b101, 0b110, 0b111,),
-
-                    (0b000, 0b010, 0b100, 0b110,),
-                    (0b001, 0b011, 0b101, 0b111,),
-
-                    (0b000, 0b001, 0b100, 0b101,),
-                    (0b010, 0b011, 0b110, 0b111,),
-                    )
-                }[self.dims]
-
-        return np.array(fvi)
-
-# }}}
-
-
 # {{{ test_resampling_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
-def test_resampling_matrix(dims, eltype):
-    ncoarse = 5
-    nfine = 10
+@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
+    from modepy.shapes import get_unit_nodes, get_basis
+    shape = shape_cls(dims)
 
-    if eltype == "simplex":
-        coarse = _SimplexElement(dims, ncoarse)
-        fine = _SimplexElement(dims, nfine)
-    elif eltype == "tensor":
-        coarse = _TensorProductElement(dims, ncoarse)
-        fine = _TensorProductElement(dims, nfine)
-    else:
-        raise ValueError(f"unknown element type: {eltype}")
+    coarse_nodes = get_unit_nodes(shape, ncoarse)
+    coarse_basis = get_basis(shape, ncoarse)
+
+    fine_nodes = get_unit_nodes(shape, nfine)
+    fine_basis = get_basis(shape, nfine)
 
     my_eye = np.dot(
-            mp.resampling_matrix(fine.basis, coarse.nodes, fine.nodes),
-            mp.resampling_matrix(coarse.basis, fine.nodes, coarse.nodes))
+            mp.resampling_matrix(fine_basis, coarse_nodes, fine_nodes),
+            mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes))
 
     assert la.norm(my_eye - np.eye(len(my_eye))) < 3e-13
 
     my_eye_least_squares = np.dot(
-            mp.resampling_matrix(coarse.basis, coarse.nodes, fine.nodes,
+            mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes,
                 least_squares_ok=True),
-            mp.resampling_matrix(coarse.basis, fine.nodes, coarse.nodes),
+            mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes),
             )
 
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
@@ -242,24 +173,22 @@ def test_resampling_matrix(dims, eltype):
 # {{{ test_diff_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
-def test_diff_matrix(dims, eltype):
-    n = 5
+@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+def test_diff_matrix(dims, shape_cls, order=5):
+    from modepy.shapes import get_unit_nodes, get_basis, get_grad_basis
+    shape = shape_cls(dims)
 
-    if eltype == "simplex":
-        el = _SimplexElement(dims, n)
-    elif eltype == "tensor":
-        el = _TensorProductElement(dims, n)
-    else:
-        raise ValueError(f"unknown element type: {eltype}")
+    nodes = get_unit_nodes(shape, order)
+    basis = get_basis(shape, order)
+    grad_basis = get_grad_basis(shape, order)
 
-    diff_mat = mp.differentiation_matrices(el.basis, el.grad_basis, el.nodes)
+    diff_mat = mp.differentiation_matrices(basis, grad_basis, nodes)
     if isinstance(diff_mat, tuple):
         diff_mat = diff_mat[0]
 
-    f = np.sin(el.nodes[0])
+    f = np.sin(nodes[0])
 
-    df_dx = np.cos(el.nodes[0])
+    df_dx = np.cos(nodes[0])
     df_dx_num = np.dot(diff_mat, f)
 
     error = la.norm(df_dx - df_dx_num) / la.norm(df_dx)
@@ -292,31 +221,29 @@ def test_diff_matrix_permutation(dims):
 
 # {{{ test_face_mass_matrix
 
-@pytest.mark.parametrize("dim", [1, 2, 3])
-@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
-def test_modal_face_mass_matrix(dim, eltype, order=3):
+@pytest.mark.parametrize("dims", [2, 3])
+@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+def test_modal_face_mass_matrix(dims, shape_cls, order=3):
     np.set_printoptions(linewidth=200)
+    shape = shape_cls(dims)
 
-    if eltype == "simplex":
-        el = _SimplexElement(dim, order)
-    elif eltype == "tensor":
-        el = _TensorProductElement(dim, order)
-    else:
-        raise ValueError(f"unknown element type: '{eltype}'")
+    from modepy.shapes import get_unit_vertices, get_basis
+    vertices = get_unit_vertices(shape).T
+    basis = get_basis(shape, order - 1)
 
-    all_verts = el.unit_vertices
-    fvi = el.face_vertex_indices
+    from modepy.shapes import get_face_vertex_indices
+    fvi = get_face_vertex_indices(shape)
 
     from modepy.matrices import modal_face_mass_matrix
-    for iface in range(el.nfaces):
-        verts = all_verts[:, fvi[iface]]
+    for iface in range(shape.nfaces):
+        face_vertices = vertices[:, fvi[iface]]
 
-        fmm = modal_face_mass_matrix(el.basis, order, verts, domain=el.domain)
-        fmm2 = modal_face_mass_matrix(el.basis, order+1, verts, domain=el.domain)
+        fmm = modal_face_mass_matrix(basis, order, face_vertices, shape=shape)
+        fmm2 = modal_face_mass_matrix(basis, order+1, face_vertices, shape=shape)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
-        assert error < 1e-11
+        assert error < 1e-11, f"error {error:.5e} on face {iface}"
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)
@@ -324,45 +251,45 @@ def test_modal_face_mass_matrix(dim, eltype, order=3):
         logger.info("fmm: nnz %d\n%s", nnz, fmm)
 
 
-@pytest.mark.parametrize("dim", [1, 2, 3])
-@pytest.mark.parametrize("eltype", ["simplex", "tensor"])
-def test_nodal_face_mass_matrix(dim, eltype, order=3):
+@pytest.mark.parametrize("dims", [2, 3])
+@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
     np.set_printoptions(linewidth=200)
+    volume = shape_cls(dims)
+    face = shape_cls(dims - 1)
 
-    if eltype == "simplex":
-        volume = _SimplexElement(dim, order)
-        face = _SimplexElement(dim - 1, order)
-    elif eltype == "tensor":
-        volume = _TensorProductElement(dim, order)
-        face = _TensorProductElement(dim - 1, order)
-    else:
-        raise ValueError(f"unknown element type: '{eltype}'")
+    from modepy.shapes import get_unit_vertices, get_unit_nodes, get_basis
+    vertices = get_unit_vertices(volume).T
+    volume_nodes = get_unit_nodes(volume, order)
+    volume_basis = get_basis(volume, order)
+    face_nodes = get_unit_nodes(face, order)
 
-    all_verts = volume.unit_vertices
-    fvi = volume.face_vertex_indices
+    from modepy.shapes import get_face_vertex_indices
+    fvi = get_face_vertex_indices(volume)
 
     from modepy.matrices import nodal_face_mass_matrix
     for iface in range(volume.nfaces):
-        verts = all_verts[:, fvi[iface]]
+        face_vertices = vertices[:, fvi[iface]]
 
         fmm = nodal_face_mass_matrix(
-                volume.basis, volume.nodes, face.nodes, order, verts,
-                domain=volume.domain)
+                volume_basis, volume_nodes, face_nodes, order, face_vertices,
+                shape=volume)
         fmm2 = nodal_face_mass_matrix(
-                volume.basis, volume.nodes, face.nodes, order+1, verts,
-                domain=volume.domain)
+                volume_basis, volume_nodes, face_nodes, order+1, face_vertices,
+                shape=volume)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
-        assert error < 1e-11
+        assert error < 1e-11, f"error {error:.5e} on face {iface}"
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)
 
         logger.info("fmm: nnz %d\n%s", nnz, fmm)
 
-    logger.info("mass matrix:\n%s",
-            mp.mass_matrix(face.basis, face.nodes))
+    logger.info("mass matrix:\n%s", mp.mass_matrix(
+        get_basis(face, order),
+        get_unit_nodes(face, order)))
 
 # }}}
 

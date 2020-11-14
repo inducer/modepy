@@ -233,15 +233,6 @@ def barycentric_to_equilateral(bary):
 # }}}
 
 
-# {{{ hypercube coordinate mapping
-
-def hypercube_unit_vertices(dims):
-    from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes(dims, np.array([-1.0, 1.0])).T
-
-# }}}
-
-
 def pick_random_simplex_unit_coordinate(rng, dims):
     offset = 0.05
     base = -1 + offset
@@ -256,6 +247,7 @@ def pick_random_simplex_unit_coordinate(rng, dims):
 
 def pick_random_hypercube_unit_coordinate(rng, dims):
     return np.array([rng.uniform(-1.0, 1.0) for _ in range(dims)])
+
 
 # {{{ accept_scalar_or_vector decorator
 

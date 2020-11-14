@@ -242,75 +242,30 @@ def mass_matrix(basis, nodes):
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-class _FaceMap:
-    def __init__(self, face_vertices):
-        vol_dim = face_vertices.shape[0]
-
-        self.origin = face_vertices[:, 0].reshape(-1, 1)
-        self.span = face_vertices[:, 1:vol_dim] - self.origin
-        self.face_dim = vol_dim - 1
-
-    def __call__(self, points):
-        return self.origin + np.einsum("ad,dn->an", self.span, points*0.5 + 0.5)
-
-
-class _SimplexFaceMap(_FaceMap):
-    def __init__(self, face_vertices):
-        """
-        :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-            should equal ``dim``.
-        """
-        vol_dim, npts = face_vertices.shape
-        if npts != vol_dim:
-            raise ValueError("'face_vertices' has wrong shape")
-
-        super().__init__(face_vertices)
-
-
-class _HypercubeFaceMap(_FaceMap):
-    def __init__(self, face_vertices):
-        """
-        :arg face_vertices: an array of shape ``[dim, npts]``, where *npts*
-            should equal ``2**(dim - 1)``.
-        """
-        vol_dim, npts = face_vertices.shape
-        if npts != 2**(vol_dim-1):
-            raise ValueError("'face_vertices' has wrong shape")
-
-        super().__init__(face_vertices)
-
-
 def modal_face_mass_matrix(trial_basis, order, face_vertices,
-        test_basis=None, domain=None):
+        test_basis=None, shape=None):
     """
-    :arg face_vertices: an array of shape ``[dim, npts]``.
-    :arg domain: identifier for the reference element, can be one of
-        `"simplex"` or `"hypercube"`.
+    :arg face_vertices: an array of shape ``(dims, nvertices)``.
+    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
+        reference face element.
 
     .. versionadded :: 2016.1
 
     .. versionchanged:: 2020.5
 
-        Added *domain* parameter and support for :math:`[-1, 1]^d` domains.
+        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if domain is None:
-        domain = "simplex"
+    from modepy import shapes
+    if shape is None:
+        shape = shapes.Simplex(face_vertices.shape[0] - 1)
 
-    if domain == "simplex":
-        from modepy.quadrature.grundmann_moeller import \
-                GrundmannMoellerSimplexQuadrature
-        fmap = _SimplexFaceMap(face_vertices)
-        quad = GrundmannMoellerSimplexQuadrature(order, fmap.face_dim)
-    elif domain == "hypercube":
-        from modepy.quadrature import LegendreGaussTensorProductQuadrature
-        fmap = _HypercubeFaceMap(face_vertices)
-        quad = LegendreGaussTensorProductQuadrature(fmap.face_dim, order)
-    else:
-        raise ValueError(f"unknown domain: '{domain}'")
+    face = type(shape)(shape.dims - 1)
+    fmap = shapes.get_face_map(shape, face_vertices)
+    quad = shapes.get_quadrature(face, order)
 
     assert quad.exact_to > order*2
     mapped_nodes = fmap(quad.nodes)
@@ -330,38 +285,33 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
 
 
 def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
-        face_vertices, test_basis=None, domain=None):
+        face_vertices, test_basis=None, shape=None):
     """
-    :arg face_vertices: an array of shape ``[dim, npts]``.
-    :arg domain: identifier for the reference element, can be one of
-        `"simplex"` or `"hypercube"`.
+    :arg face_vertices: an array of shape ``(dims, nvertices)``.
+    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
+        reference face element.
 
     .. versionadded :: 2016.1
 
     .. versionchanged:: 2020.5
 
-        Added *domain* parameter and support for :math:`[-1, 1]^d` domains.
+        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if domain is None:
-        domain = "simplex"
+    from modepy import shapes
+    if shape is None:
+        shape = shapes.Simplex(face_vertices.shape[0])
 
-    if domain == "simplex":
-        fmap = _SimplexFaceMap(face_vertices)
-    elif domain == "hypercube":
-        fmap = _HypercubeFaceMap(face_vertices)
-    else:
-        raise ValueError(f"unknown domain: '{domain}'")
-
+    fmap = shapes.get_face_map(shape, face_vertices)
     face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
     vol_vdm = vandermonde(test_basis, volume_nodes)
 
     modal_fmm = modal_face_mass_matrix(
             trial_basis, order, face_vertices,
-            test_basis=test_basis, domain=domain)
+            test_basis=test_basis, shape=shape)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
 
 
