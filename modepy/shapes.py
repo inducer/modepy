@@ -27,21 +27,6 @@ import numpy as np
 from functools import singledispatch
 from dataclasses import dataclass, field
 
-__doc__ = """
-Shapes
-------
-
-.. currentmodule:: modepy
-
-.. autoclass:: Shape
-.. autoclass:: Simplex
-.. autoclass:: Hypercube
-
-.. autofunction:: get_unit_vertices
-.. autofunction:: get_face_map
-.. autofunction:: get_quadrature
-"""
-
 
 # {{{ interface
 
@@ -116,13 +101,13 @@ class Simplex(Shape):
         return self.dims + 1
 
 
-@get_unit_vertices.register
+@get_unit_vertices.register(Simplex)
 def _(shape: Simplex):
     from modepy.tools import unit_vertices
     return unit_vertices(shape.dims)
 
 
-@get_face_vertex_indices.register
+@get_face_vertex_indices.register(Simplex)
 def _(shape: Simplex):
     fvi = np.empty((shape.dims + 1, shape.dims), dtype=np.int)
     indices = np.arange(shape.dims + 1)
@@ -133,7 +118,7 @@ def _(shape: Simplex):
     return fvi
 
 
-@get_face_map.register
+@get_face_map.register(Simplex)
 def _(shape: Simplex, face_vertices: np.ndarray):
     dims, npoints = face_vertices.shape
     if npoints != dims:
@@ -145,7 +130,7 @@ def _(shape: Simplex, face_vertices: np.ndarray):
     return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@get_quadrature.register
+@get_quadrature.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
     if shape.dims == 0:
@@ -159,26 +144,26 @@ def _(shape: Simplex, order: int):
     return quad
 
 
-@get_node_tuples.register
+@get_node_tuples.register(Simplex)
 def _(shape: Simplex, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
     return list(gnitsam(order, shape.dims))
 
 
-@get_unit_nodes.register
+@get_unit_nodes.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
     return mp.warp_and_blend_nodes(shape.dims, order)
 
 
-@get_basis.register
+@get_basis.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
     return mp.simplex_onb(shape.dims, order)
 
 
-@get_grad_basis.register
+@get_grad_basis.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
     return mp.grad_simplex_onb(shape.dims, order)
@@ -194,13 +179,13 @@ class Hypercube(Shape):
         return 2 * self.dims
 
 
-@get_unit_vertices.register
+@get_unit_vertices.register(Hypercube)
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes(shape.dims, np.array([-1.0, 1.0])).T
 
 
-@get_face_vertex_indices.register
+@get_face_vertex_indices.register(Hypercube)
 def _(shape: Hypercube):
     return {
         1: ((0b0,), (0b1,)),
@@ -218,7 +203,7 @@ def _(shape: Hypercube):
         }[shape.dims]
 
 
-@get_face_map.register
+@get_face_map.register(Hypercube)
 def _(shape: Hypercube, face_vertices: np.ndarray):
     dims, npoints = face_vertices.shape
     if npoints != 2**(dims - 1):
@@ -230,7 +215,7 @@ def _(shape: Hypercube, face_vertices: np.ndarray):
     return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@get_quadrature.register
+@get_quadrature.register(Hypercube)
 def _(shape: Hypercube, order: int):
     import modepy as mp
     if shape.dims == 0:
@@ -242,26 +227,26 @@ def _(shape: Hypercube, order: int):
     return quad
 
 
-@get_node_tuples.register
+@get_node_tuples.register(Hypercube)
 def _(shape: Hypercube, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_below as gnitb
     return list(gnitb(order, shape.dims))
 
 
-@get_unit_nodes.register
+@get_unit_nodes.register(Hypercube)
 def _(shape: Hypercube, order: int):
     import modepy as mp
     return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dims, order)
 
 
-@get_basis.register
+@get_basis.register(Hypercube)
 def _(shape: Hypercube, order: int):
     import modepy as mp
     return mp.legendre_tensor_product_basis(shape.dims, order)
 
 
-@get_grad_basis.register
+@get_grad_basis.register(Hypercube)
 def _(shape: Hypercube, order: int):
     import modepy as mp
     return mp.grad_legendre_tensor_product_basis(shape.dims, order)
