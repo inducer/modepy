@@ -298,28 +298,24 @@ def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
 
 @pytest.mark.parametrize("dims", [1, 2])
 @pytest.mark.parametrize("order", [3, 5, 8])
-@pytest.mark.parametrize("domain", ["simplex", "hypercube"])
-def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
+@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
     logging.basicConfig(level=logging.INFO)
+    shape = shape_cls(dims)
 
-    if domain == "simplex":
-        nodes = mp.warp_and_blend_nodes(dims, order)
-    elif domain == "hypercube":
-        from modepy.nodes import legendre_gauss_lobatto_tensor_product_nodes
-        nodes = legendre_gauss_lobatto_tensor_product_nodes(dims, order)
-    else:
-        raise ValueError(f"unknown domain: '{domain}'")
+    from modepy.shapes import get_unit_nodes
+    nodes = get_unit_nodes(shape, order)
 
     from modepy.tools import estimate_lebesgue_constant
-    lebesgue_constant = estimate_lebesgue_constant(order, nodes, domain=domain)
-    logger.info("%s-%d/%s: %.5e", domain, dims, order, lebesgue_constant)
+    lebesgue_constant = estimate_lebesgue_constant(order, nodes, shape=shape)
+    logger.info("%s-%d/%s: %.5e", shape, dims, order, lebesgue_constant)
 
     if not visualize:
         return
 
     from modepy.tools import _evaluate_lebesgue_function
     lebesgue, equi_node_tuples, equi_nodes = \
-            _evaluate_lebesgue_function(order, nodes, domain)
+            _evaluate_lebesgue_function(order, nodes, shape)
 
     import matplotlib.pyplot as plt
     fig = plt.figure()
@@ -340,6 +336,7 @@ def test_estimate_lebesgue_constant(dims, order, domain, visualize=False):
     else:
         raise ValueError(f"unsupported dimension: {dims}")
 
+    domain = type(shape).__name__.lower()
     fig.savefig(f"estimate_lebesgue_constant_{domain}_{dims}_order_{order}")
 
 # }}}

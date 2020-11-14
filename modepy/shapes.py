@@ -56,7 +56,7 @@ def get_unit_vertices(shape: Shape):
     """
     :returns: an :class:`~numpy.ndarray` of shape ``(nvertices, dims)``.
     """
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
@@ -65,8 +65,7 @@ def get_face_vertex_indices(shape: Shape):
     :results: indices into the vertices returned by :func:`get_unit_vertices`
         belonging to each face.
     """
-
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
@@ -76,7 +75,7 @@ def get_face_map(shape: Shape, face_vertices: np.ndarray):
         unit nodes on the face represented by *face_vertices* and maps
         them to the volume.
     """
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
@@ -84,22 +83,27 @@ def get_quadrature(shape: Shape, order: int):
     """
     :returns: a :class:`~modepy.Quadrature` instance of the given *order*.
     """
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def get_node_tuples(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
 def get_unit_nodes(shape: Shape, order: int):
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
 def get_basis(shape: Shape, order: int):
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
 def get_grad_basis(shape: Shape, order: int):
-    raise NotImplementedError
+    raise NotImplementedError(type(shape).__name__)
 
 # }}}
 
@@ -153,6 +157,13 @@ def _(shape: Simplex, order: int):
             quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dims)
 
     return quad
+
+
+@get_node_tuples.register
+def _(shape: Simplex, order: int):
+    from pytools import \
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
+    return list(gnitsam(order, shape.dims))
 
 
 @get_unit_nodes.register
@@ -229,6 +240,13 @@ def _(shape: Hypercube, order: int):
         quad = LegendreGaussTensorProductQuadrature(order, shape.dims)
 
     return quad
+
+
+@get_node_tuples.register
+def _(shape: Hypercube, order: int):
+    from pytools import \
+            generate_nonnegative_integer_tuples_below as gnitb
+    return list(gnitb(order, shape.dims))
 
 
 @get_unit_nodes.register

@@ -493,26 +493,12 @@ def plot_element_values(n, nodes, values, resample_n=None,
 
 # {{{ lebesgue constant
 
-def _evaluate_lebesgue_function(n, nodes, domain):
-    dims = len(nodes)
+def _evaluate_lebesgue_function(n, nodes, shape):
     huge_n = 30*n
 
-    if domain == "simplex":
-        from modepy.modes import simplex_onb as domain_basis_onb
-        from pytools import (
-                generate_nonnegative_integer_tuples_summing_to_at_most
-                as generate_node_tuples)
-    elif domain == "hypercube":
-        from modepy.modes import (
-                legendre_tensor_product_basis as domain_basis_onb)
-        from pytools import (
-                generate_nonnegative_integer_tuples_below
-                as generate_node_tuples)
-    else:
-        raise ValueError(f"unknown domain: '{domain}'")
-
-    basis = domain_basis_onb(dims, n)
-    equi_node_tuples = list(generate_node_tuples(huge_n, dims))
+    from modepy.shapes import get_basis, get_node_tuples
+    basis = get_basis(shape, n)
+    equi_node_tuples = get_node_tuples(shape, huge_n)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
 
     from modepy.matrices import vandermonde
@@ -526,7 +512,7 @@ def _evaluate_lebesgue_function(n, nodes, domain):
     return lebesgue_worst, equi_node_tuples, equi_nodes
 
 
-def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
+def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     """Estimate the
     `Lebesgue constant
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
@@ -534,8 +520,7 @@ def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
 
     :arg nodes: an array of shape *(dims, nnodes)* as returned by
         :func:`modepy.warp_and_blend_nodes`.
-    :arg domain: represents the domain of the reference element and can be
-        either ``"simplex"`` or ``"hypercube"``.
+    :arg shape: a :class:`~modepy.shapes.Shape`.
     :arg visualize: visualize the function that gives rise to the
         returned Lebesgue constant. (2D only for now)
     :return: the Lebesgue constant, a scalar.
@@ -546,24 +531,29 @@ def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
 
         *domain* parameter was added with support for nodes on the unit
         hypercube (i.e. unit square in 2D and unit cube in 3D).
-    """
-    if domain is None:
-        domain = "simplex"
 
-    dims = len(nodes)
+    .. versionchanged:: 2020.3
+
+        Renamed *domain* to *shape*.
+    """
+    if shape is None:
+        from modepy.shapes import Simplex
+        shape = Simplex(len(nodes))
+
     lebesgue_worst, equi_node_tuples, equi_nodes = \
-            _evaluate_lebesgue_function(n, nodes, domain)
+            _evaluate_lebesgue_function(n, nodes, shape)
     lebesgue_constant = np.max(lebesgue_worst)
 
     if not visualize:
         return lebesgue_constant
 
-    if dims == 2:
+    if shape.dims == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
 
-        if domain == "simplex":
+        from modepy.shapes import Simplex, Hypercube
+        if isinstance(shape, Simplex):
             triangles = simplex_submesh(equi_node_tuples)
-        elif domain == "hypercube":
+        elif isinstance(shape, Hypercube):
             triangles = hypercube_submesh(equi_node_tuples)
         else:
             triangles = None
@@ -601,7 +591,7 @@ def estimate_lebesgue_constant(n, nodes, domain=None, visualize=False):
             ax.set_aspect("equal")
             plt.show()
     else:
-        raise ValueError(f"visualization is not supported in {dims}D")
+        raise ValueError(f"visualization is not supported in {shape.dims}D")
 
     return lebesgue_constant
 
