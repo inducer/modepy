@@ -124,14 +124,12 @@ def _(shape: Simplex, order: int):
 
 @get_basis.register(Hypercube)
 def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.legendre_tensor_product_basis(shape.dims, order)
+    return legendre_tensor_product_basis(shape.dims, order)
 
 
 @get_grad_basis.register(Hypercube)
 def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.grad_legendre_tensor_product_basis(shape.dims, order)
+    return grad_legendre_tensor_product_basis(shape.dims, order)
 
 # }}}
 
@@ -485,6 +483,13 @@ def grad_monomial(order, rst):
 
 # {{{ dimension-independent interface for simplices
 
+def zerod_basis(x):
+    if len(x.shape) == 1:
+        return 1
+    else:
+        return np.ones(x.shape[1])
+
+
 def simplex_onb_with_mode_ids(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
     total degree *n*.
@@ -510,15 +515,8 @@ def simplex_onb_with_mode_ids(dims, n):
 
     from functools import partial
     if dims == 0:
-        def zerod_basis(x):
-            if len(x.shape) == 1:
-                return 1
-            else:
-                return np.ones(x.shape[1])
-
         mode_ids = get_node_tuples(shape, n)
         return mode_ids, (zerod_basis,)
-
     elif dims == 1:
         # FIXME: should also use get_node_tuples
         mode_ids = tuple(range(n+1))
@@ -697,14 +695,12 @@ def tensor_product_basis(dims, basis_1d):
 
     .. versionadded:: 2017.1
     """
-    if dims == 0:
-        # NOTE: using to maintain consistency in the 0d case
-        return simplex_onb(dims, len(basis_1d))
+    from modepy.shapes import Hypercube, get_node_tuples
+    mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
 
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
     return tuple(
             _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
-            for order in gnitb(len(basis_1d), dims))
+            for order in mode_ids)
 
 
 def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
@@ -716,13 +712,9 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
     .. versionadded:: 2020.2
     """
-    if dims == 0:
-        # NOTE: using to maintain consistency in the 0d case
-        return grad_simplex_onb(dims, len(basis_1d))
-
-    from pytools import (
-            wandering_element,
-            generate_nonnegative_integer_tuples_below as gnitb)
+    from pytools import wandering_element
+    from modepy.shapes import Hypercube, get_node_tuples
+    mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
 
     func = (basis_1d, grad_basis_1d)
     return tuple(
@@ -730,7 +722,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
                 [func[i][k] for i, k in zip(iderivative, order)]
                 for iderivative in wandering_element(dims)
                 ])
-            for order in gnitb(len(basis_1d), dims))
+            for order in mode_ids)
 
 
 def legendre_tensor_product_basis(dims, order):

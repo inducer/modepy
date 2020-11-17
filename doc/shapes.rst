@@ -11,7 +11,7 @@ Interface
 
 .. autoclass:: Shape
 .. autofunction:: get_unit_vertices
-.. autofunction:: get_node_tuples
+.. autofunction:: get_face_vertex_indices
 .. autofunction:: get_face_map
 
 Simplices

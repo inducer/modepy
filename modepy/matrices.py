@@ -259,13 +259,14 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
     if test_basis is None:
         test_basis = trial_basis
 
-    from modepy import shapes
     if shape is None:
-        shape = shapes.Simplex(face_vertices.shape[0] - 1)
+        from modepy.shapes import Simplex
+        shape = Simplex(face_vertices.shape[0])
 
+    from modepy.shapes import get_face_map, get_quadrature
     face = type(shape)(shape.dims - 1)
-    fmap = shapes.get_face_map(shape, face_vertices)
-    quad = shapes.get_quadrature(face, order)
+    fmap = get_face_map(shape, face_vertices)
+    quad = get_quadrature(face, order)
 
     assert quad.exact_to > order*2
     mapped_nodes = fmap(quad.nodes)
@@ -301,11 +302,12 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
     if test_basis is None:
         test_basis = trial_basis
 
-    from modepy import shapes
     if shape is None:
-        shape = shapes.Simplex(face_vertices.shape[0])
+        from modepy.shapes import Simplex
+        shape = Simplex(face_vertices.shape[0])
 
-    fmap = shapes.get_face_map(shape, face_vertices)
+    from modepy.shapes import get_face_map
+    fmap = get_face_map(shape, face_vertices)
     face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
     vol_vdm = vandermonde(test_basis, volume_nodes)
 

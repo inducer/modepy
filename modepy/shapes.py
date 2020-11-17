@@ -51,8 +51,9 @@ def get_unit_vertices(shape: Shape):
 @singledispatch
 def get_face_vertex_indices(shape: Shape):
     """
-    :results: indices into the vertices returned by :func:`get_unit_vertices`
-        belonging to each face.
+    :results: a tuple of the length :attr:`Shape.nfaces`, where each entry
+        is a tuple of indices into the vertices returned by
+        :func:`get_unit_vertices`.
     """
     raise NotImplementedError(type(shape).__name__)
 
