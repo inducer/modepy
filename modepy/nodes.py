@@ -24,6 +24,74 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 
+from modepy.shapes import Simplex, Hypercube
+from modepy.shapes import get_node_count, get_node_tuples, get_unit_nodes
+
+
+# {{{ shape nodes
+
+# {{{ simplex
+
+@get_node_count.register(Simplex)
+def _(shape: Simplex, order: int):
+    try:
+        from math import comb       # comb is v3.8+
+        node_count = comb(order + shape.dims, shape.dims)
+    except ImportError:
+        from functools import reduce
+        from operator import mul
+        node_count = reduce(mul, range(order + 1, order + shape.dims + 1), 1) \
+                // reduce(mul, range(1, shape.dims + 1), 1)
+
+    return node_count
+
+
+@get_node_tuples.register(Simplex)
+def _(shape: Simplex, order: int):
+    from pytools import \
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
+    if shape.dims == 0:
+        return ((0,),)
+    else:
+        return tuple(gnitsam(order, shape.dims))
+
+
+@get_unit_nodes.register(Simplex)
+def _(shape: Simplex, order: int):
+    import modepy as mp
+    return mp.warp_and_blend_nodes(shape.dims, order)
+
+# }}}
+
+
+# {{{ hypercube
+
+@get_node_count.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    return (order + 1)**shape.dims
+
+
+@get_node_tuples.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    from pytools import \
+            generate_nonnegative_integer_tuples_below as gnitb
+    if shape.dims == 0:
+        return ((0,),)
+    else:
+        return tuple(gnitb(order, shape.dims))
+
+
+@get_unit_nodes.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    import modepy as mp
+    return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dims, order)
+
+# }}}
+
+# }}}
+
+
+# {{{ equidistant nodes
 
 def equidistant_nodes(dims, n, node_tuples=None):
     """
@@ -37,26 +105,20 @@ def equidistant_nodes(dims, n, node_tuples=None):
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
 
+    shape = Simplex(dims)
     if node_tuples is None:
-        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-                as gnitstam
-        node_tuples = list(gnitstam(n, dims))
+        node_tuples = get_node_tuples(shape, n)
     else:
-        try:
-            from math import comb       # comb is v3.8+
-            node_count = comb(n + dims, dims)
-        except ImportError:
-            from functools import reduce
-            from operator import mul
-            node_count = reduce(mul, range(n + 1, n + dims + 1), 1) \
-                    // reduce(mul, range(1, dims + 1), 1)
-
-        if len(node_tuples) != node_count:
+        if len(node_tuples) != get_node_count(shape, n):
             raise ValueError("'node_tuples' list does not have the correct length")
 
-    # shape: (2, nnodes)
+    # shape: (dims, nnodes)
     return (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
+# }}}
+
+
+# {{{ warp and blend simplex nodes
 
 def warp_factor(n, output_nodes, scaled=True):
     """Compute warp function at order *n* and evaluate it at
@@ -126,13 +188,12 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
     except IndexError:
         alpha = 5/3
 
+    shape = Simplex(2)
     if node_tuples is None:
-        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-                as gnitstam
-        node_tuples = list(gnitstam(n, 2))
+        node_tuples = get_node_tuples(shape, n)
     else:
-        if len(node_tuples) != (n+1)*(n+2)//2:
-            raise ValueError("node_tuples list does not have the correct length")
+        if len(node_tuples) != get_node_count(shape, n):
+            raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (2, nnodes)
     unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
@@ -163,13 +224,12 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
     except IndexError:
         alpha = 1.
 
+    shape = Simplex(3)
     if node_tuples is None:
-        from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-                as gnitstam
-        node_tuples = list(gnitstam(n, 3))
+        node_tuples = get_node_tuples(shape, n)
     else:
-        if len(node_tuples) != (n+1)*(n+2)*(n+3)//6:
-            raise ValueError("node_tuples list does not have the correct length")
+        if len(node_tuples) != get_node_count(shape, n):
+            raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (3, nnodes)
     unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
@@ -291,6 +351,8 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
 # }}}
 
+# }}}
+
 
 # {{{ tensor product nodes
 
@@ -319,6 +381,5 @@ def legendre_gauss_lobatto_tensor_product_nodes(dims, n):
     return tensor_product_nodes(dims, legendre_gauss_lobatto_nodes(n))
 
 # }}}
-
 
 # vim: foldmethod=marker

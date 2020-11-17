@@ -1,4 +1,5 @@
 __copyright__ = """
+Copyright (c) 2013 Andreas Kloeckner
 Copyright (c) 2020 Alexandru Fikl
 """
 
@@ -25,15 +26,18 @@ THE SOFTWARE.
 import numpy as np
 
 from functools import singledispatch
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 # {{{ interface
 
 @dataclass(frozen=True)
 class Shape:
+    """
+    .. attribute :: dims
+    .. attribute :: nfaces
+    """
     dims: int
-    nfaces: int = field(init=False)
 
 
 @singledispatch
@@ -66,8 +70,13 @@ def get_face_map(shape: Shape, face_vertices: np.ndarray):
 @singledispatch
 def get_quadrature(shape: Shape, order: int):
     """
-    :returns: a :class:`~modepy.Quadrature` instance of the given *order*.
+    :returns: a :class:`~modepy.Quadrature` that is exact up to ``2 * order + 1``.
     """
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def get_node_count(shape: Shape, order: int):
     raise NotImplementedError(type(shape).__name__)
 
 
@@ -133,40 +142,12 @@ def _(shape: Simplex, face_vertices: np.ndarray):
 @get_quadrature.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
-    if shape.dims == 0:
-        quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
-    else:
-        try:
-            quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dims)
-        except (mp.QuadratureRuleUnavailable, ValueError):
-            quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dims)
+    try:
+        quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dims)
+    except (mp.QuadratureRuleUnavailable, ValueError):
+        quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dims)
 
     return quad
-
-
-@get_node_tuples.register(Simplex)
-def _(shape: Simplex, order: int):
-    from pytools import \
-            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
-    return list(gnitsam(order, shape.dims))
-
-
-@get_unit_nodes.register(Simplex)
-def _(shape: Simplex, order: int):
-    import modepy as mp
-    return mp.warp_and_blend_nodes(shape.dims, order)
-
-
-@get_basis.register(Simplex)
-def _(shape: Simplex, order: int):
-    import modepy as mp
-    return mp.simplex_onb(shape.dims, order)
-
-
-@get_grad_basis.register(Simplex)
-def _(shape: Simplex, order: int):
-    import modepy as mp
-    return mp.grad_simplex_onb(shape.dims, order)
 
 # }}}
 
@@ -187,6 +168,7 @@ def _(shape: Hypercube):
 
 @get_face_vertex_indices.register(Hypercube)
 def _(shape: Hypercube):
+    # FIXME: replace by nicer n-dimensional formula
     return {
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
@@ -225,30 +207,5 @@ def _(shape: Hypercube, order: int):
         quad = LegendreGaussTensorProductQuadrature(order, shape.dims)
 
     return quad
-
-
-@get_node_tuples.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    from pytools import \
-            generate_nonnegative_integer_tuples_below as gnitb
-    return list(gnitb(order, shape.dims))
-
-
-@get_unit_nodes.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dims, order)
-
-
-@get_basis.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.legendre_tensor_product_basis(shape.dims, order)
-
-
-@get_grad_basis.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.grad_legendre_tensor_product_basis(shape.dims, order)
 
 # }}}

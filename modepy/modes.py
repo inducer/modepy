@@ -24,7 +24,10 @@ THE SOFTWARE.
 
 from math import sqrt
 import numpy as np
+
 from modepy.tools import accept_scalar_or_vector
+from modepy.shapes import Simplex, Hypercube
+from modepy.shapes import get_basis, get_grad_basis
 
 
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
@@ -93,6 +96,46 @@ Monomials
 
 .. autofunction:: grad_monomial(order, rst)
 """
+
+
+# {{{ shape basis functions
+
+# {{{ simplex
+
+@get_basis.register(Simplex)
+def _(shape: Simplex, order: int):
+    if shape.dims <= 3:
+        return simplex_onb(shape.dims, order)
+    else:
+        return simplex_monomial_basis(shape.dims, order)
+
+
+@get_grad_basis.register(Simplex)
+def _(shape: Simplex, order: int):
+    if shape.dims <= 3:
+        return grad_simplex_onb(shape.dims, order)
+    else:
+        return grad_simplex_monomial_basis(shape.dims, order)
+
+# }}}
+
+
+# {{{ hypercube
+
+@get_basis.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    import modepy as mp
+    return mp.legendre_tensor_product_basis(shape.dims, order)
+
+
+@get_grad_basis.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    import modepy as mp
+    return mp.grad_legendre_tensor_product_basis(shape.dims, order)
+
+# }}}
+
+# }}}
 
 
 # {{{ jacobi polynomials
@@ -462,10 +505,10 @@ def simplex_onb_with_mode_ids(dims, n):
 
     ... versionadded: 2018.1
     """
-    from functools import partial
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from modepy.shapes import get_node_tuples
+    shape = Simplex(dims)
 
+    from functools import partial
     if dims == 0:
         def zerod_basis(x):
             if len(x.shape) == 1:
@@ -473,16 +516,18 @@ def simplex_onb_with_mode_ids(dims, n):
             else:
                 return np.ones(x.shape[1])
 
-        return ((0,),), (zerod_basis,)
+        mode_ids = get_node_tuples(shape, n)
+        return mode_ids, (zerod_basis,)
 
     elif dims == 1:
+        # FIXME: should also use get_node_tuples
         mode_ids = tuple(range(n+1))
         return mode_ids, tuple(partial(jacobi, 0, 0, i) for i in mode_ids)
     elif dims == 2:
-        mode_ids = tuple(gnitstam(n, dims))
+        mode_ids = get_node_tuples(shape, n)
         return mode_ids, tuple(partial(pkdo_2d, order) for order in mode_ids)
     elif dims == 3:
-        mode_ids = tuple(gnitstam(n, dims))
+        mode_ids = get_node_tuples(shape, n)
         return mode_ids, tuple(partial(pkdo_3d, order) for order in mode_ids)
     else:
         raise NotImplementedError("%d-dimensional bases" % dims)
@@ -560,10 +605,10 @@ def simplex_monomial_basis_with_mode_ids(dims, n):
 
     .. versionadded:: 2018.1
     """
+    from modepy.shapes import get_node_tuples
+    mode_ids = get_node_tuples(Simplex(dims), n)
+
     from functools import partial
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
-    mode_ids = tuple(gnitstam(n, dims))
     return mode_ids, tuple(partial(monomial, order) for order in mode_ids)
 
 
@@ -605,18 +650,12 @@ def grad_simplex_monomial_basis(dims, n):
 
 # undocumented for now
 def simplex_best_available_basis(dims, n):
-    if dims <= 3:
-        return simplex_onb(dims, n)
-    else:
-        return simplex_monomial_basis(dims, n)
+    return get_basis(Simplex(dims), n)
 
 
 # undocumented for now
 def grad_simplex_best_available_basis(dims, n):
-    if dims <= 3:
-        return grad_simplex_onb(dims, n)
-    else:
-        return grad_simplex_monomial_basis(dims, n)
+    return get_grad_basis(Simplex(dims), n)
 
 # }}}
 
