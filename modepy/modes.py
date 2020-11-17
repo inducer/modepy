@@ -27,7 +27,7 @@ import numpy as np
 
 from modepy.tools import accept_scalar_or_vector
 from modepy.shapes import Simplex, Hypercube
-from modepy.shapes import get_basis, get_grad_basis
+from modepy.shapes import get_basis, get_grad_basis, get_basis_with_mode_ids
 
 
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
@@ -117,6 +117,14 @@ def _(shape: Simplex, order: int):
     else:
         return grad_simplex_monomial_basis(shape.dims, order)
 
+
+@get_basis_with_mode_ids.register(Simplex)
+def _(shape: Simplex, order: int):
+    if shape.dims <= 3:
+        return simplex_onb_with_mode_ids(shape.dims, order)
+    else:
+        return simplex_monomial_basis_with_mode_ids(shape.dims, order)
+
 # }}}
 
 
@@ -130,6 +138,13 @@ def _(shape: Hypercube, order: int):
 @get_grad_basis.register(Hypercube)
 def _(shape: Hypercube, order: int):
     return grad_legendre_tensor_product_basis(shape.dims, order)
+
+
+@get_basis_with_mode_ids.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    from modepy.shapes import get_node_tuples
+    mode_ids = get_node_tuples(shape, order)
+    return mode_ids, get_basis(shape, order)
 
 # }}}
 

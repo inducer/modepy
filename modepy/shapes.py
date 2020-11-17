@@ -100,6 +100,11 @@ def get_basis(shape: Shape, order: int):
 def get_grad_basis(shape: Shape, order: int):
     raise NotImplementedError(type(shape).__name__)
 
+
+@singledispatch
+def get_basis_with_mode_ids(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
+
 # }}}
 
 
