@@ -85,6 +85,10 @@ class Transformed1DQuadrature(Quadrature):
 
 
 class TensorProductQuadrature(Quadrature):
+    """
+    .. automethod:: __init__
+    """
+
     def __init__(self, dims, quad):
         """
         :arg quad: a :class:`Quadrature` class for one-dimensional intervals.
