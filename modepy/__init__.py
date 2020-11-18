@@ -38,7 +38,9 @@ from modepy.matrices import (vandermonde,
         diff_matrix_permutation,
         inverse_mass_matrix, mass_matrix,
         modal_face_mass_matrix, nodal_face_mass_matrix)
-from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
+from modepy.quadrature import (
+        Quadrature, QuadratureRuleUnavailable,
+        TensorProductQuadrature, LegendreGaussTensorProductQuadrature)
 from modepy.quadrature.jacobi_gauss import (
         JacobiGaussQuadrature, LegendreGaussQuadrature, ChebyshevGaussQuadrature,
         GaussGegenbauerQuadrature)
@@ -79,7 +81,9 @@ __all__ = [
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
         "ClenshawCurtisQuadrature", "FejerQuadrature",
+
         "WitherdenVincentQuadrature",
+        "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",
         ]
 
 from pytools import MovedFunctionDeprecationWrapper

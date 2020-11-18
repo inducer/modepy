@@ -28,15 +28,15 @@ class WitherdenVincentQuadrature(Quadrature):
     hexahedra.
 
     The integration domain is the unit hypercube :math:`[-1, 1]^d`, where :math:`d`
-    is the dimension. The quadrature rules are adapted from::
+    is the dimension. The quadrature rules are adapted from:
 
         F. D. Witherden, P. E. Vincent,
         On the Identification of Symmetric Quadrature Rules for Finite
         Element Methods,
         Computers & Mathematics with Applications, Vol. 69, pp. 1232--1241, 2015,
-        `10.1016/j.camwa.2015.03.017 http://dx.doi.org/10.1016/j.camwa.2015.03.017`_.
+        `DOI <http://dx.doi.org/10.1016/j.camwa.2015.03.017>`_.
 
-    .. versionadded: 2020.5
+    .. versionadded: 2020.3
 
     .. automethod:: __init__
     .. automethod:: __call__

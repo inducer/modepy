@@ -36,6 +36,7 @@ class Shape:
     """
     .. attribute :: dims
     .. attribute :: nfaces
+    .. attribute :: nvertices
     """
     dims: int
 
@@ -43,7 +44,7 @@ class Shape:
 @singledispatch
 def get_unit_vertices(shape: Shape):
     """
-    :returns: an :class:`~numpy.ndarray` of shape ``(nvertices, dims)``.
+    :returns: an :class:`~numpy.ndarray` of shape `(nvertices, dims)`.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -62,8 +63,8 @@ def get_face_vertex_indices(shape: Shape):
 def get_face_map(shape: Shape, face_vertices: np.ndarray):
     """
     :returns: a :class:`~collections.abc.Callable` that takes an array of
-        unit nodes on the face represented by *face_vertices* and maps
-        them to the volume.
+        size `(dims, nnodes)` of unit nodes on the face represented by
+        *face_vertices* and maps them to the volume.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -71,7 +72,7 @@ def get_face_map(shape: Shape, face_vertices: np.ndarray):
 @singledispatch
 def get_quadrature(shape: Shape, order: int):
     """
-    :returns: a :class:`~modepy.Quadrature` that is exact up to ``2 * order + 1``.
+    :returns: a :class:`~modepy.Quadrature` that is exact up to :math:`2 N + 1`.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -114,6 +115,10 @@ class Simplex(Shape):
     @property
     def nfaces(self):
         return self.dims + 1
+
+    @property
+    def nvertices(self):
+        return self.dim + 1
 
 
 @get_unit_vertices.register(Simplex)
@@ -164,6 +169,10 @@ class Hypercube(Shape):
     @property
     def nfaces(self):
         return 2 * self.dims
+
+    @property
+    def nvertices(self):
+        return 2**self.dims
 
 
 @get_unit_vertices.register(Hypercube)

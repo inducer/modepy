@@ -1,13 +1,11 @@
 Shapes
 ======
 
-`modepy.shapes` provides a generic description of the supported shapes
-(i.e. reference elements).
-
-Interface
-^^^^^^^^^
-
+.. automodule:: modepy.shapes
 .. currentmodule:: modepy.shapes
+
+:mod:`modepy.shapes` provides a generic description of the supported shapes
+(i.e. reference elements).
 
 .. autoclass:: Shape
 .. autofunction:: get_unit_vertices
@@ -139,7 +137,7 @@ Unit coordinates on :math:`(r, s, t)`::
     t
     ^
     |
-    E----------G
+    B----------D
     |\         |\
     | \        | \
     |  \       |  \
@@ -149,7 +147,7 @@ Unit coordinates on :math:`(r, s, t)`::
      \  |       \  |
       \ |        \ |
        \|         \|
-        B----------D
+        E----------G
          \
           v r
 
@@ -157,10 +155,13 @@ Verties in unit coordinates::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
-    B = ( 1, -1, -1)
+    B = (-1, -1,  1)
     C = (-1,  1, -1)
-    D = ( 1,  1, -1)
-    E = (-1, -1,  1)
+    D = (-1,  1,  1)
+    E = ( 1, -1, -1)
     F = ( 1, -1,  1)
-    G = (-1,  1,  1)
+    G = ( 1,  1, -1)
     H = ( 1,  1,  1)
+
+The order of the vertices in the hypercubes follows binary counting
+in ``rst``. For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.

@@ -251,7 +251,7 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
 
     .. versionadded :: 2016.1
 
-    .. versionchanged:: 2020.5
+    .. versionchanged:: 2020.3
 
         Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
@@ -294,7 +294,7 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
 
     .. versionadded :: 2016.1
 
-    .. versionchanged:: 2020.5
+    .. versionchanged:: 2020.3
 
         Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """

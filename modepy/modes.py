@@ -523,7 +523,7 @@ def simplex_onb_with_mode_ids(dims, n):
     * |koornwinder-ref|
     * |dubiner-ref|
 
-    ... versionadded: 2018.1
+    .. versionadded:: 2018.1
     """
     from modepy.shapes import get_node_tuples
     shape = Simplex(dims)
@@ -550,7 +550,7 @@ def simplex_onb(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
     total degree *n*.
 
-    :returns: a class:`tuple` of functions, each of  which
+    :returns: a :class:`tuple` of functions, each of  which
         accepts arrays of shape *(dims, npts)*
         and return the function values as an array of size *npts*.
         'Scalar' evaluation, by passing just one vector of length *dims*,
@@ -629,7 +629,7 @@ def simplex_monomial_basis(dims, n):
     """Return a list of monomial basis functions in dimension *dims* of maximal
     total degree *n*.
 
-    :returns: a class:`tuple` of functions, each of  which
+    :returns: a :class:`tuple` of functions, each of  which
         accepts arrays of shape *(dims, npts)*
         and return the function values as an array of size *npts*.
         'Scalar' evaluation, by passing just one vector of length *dims*,
