@@ -536,9 +536,13 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
 
         Renamed *domain* to *shape*.
     """
+    dims = len(nodes)
     if shape is None:
         from modepy.shapes import Simplex
-        shape = Simplex(len(nodes))
+        shape = Simplex(dims)
+    else:
+        if shape.dims != dims:
+            raise ValueError(f"expected {shape.dims}-dimensional nodes")
 
     lebesgue_worst, equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(n, nodes, shape)

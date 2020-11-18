@@ -336,8 +336,8 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
     else:
         raise ValueError(f"unsupported dimension: {dims}")
 
-    domain = type(shape).__name__.lower()
-    fig.savefig(f"estimate_lebesgue_constant_{domain}_{dims}_order_{order}")
+    shape_name = shape_cls.__name__.lower()
+    fig.savefig(f"estimate_lebesgue_constant_{shape_name}_{dims}_order_{order}")
 
 # }}}
 
