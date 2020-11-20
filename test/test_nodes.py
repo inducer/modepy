@@ -59,10 +59,9 @@ def test_warp():
     n = 17
     from modepy.nodes import warp_factor
     from functools import partial
-    from modepy.tools import accept_scalar_or_vector
 
-    wfc = accept_scalar_or_vector(1, 1)(
-            partial(warp_factor, 17, scaled=False))
+    def wfc(x):
+        return warp_factor(n, np.array([x]), scaled=False)[0]
 
     assert abs(wfc(-1)) < 1e-12
     assert abs(wfc(1)) < 1e-12
@@ -70,7 +69,7 @@ def test_warp():
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     lgq = LegendreGaussQuadrature(n)
-    assert abs(lgq(wfc)) < 6e-14
+    assert abs(lgq(partial(warp_factor, n, scaled=False))) < 6e-14
 
 
 def test_tri_face_node_distribution():
