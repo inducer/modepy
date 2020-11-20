@@ -83,6 +83,10 @@ Monomials
 
 .. autofunction:: monomial(order, rst)
 .. autofunction:: grad_monomial(order, rst)
+
+Symbolic Basis Functions
+------------------------
+.. autofunction:: symbolicize_basis(order, rst)
 """
 
 
@@ -693,6 +697,42 @@ def grad_legendre_tensor_product_basis(dims, order):
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     grad_basis = [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]
     return grad_tensor_product_basis(dims, basis, grad_basis)
+
+# }}}
+
+
+# {{{ symbolic basis functions
+
+def symbolicize_basis(basis, dims, ref_coord_var_name="r"):
+    """For a basis or a gradient of a basis returned by one of the functions in
+    this module, return a list of :mod:`pymbolic` expressions representing the
+    same basis.
+
+    :arg dims: the number of dimensions of the reference element on which
+        *basis* is defined.
+
+    .. versionadded:: 2020.2
+    """
+    import pymbolic.primitives as p
+    r_sym = p.make_sym_vector(ref_coord_var_name, dims)
+
+    result = [func(r_sym) for func in basis]
+
+    if dims == 1:
+        # Work around inconsistent 1D stupidity. Grrrr!
+        # (We fed it an object array, and it gave one back, i.e. it treated its
+        # argument as a scalar instead of indexing into it. That tends to
+        # happen for 1D functions. Because we're aiming for future consistency
+        # across 1D/nD, we'll first try to feed *every* basis object arrays and
+        # only recover if it does the wrong/inconsistent thing.)
+        if any(isinstance(sym_func, np.ndarray) and sym_func.dtype.char == "O"
+                for sym_func in result):
+            r_sym = p.Variable("r")[0]
+            return [func(r_sym) for func in basis]
+        else:
+            return result
+    else:
+        return result
 
 # }}}
 
