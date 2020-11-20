@@ -56,15 +56,10 @@ Dimension-independent basis getters for simplices
     http://dx.doi.org/10.1007/BF01060030
 
 .. autofunction:: simplex_onb_with_mode_ids
-
 .. autofunction:: simplex_onb
-
 .. autofunction:: grad_simplex_onb
-
 .. autofunction:: simplex_monomial_basis_with_mode_ids
-
 .. autofunction:: simplex_monomial_basis
-
 .. autofunction:: grad_simplex_monomial_basis
 
 Dimension-independent basis getters for tensor-product bases
@@ -79,18 +74,14 @@ Dimension-specific functions
 .. currentmodule:: modepy.modes
 
 .. autofunction:: pkdo_2d(order, rs)
-
 .. autofunction:: grad_pkdo_2d(order, rs)
-
 .. autofunction:: pkdo_3d(order, rst)
-
 .. autofunction:: grad_pkdo_3d(order, rst)
 
 Monomials
 ---------
 
 .. autofunction:: monomial(order, rst)
-
 .. autofunction:: grad_monomial(order, rst)
 """
 
