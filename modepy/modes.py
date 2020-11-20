@@ -101,7 +101,7 @@ def jacobi(alpha, beta, n, x):
     Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
 
     Observe that choosing :math:`\alpha=\beta=0` will yield the
-    `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`_.
+    `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`__.
     """
 
     out_shape = x.shape
