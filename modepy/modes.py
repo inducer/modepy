@@ -22,9 +22,9 @@ THE SOFTWARE.
 """
 
 
+import sys
 from math import sqrt
 import numpy as np
-from modepy.tools import accept_scalar_or_vector
 
 
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
@@ -86,6 +86,36 @@ Monomials
 """
 
 
+# {{{ helpers for symbolic evaluation
+
+def _cse(expr, prefix):
+    if "pymbolic" in sys.modules:
+        from pymbolic.primitives import CommonSubexpression, Expression
+        if isinstance(expr, Expression):
+            return CommonSubexpression(expr, prefix)
+        else:
+            return expr
+
+    return expr
+
+
+def _where(op_a, comp, op_b, then, else_):
+    if "pymbolic" in sys.modules:
+        from pymbolic.primitives import If, Comparison, Expression
+        if isinstance(op_a, Expression) or isinstance(op_b, Expression):
+            return If(Comparison(op_a, comp, op_b), then, else_)
+
+    import operator
+    comp_op = getattr(operator, comp)
+
+    if isinstance(op_a, np.ndarray) or isinstance(op_b, np.ndarray):
+        return np.where(comp_op(op_a, op_b), then, else_)
+
+    return then if comp_op(op_a, op_b) else else_
+
+# }}}
+
+
 # {{{ jacobi polynomials
 
 def jacobi(alpha, beta, n, x):
@@ -104,18 +134,7 @@ def jacobi(alpha, beta, n, x):
     `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`__.
     """
 
-    out_shape = x.shape
-    x = x.ravel()
-
     from modepy.tools import gamma
-
-    n = np.int32(n)
-    Nx = len(x)  # noqa: N806
-    if x.shape[0] > 1:
-        x = x.T
-
-    # Storage for recursive construction
-    PL = np.zeros((Nx, n+1), np.float64)  # noqa: N806
 
     # Initial values P_0(x) and P_1(x)
     # NOTE: general formula gets a divide by 0 in the `alpha + beta == -1` case,
@@ -127,14 +146,19 @@ def jacobi(alpha, beta, n, x):
         gamma0 = (2**(alpha+beta+1) / (alpha+beta+1.)
                 * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
-    PL[:, 0] = 1.0/sqrt(gamma0)
+    # Storage for recursive construction
+    pl = [1.0/sqrt(gamma0) + 0*x]
+
     if n == 0:
-        return PL[:, 0].reshape(out_shape)
+        return pl[0]
 
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0
-    PL[:, 1] = ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1)
+
+    pl.append(_cse(
+        ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1),
+        prefix="jac_p1"))
     if n == 1:
-        return PL[:, 1].reshape(out_shape)
+        return pl[1]
 
     # Repeat value in recurrence.
     aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
@@ -147,10 +171,12 @@ def jacobi(alpha, beta, n, x):
         anew = 2./(h1+2.)*sqrt(foo)
 
         bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
-        PL[:, i+1] = (-aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]))/anew
+        pl.append(_cse(
+            (-aold*pl[i-1] + np.multiply(x-bnew, pl[i]))/anew,
+            prefix=f"jac_p{i+1}"))
         aold = anew
 
-    return PL[:, n].reshape(out_shape)
+    return pl[n]
 
 
 def grad_jacobi(alpha, beta, n, x):
@@ -158,30 +184,27 @@ def grad_jacobi(alpha, beta, n, x):
     with the same meanings and restrictions for all arguments.
     """
     if n == 0:
-        return np.zeros_like(x)
+        return 0*x
     else:
-        return sqrt(n*(n+alpha+beta+1)) \
-                * jacobi(alpha+1, beta+1, n-1, x)
+        return sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
 
 # }}}
 
 
 # {{{ 2D PKDO
 
-def _rstoab(r, s):
+def _rstoab(r, s, tol=1e-12):
     """Transfer from (r, s) -> (a, b) coordinates in triangle.
     """
 
-    a = np.empty_like(r)
-
-    valid = (s != 1)
-    a[valid] = 2*(1+r[valid])/(1-s[valid])-1
-    a[~valid] = -1
+    # We may divide by zero below (or close to it), but we won't use the
+    # results because of the conditional. Silence the resulting numpy warnings.
+    with np.errstate(all="ignore"):
+        a = _where(abs(s-1), "ge", tol, 2*(1+r)/(1-s)-1, -1)
     b = s
     return a, b
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_2d(order, rs):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -205,7 +228,6 @@ def pkdo_2d(order, rs):
     return sqrt(2)*h1*h2*(1-b)**i
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_2d(order, rs):
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
@@ -260,31 +282,17 @@ def grad_pkdo_2d(order, rs):
 
 # {{{ 3D PKDO
 
-def _rsttoabc(r, s, t):
-    Np = len(r)  # noqa: N806
-    tol = 1e-10
-
-    a = np.zeros(Np)
-    b = np.zeros(Np)
-    c = np.zeros(Np)
-
-    for n in range(Np):
-        if abs(s[n]+t[n]) > tol:
-            a[n] = 2*(1+r[n])/(-s[n]-t[n])-1
-        else:
-            a[n] = -1
-
-        if abs(t[n]-1.) > tol:
-            b[n] = 2*(1+s[n])/(1-t[n])-1
-        else:
-            b[n] = -1
-
-        c[n] = t[n]
+def _rsttoabc(r, s, t, tol=1e-10):
+    # We may divide by zero below (or close to it), but we won't use the
+    # results because of the conditional. Silence the resulting numpy warnings.
+    with np.errstate(all="ignore"):
+        a = _where(abs(s+t), "gt", tol, 2*(1+r)/(-s-t)-1, -1)
+        b = _where(abs(t-1.), "gt", tol, 2*(1+s)/(1-t)-1, -1)
+        c = t
 
     return a, b, c
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_3d(order, rst):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -310,7 +318,6 @@ def pkdo_3d(order, rst):
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_3d(order, rst):
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
@@ -379,7 +386,6 @@ def grad_pkdo_3d(order, rst):
 
 # {{{ monomials
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def monomial(order, rst):
     """Evaluate the monomial of order *order* at the points *rst*.
 
@@ -394,7 +400,6 @@ def monomial(order, rst):
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_monomial(order, rst):
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 

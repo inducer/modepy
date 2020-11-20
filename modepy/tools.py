@@ -244,69 +244,6 @@ def pick_random_simplex_unit_coordinate(rng, dims):
 def pick_random_hypercube_unit_coordinate(rng, dims):
     return np.array([rng.uniform(-1.0, 1.0) for _ in range(dims)])
 
-# {{{ accept_scalar_or_vector decorator
-
-class accept_scalar_or_vector:  # noqa
-    def __init__(self, arg_nr, expected_rank):
-        """
-        :arg arg_nr: The argument number which may be a scalar or a vector,
-            one-based.
-        """
-        self.arg_nr = arg_nr - 1
-        self.expected_rank = expected_rank
-
-    def __call__(self, f):
-
-        def wrapper(*args, **kwargs):
-            controlling_arg = args[self.arg_nr]
-            try:
-                shape = controlling_arg.shape
-            except AttributeError:
-                has_shape = False
-            else:
-                has_shape = True
-
-            if not has_shape:
-                if not self.expected_rank == 1:
-                    raise ValueError("cannot pass a scalar to %s" % f)
-
-                controlling_arg = np.array([controlling_arg])
-                new_args = args[:self.arg_nr] \
-                        + (controlling_arg,) + args[self.arg_nr+1:]
-                result = f(*new_args, **kwargs)
-
-                if isinstance(result, tuple):
-                    return tuple(r[0] for r in result)
-                else:
-                    return result[0]
-
-            if len(shape) == self.expected_rank:
-                return f(*args, **kwargs)
-            elif len(shape) < self.expected_rank:
-                controlling_arg = controlling_arg[..., np.newaxis]
-
-                new_args = args[:self.arg_nr] \
-                        + (controlling_arg,) + args[self.arg_nr+1:]
-                result = f(*new_args, **kwargs)
-
-                if isinstance(result, tuple):
-                    return tuple(r[..., 0] for r in result)
-                else:
-                    return result[..., 0]
-            else:
-                raise ValueError("argument rank is too large: got %d, expected %d"
-                        % (len(shape), self.expected_rank))
-
-        from functools import wraps
-        try:
-            wrapper = wraps(f)(wrapper)
-        except AttributeError:
-            pass
-
-        return wrapper
-
-# }}}
-
 
 # {{{ submeshes, plotting helpers
 
@@ -446,7 +383,6 @@ def hypercube_submesh(node_tuples):
     return result
 
 
-@accept_scalar_or_vector(2, 2)
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
     dims = len(nodes)
