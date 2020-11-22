@@ -22,9 +22,9 @@ THE SOFTWARE.
 """
 
 
+import sys
 from math import sqrt
 import numpy as np
-from modepy.tools import accept_scalar_or_vector
 
 
 __doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
@@ -56,15 +56,10 @@ Dimension-independent basis getters for simplices
     http://dx.doi.org/10.1007/BF01060030
 
 .. autofunction:: simplex_onb_with_mode_ids
-
 .. autofunction:: simplex_onb
-
 .. autofunction:: grad_simplex_onb
-
 .. autofunction:: simplex_monomial_basis_with_mode_ids
-
 .. autofunction:: simplex_monomial_basis
-
 .. autofunction:: grad_simplex_monomial_basis
 
 Dimension-independent basis getters for tensor-product bases
@@ -78,21 +73,51 @@ Dimension-specific functions
 
 .. currentmodule:: modepy.modes
 
-.. autofunction:: pkdo_2d(order, rs)
-
-.. autofunction:: grad_pkdo_2d(order, rs)
-
-.. autofunction:: pkdo_3d(order, rst)
-
-.. autofunction:: grad_pkdo_3d(order, rst)
+.. autofunction:: pkdo_2d
+.. autofunction:: grad_pkdo_2d
+.. autofunction:: pkdo_3d
+.. autofunction:: grad_pkdo_3d
 
 Monomials
 ---------
 
-.. autofunction:: monomial(order, rst)
+.. autofunction:: monomial
+.. autofunction:: grad_monomial
 
-.. autofunction:: grad_monomial(order, rst)
+Symbolic Basis Functions
+------------------------
+.. autofunction:: symbolicize_basis
 """
+
+
+# {{{ helpers for symbolic evaluation
+
+def _cse(expr, prefix):
+    if "pymbolic" in sys.modules:
+        from pymbolic.primitives import CommonSubexpression, Expression
+        if isinstance(expr, Expression):
+            return CommonSubexpression(expr, prefix)
+        else:
+            return expr
+
+    return expr
+
+
+def _where(op_a, comp, op_b, then, else_):
+    if "pymbolic" in sys.modules:
+        from pymbolic.primitives import If, Comparison, Expression
+        if isinstance(op_a, Expression) or isinstance(op_b, Expression):
+            return If(Comparison(op_a, comp, op_b), then, else_)
+
+    import operator
+    comp_op = getattr(operator, comp)
+
+    if isinstance(op_a, np.ndarray) or isinstance(op_b, np.ndarray):
+        return np.where(comp_op(op_a, op_b), then, else_)
+
+    return then if comp_op(op_a, op_b) else else_
+
+# }}}
 
 
 # {{{ jacobi polynomials
@@ -110,21 +135,10 @@ def jacobi(alpha, beta, n, x):
     Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
 
     Observe that choosing :math:`\alpha=\beta=0` will yield the
-    `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`_.
+    `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`__.
     """
 
-    out_shape = x.shape
-    x = x.ravel()
-
     from modepy.tools import gamma
-
-    n = np.int32(n)
-    Nx = len(x)  # noqa: N806
-    if x.shape[0] > 1:
-        x = x.T
-
-    # Storage for recursive construction
-    PL = np.zeros((Nx, n+1), np.float64)  # noqa: N806
 
     # Initial values P_0(x) and P_1(x)
     # NOTE: general formula gets a divide by 0 in the `alpha + beta == -1` case,
@@ -136,14 +150,19 @@ def jacobi(alpha, beta, n, x):
         gamma0 = (2**(alpha+beta+1) / (alpha+beta+1.)
                 * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
-    PL[:, 0] = 1.0/sqrt(gamma0)
+    # Storage for recursive construction
+    pl = [1.0/sqrt(gamma0) + 0*x]
+
     if n == 0:
-        return PL[:, 0].reshape(out_shape)
+        return pl[0]
 
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0
-    PL[:, 1] = ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1)
+
+    pl.append(_cse(
+        ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1),
+        prefix="jac_p1"))
     if n == 1:
-        return PL[:, 1].reshape(out_shape)
+        return pl[1]
 
     # Repeat value in recurrence.
     aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
@@ -156,10 +175,12 @@ def jacobi(alpha, beta, n, x):
         anew = 2./(h1+2.)*sqrt(foo)
 
         bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
-        PL[:, i+1] = (-aold*PL[:, i-1] + np.multiply(x-bnew, PL[:, i]))/anew
+        pl.append(_cse(
+            (-aold*pl[i-1] + np.multiply(x-bnew, pl[i]))/anew,
+            prefix=f"jac_p{i+1}"))
         aold = anew
 
-    return PL[:, n].reshape(out_shape)
+    return pl[n]
 
 
 def grad_jacobi(alpha, beta, n, x):
@@ -167,30 +188,27 @@ def grad_jacobi(alpha, beta, n, x):
     with the same meanings and restrictions for all arguments.
     """
     if n == 0:
-        return np.zeros_like(x)
+        return 0*x
     else:
-        return sqrt(n*(n+alpha+beta+1)) \
-                * jacobi(alpha+1, beta+1, n-1, x)
+        return sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
 
 # }}}
 
 
 # {{{ 2D PKDO
 
-def _rstoab(r, s):
+def _rstoab(r, s, tol=1e-12):
     """Transfer from (r, s) -> (a, b) coordinates in triangle.
     """
 
-    a = np.empty_like(r)
-
-    valid = (s != 1)
-    a[valid] = 2*(1+r[valid])/(1-s[valid])-1
-    a[~valid] = -1
+    # We may divide by zero below (or close to it), but we won't use the
+    # results because of the conditional. Silence the resulting numpy warnings.
+    with np.errstate(all="ignore"):
+        a = _where(abs(s-1), "ge", tol, 2*(1+r)/(1-s)-1, -1)
     b = s
     return a, b
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_2d(order, rs):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -214,7 +232,6 @@ def pkdo_2d(order, rs):
     return sqrt(2)*h1*h2*(1-b)**i
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_2d(order, rs):
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
@@ -269,31 +286,17 @@ def grad_pkdo_2d(order, rs):
 
 # {{{ 3D PKDO
 
-def _rsttoabc(r, s, t):
-    Np = len(r)  # noqa: N806
-    tol = 1e-10
-
-    a = np.zeros(Np)
-    b = np.zeros(Np)
-    c = np.zeros(Np)
-
-    for n in range(Np):
-        if abs(s[n]+t[n]) > tol:
-            a[n] = 2*(1+r[n])/(-s[n]-t[n])-1
-        else:
-            a[n] = -1
-
-        if abs(t[n]-1.) > tol:
-            b[n] = 2*(1+s[n])/(1-t[n])-1
-        else:
-            b[n] = -1
-
-        c[n] = t[n]
+def _rsttoabc(r, s, t, tol=1e-10):
+    # We may divide by zero below (or close to it), but we won't use the
+    # results because of the conditional. Silence the resulting numpy warnings.
+    with np.errstate(all="ignore"):
+        a = _where(abs(s+t), "gt", tol, 2*(1+r)/(-s-t)-1, -1)
+        b = _where(abs(t-1.), "gt", tol, 2*(1+s)/(1-t)-1, -1)
+        c = t
 
     return a, b, c
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def pkdo_3d(order, rst):
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
@@ -319,7 +322,6 @@ def pkdo_3d(order, rst):
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_pkdo_3d(order, rst):
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
@@ -388,7 +390,6 @@ def grad_pkdo_3d(order, rst):
 
 # {{{ monomials
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def monomial(order, rst):
     """Evaluate the monomial of order *order* at the points *rst*.
 
@@ -403,7 +404,6 @@ def monomial(order, rst):
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-@accept_scalar_or_vector(arg_nr=2, expected_rank=2)
 def grad_monomial(order, rst):
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
@@ -697,6 +697,42 @@ def grad_legendre_tensor_product_basis(dims, order):
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     grad_basis = [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]
     return grad_tensor_product_basis(dims, basis, grad_basis)
+
+# }}}
+
+
+# {{{ symbolic basis functions
+
+def symbolicize_basis(basis, dims, ref_coord_var_name="r"):
+    """For a basis or a gradient of a basis returned by one of the functions in
+    this module, return a list of :mod:`pymbolic` expressions representing the
+    same basis.
+
+    :arg dims: the number of dimensions of the reference element on which
+        *basis* is defined.
+
+    .. versionadded:: 2020.2
+    """
+    import pymbolic.primitives as p
+    r_sym = p.make_sym_vector(ref_coord_var_name, dims)
+
+    result = [func(r_sym) for func in basis]
+
+    if dims == 1:
+        # Work around inconsistent 1D stupidity. Grrrr!
+        # (We fed it an object array, and it gave one back, i.e. it treated its
+        # argument as a scalar instead of indexing into it. That tends to
+        # happen for 1D functions. Because we're aiming for future consistency
+        # across 1D/nD, we'll first try to feed *every* basis object arrays and
+        # only recover if it does the wrong/inconsistent thing.)
+        if any(isinstance(sym_func, np.ndarray) and sym_func.dtype.char == "O"
+                for sym_func in result):
+            r_sym = p.Variable("r")[0]
+            return [func(r_sym) for func in basis]
+        else:
+            return result
+    else:
+        return result
 
 # }}}
 

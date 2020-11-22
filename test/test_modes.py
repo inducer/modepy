@@ -25,6 +25,9 @@ import numpy as np
 import numpy.linalg as la
 import pytest
 import modepy.modes as m
+from pymbolic.mapper.stringifier import (
+        CSESplittingStringifyMapperMixin, StringifyMapper)
+from pymbolic.mapper.evaluator import EvaluationMapper
 
 import logging
 logger = logging.getLogger(__name__)
@@ -146,6 +149,104 @@ def test_basis_grad(dims, order, eltype, basis_getter, grad_basis_getter):
             err = la.norm(gradbf_v_num - gradbf_v)
             logger.info("error: %.5", err)
             assert err < factor * h, (err, i_bf)
+
+
+# {{{ test symbolic modes
+
+class MyStringifyMapper(CSESplittingStringifyMapperMixin, StringifyMapper):
+    pass
+
+
+class MyEvaluationMapper(EvaluationMapper):
+    def map_if(self, expr):
+        return np.where(self.rec(expr.condition),
+                self.rec(expr.then), self.rec(expr.else_))
+
+
+@pytest.mark.parametrize(("domain", "get_basis", "get_grad_basis"), [
+    ("simplex", m.simplex_onb, m.grad_simplex_onb),
+    ("simplex", m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
+    ("hypercube", m.legendre_tensor_product_basis,
+        m.grad_legendre_tensor_product_basis),
+    ])
+@pytest.mark.parametrize("dims", [1, 2, 3])
+@pytest.mark.parametrize("n", [5, 10])
+def test_symbolic_basis(domain, dims, n,
+        get_basis,
+        get_grad_basis):
+
+    basis = get_basis(dims, n)
+    sym_basis = m.symbolicize_basis(basis, dims)
+
+    # {{{ test symbolic against direct eval
+
+    print(75*"#")
+    print("VALUES")
+    print(75*"#")
+
+    r = np.random.rand(dims, 10000)*2 - 1
+    if domain == "simplex":
+        r = r[:, r.sum(axis=0) < 0]
+    elif domain == "hypercube":
+        pass
+    else:
+        raise ValueError(f"unexpected domain: {domain}")
+
+    for func, sym_func in zip(basis, sym_basis):
+        strmap = MyStringifyMapper()
+        s = strmap(sym_func)
+        for name, val in strmap.cse_name_list:
+            print(f"{name} <- {val}")
+        print(s)
+
+        sym_val = MyEvaluationMapper({"r": r, "abs": abs})(sym_func)
+        ref_val = func(r)
+
+        ref_norm = la.norm(ref_val, np.inf)
+        err = la.norm(sym_val-ref_val, np.inf)
+        if ref_norm:
+            err = err/ref_norm
+        print(f"ERROR: {err}")
+        print()
+        assert np.allclose(sym_val, ref_val)
+
+    # }}}
+
+    # {{{ test gradients
+
+    print(75*"#")
+    print("GRADIENTS")
+    print(75*"#")
+
+    grad_basis = get_grad_basis(dims, n)
+    sym_grad_basis = m.symbolicize_basis(grad_basis, dims)
+
+    for grad, sym_grad in zip(grad_basis, sym_grad_basis):
+        strmap = MyStringifyMapper()
+        s = strmap(sym_grad)
+        for name, val in strmap.cse_name_list:
+            print(f"{name} <- {val}")
+        print(s)
+
+        sym_val = MyEvaluationMapper({"r": r, "abs": abs})(sym_grad)
+        ref_val = grad(r)
+        if not isinstance(ref_val, tuple):
+            assert not isinstance(sym_val, tuple)
+            sym_val = (sym_val,)
+            ref_val = (ref_val,)
+
+        for sv_i, rv_i in zip(sym_val, ref_val):
+            ref_norm = la.norm(rv_i, np.inf)
+            err = la.norm(sv_i-rv_i, np.inf)
+            if ref_norm:
+                err = err/ref_norm
+            print(f"ERROR: {err}")
+            print()
+            assert np.allclose(sv_i, rv_i)
+
+    # }}}
+
+# }}}
 
 
 # You can test individual routines by typing
