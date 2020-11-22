@@ -73,20 +73,20 @@ Dimension-specific functions
 
 .. currentmodule:: modepy.modes
 
-.. autofunction:: pkdo_2d(order, rs)
-.. autofunction:: grad_pkdo_2d(order, rs)
-.. autofunction:: pkdo_3d(order, rst)
-.. autofunction:: grad_pkdo_3d(order, rst)
+.. autofunction:: pkdo_2d
+.. autofunction:: grad_pkdo_2d
+.. autofunction:: pkdo_3d
+.. autofunction:: grad_pkdo_3d
 
 Monomials
 ---------
 
-.. autofunction:: monomial(order, rst)
-.. autofunction:: grad_monomial(order, rst)
+.. autofunction:: monomial
+.. autofunction:: grad_monomial
 
 Symbolic Basis Functions
 ------------------------
-.. autofunction:: symbolicize_basis(order, rst)
+.. autofunction:: symbolicize_basis
 """
 
 
