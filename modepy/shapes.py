@@ -389,3 +389,5 @@ def _(shape: Hypercube, order: int):
     return quad
 
 # }}}
+
+# vim: foldmethod=marker
