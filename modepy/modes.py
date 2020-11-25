@@ -253,10 +253,10 @@ def grad_pkdo_2d(order, rs):
     a, b = _rstoab(*rs)
     i, j = order
 
-    fa = jacobi(0, 0, i, a)
-    dfa = grad_jacobi(0, 0, i, a)
-    gb = jacobi(2*i+1, 0, j, b)
-    dgb = grad_jacobi(2*i+1, 0, j, b)
+    fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
+    dfa = _cse(grad_jacobi(0, 0, i, a), "dleg_{i}")
+    gb = _cse(jacobi(2*i+1, 0, j, b), f"jac_{2*i+1}_{j}")
+    dgb = _cse(grad_jacobi(2*i+1, 0, j, b), f"djac_{2*i+1}_{j}")
 
     # r-derivative
     # d/dr
@@ -343,12 +343,12 @@ def grad_pkdo_3d(order, rst):
     a, b, c = _rsttoabc(*rst)
     i, j, k = order
 
-    fa = jacobi(0, 0, i, a)
-    dfa = grad_jacobi(0, 0, i, a)
-    gb = jacobi(2*i+1, 0, j, b)
-    dgb = grad_jacobi(2*i+1, 0, j, b)
-    hc = jacobi(2*(i+j)+2, 0, k, c)
-    dhc = grad_jacobi(2*(i+j)+2, 0, k, c)
+    fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
+    dfa = _cse(grad_jacobi(0, 0, i, a), f"dleg_{i}")
+    gb = _cse(jacobi(2*i+1, 0, j, b), f"jac_{2*i+1}")
+    dgb = _cse(grad_jacobi(2*i+1, 0, j, b), f"djac_{2*i+1}")
+    hc = _cse(jacobi(2*(i+j)+2, 0, k, c), f"jac_{2*(i+j)+2}")
+    dhc = _cse(grad_jacobi(2*(i+j)+2, 0, k, c), f"djac_{2*(i+j)+2}")
 
     # r-derivative
     # d/dr = da/dr d/da + db/dr d/db + dc/dr d/dx
