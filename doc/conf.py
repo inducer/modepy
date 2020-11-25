@@ -270,6 +270,7 @@ intersphinx_mapping = {
         "https://docs.python.org/": None,
         "https://docs.scipy.org/doc/numpy/": None,
         "https://documen.tician.de/pytools": None,
+        "https://documen.tician.de/pymbolic": None,
         }
 
 autoclass_content = "class"
