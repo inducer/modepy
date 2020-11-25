@@ -39,7 +39,6 @@ Jacobi polynomials
 .. currentmodule:: modepy
 
 .. autofunction:: jacobi(alpha, beta, n, x)
-
 .. autofunction:: grad_jacobi(alpha, beta, n, x)
 
 Dimension-independent basis getters for simplices
