@@ -176,7 +176,7 @@ def test_symbolic_basis(domain, dims, n,
         get_grad_basis):
 
     basis = get_basis(dims, n)
-    sym_basis = m.symbolicize_basis(basis, dims)
+    sym_basis = [m.symbolicize_function(f, dims) for f in basis]
 
     # {{{ test symbolic against direct eval
 
@@ -219,7 +219,7 @@ def test_symbolic_basis(domain, dims, n,
     print(75*"#")
 
     grad_basis = get_grad_basis(dims, n)
-    sym_grad_basis = m.symbolicize_basis(grad_basis, dims)
+    sym_grad_basis = [m.symbolicize_function(f, dims) for f in grad_basis]
 
     for grad, sym_grad in zip(grad_basis, sym_grad_basis):
         strmap = MyStringifyMapper()
