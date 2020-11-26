@@ -41,8 +41,10 @@ Jacobi polynomials
 .. autofunction:: jacobi(alpha, beta, n, x)
 .. autofunction:: grad_jacobi(alpha, beta, n, x)
 
-Dimension-independent basis getters for simplices
--------------------------------------------------
+PKDO basis functions
+--------------------
+
+.. currentmodule:: modepy.modes
 
 .. |proriol-ref| replace::
     Proriol, Joseph. "Sur une famille de polynomes á deux variables orthogonaux
@@ -57,23 +59,6 @@ Dimension-independent basis getters for simplices
     Scientific Computing 6, no. 4 (December 1, 1991): 345–390.
     http://dx.doi.org/10.1007/BF01060030
 
-.. autofunction:: simplex_onb_with_mode_ids
-.. autofunction:: simplex_onb
-.. autofunction:: grad_simplex_onb
-.. autofunction:: simplex_monomial_basis_with_mode_ids
-.. autofunction:: simplex_monomial_basis
-.. autofunction:: grad_simplex_monomial_basis
-
-Dimension-independent basis getters for tensor-product bases
-------------------------------------------------------------
-
-.. autofunction:: tensor_product_basis
-.. autofunction:: grad_tensor_product_basis
-
-Dimension-specific functions
-----------------------------
-
-.. currentmodule:: modepy.modes
 
 .. autofunction:: pkdo_2d
 .. autofunction:: grad_pkdo_2d
@@ -442,7 +427,7 @@ def grad_monomial(order, rst):
 # }}}
 
 
-# {{{ dimension-independent interface for simplices
+# {{{ DEPRECATED dimension-independent interface for simplices
 
 def zerod_basis(x):
     if len(x.shape) == 1:
@@ -471,6 +456,11 @@ def simplex_onb_with_mode_ids(dims, n):
 
     .. versionadded:: 2018.1
     """
+    warn("simplex_onb_with_mode_ids is deprecated. "
+            "Use orthonormal_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from modepy.shapes import get_node_tuples
     shape = Simplex(dims)
 
@@ -512,6 +502,11 @@ def simplex_onb(dims, n):
 
         Made return value a tuple, to make bases hashable.
     """
+    warn("simplex_onb is deprecated. "
+            "Use orthonormal_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     mode_ids, basis = simplex_onb_with_mode_ids(dims, n)
     return basis
 
@@ -536,6 +531,11 @@ def grad_simplex_onb(dims, n):
 
         Made return value a tuple, to make bases hashable.
     """
+    warn("grad_simplex_onb is deprecated. "
+            "Use orthonormal_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
@@ -564,6 +564,11 @@ def simplex_monomial_basis_with_mode_ids(dims, n):
 
     .. versionadded:: 2018.1
     """
+    warn("simplex_monomial_basis_with_mode_ids is deprecated. "
+            "Use monomial_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from modepy.shapes import get_node_tuples
     mode_ids = get_node_tuples(Simplex(dims), n)
 
@@ -601,25 +606,38 @@ def grad_simplex_monomial_basis(dims, n):
     .. versionadded:: 2016.1
     """
 
+    warn("grad_simplex_monomial_basis_with_mode_ids is deprecated. "
+            "Use monomial_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
     return tuple(partial(grad_monomial, order) for order in gnitstam(n, dims))
 
 
-# undocumented for now
 def simplex_best_available_basis(dims, n):
-    return get_basis(Simplex(dims), n)
+    warn("simplex_best_available_basis is deprecated. "
+            "Use basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
+    return basis_for_shape(Simplex(dims), n).functions
 
 
-# undocumented for now
 def grad_simplex_best_available_basis(dims, n):
-    return get_grad_basis(Simplex(dims), n)
+    warn("grad_simplex_best_available_basis is deprecated. "
+            "Use basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
+    return basis_for_shape(Simplex(dims), n).gradients
 
 # }}}
 
 
-# {{{ tensor product basis
+# {{{ tensor product basis helpers
 
 class _TensorProductBasisFunction:
     def __init__(self, multi_index, per_dim_functions):
@@ -647,6 +665,10 @@ class _TensorProductGradientBasisFunction:
 
         return tuple(result)
 
+# }}}
+
+
+# {{{ DEPRECATED dimension-independent basis getters
 
 def tensor_product_basis(dims, basis_1d):
     """Adapt any iterable *basis_1d* of 1D basis functions into a *dims*-dimensional
@@ -656,6 +678,11 @@ def tensor_product_basis(dims, basis_1d):
 
     .. versionadded:: 2017.1
     """
+    warn("tensor_product_basis is deprecated. "
+            "Use TensorProductBasis instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from modepy.shapes import Hypercube, get_node_tuples
     mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
 
@@ -673,6 +700,11 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
     .. versionadded:: 2020.2
     """
+    warn("grad_tensor_product_basis is deprecated. "
+            "Use TensorProductBasis instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from pytools import wandering_element
     from modepy.shapes import Hypercube, get_node_tuples
     mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
@@ -687,12 +719,22 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
 
 def legendre_tensor_product_basis(dims, order):
+    warn("legendre_tensor_product_basis is deprecated. "
+            "Use orthonormal_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from functools import partial
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     return tensor_product_basis(dims, basis)
 
 
 def grad_legendre_tensor_product_basis(dims, order):
+    warn("grad_legendre_tensor_product_basis is deprecated. "
+            "Use orthonormal_basis_for_shape instead. "
+            "This function will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
     from functools import partial
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     grad_basis = [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]
