@@ -148,8 +148,9 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
                     np.dot(resample_vdm_new, la.pinv(vdm_old)),
                     order="C")
         else:
-            raise RuntimeError("number of input nodes and number "
-                    "of basis functions "
+            raise RuntimeError(
+                    f"number of input nodes ({old_nodes.shape[1]}) "
+                    f"and number of basis functions ({len(basis)}) "
                     "do not agree--perhaps use least_squares_ok")
 
 
