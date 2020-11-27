@@ -22,16 +22,30 @@ THE SOFTWARE.
 """
 
 
+from warnings import warn
 import sys
 from math import sqrt
+from functools import singledispatch, partial
+
 import numpy as np
 
-from modepy.shapes import Simplex, Hypercube
-from modepy.shapes import get_basis, get_grad_basis, get_basis_with_mode_ids
+from modepy.shapes import Shape, Simplex, Hypercube
 
 
-__doc__ = """:mod:`modepy.modes` provides orthonormal bases and their
-derivatives on unit simplices.
+__doc__ = """This functionality provides sets of basis functions for the
+reference elements in :mod:`modepy.shapes`.
+
+.. currentmodule:: modepy
+
+Generic Basis Retrieval based on :mod:`~modepy.shapes`
+------------------------------------------------------
+
+.. autoexception:: BasisNotOrthonormal
+.. autoclass:: Basis
+
+.. autofunction:: basis_for_shape
+.. autofunction:: orthonormal_basis_for_shape
+.. autofunction:: monomial_basis_for_shape
 
 Jacobi polynomials
 ------------------
@@ -430,10 +444,7 @@ def grad_monomial(order, rst):
 # {{{ DEPRECATED dimension-independent interface for simplices
 
 def zerod_basis(x):
-    if len(x.shape) == 1:
-        return 1
-    else:
-        return np.ones(x.shape[1])
+    return 1 + 0*x[()]
 
 
 def simplex_onb_with_mode_ids(dims, n):
@@ -461,25 +472,13 @@ def simplex_onb_with_mode_ids(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from modepy.shapes import get_node_tuples
-    shape = Simplex(dims)
-
-    from functools import partial
-    if dims == 0:
-        mode_ids = get_node_tuples(shape, n)
-        return mode_ids, (zerod_basis,)
-    elif dims == 1:
+    if dims == 1:
         # FIXME: should also use get_node_tuples
         mode_ids = tuple(range(n+1))
         return mode_ids, tuple(partial(jacobi, 0, 0, i) for i in mode_ids)
-    elif dims == 2:
-        mode_ids = get_node_tuples(shape, n)
-        return mode_ids, tuple(partial(pkdo_2d, order) for order in mode_ids)
-    elif dims == 3:
-        mode_ids = get_node_tuples(shape, n)
-        return mode_ids, tuple(partial(pkdo_3d, order) for order in mode_ids)
     else:
-        raise NotImplementedError("%d-dimensional bases" % dims)
+        b = _SimplexONB(dims, n)
+        return b.mode_ids, b.functions
 
 
 def simplex_onb(dims, n):
@@ -536,7 +535,6 @@ def grad_simplex_onb(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
 
@@ -572,7 +570,6 @@ def simplex_monomial_basis_with_mode_ids(dims, n):
     from modepy.shapes import get_node_tuples
     mode_ids = get_node_tuples(Simplex(dims), n)
 
-    from functools import partial
     return mode_ids, tuple(partial(monomial, order) for order in mode_ids)
 
 
@@ -611,7 +608,6 @@ def grad_simplex_monomial_basis(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from functools import partial
     from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
             as gnitstam
     return tuple(partial(grad_monomial, order) for order in gnitstam(n, dims))
@@ -640,6 +636,8 @@ def grad_simplex_best_available_basis(dims, n):
 # {{{ tensor product basis helpers
 
 class _TensorProductBasisFunction:
+    # multi_index is here just for debugging.
+
     def __init__(self, multi_index, per_dim_functions):
         self.multi_index = multi_index
         self.per_dim_functions = per_dim_functions
@@ -653,6 +651,8 @@ class _TensorProductBasisFunction:
 
 
 class _TensorProductGradientBasisFunction:
+    # multi_index is here just for debugging.
+
     def __init__(self, multi_index, per_dim_derivatives):
         self.multi_index = multi_index
         self.per_dim_derivatives = tuple(per_dim_derivatives)
@@ -724,7 +724,6 @@ def legendre_tensor_product_basis(dims, order):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from functools import partial
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     return tensor_product_basis(dims, basis)
 
@@ -735,7 +734,6 @@ def grad_legendre_tensor_product_basis(dims, order):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from functools import partial
     basis = [partial(jacobi, 0, 0, n) for n in range(order + 1)]
     grad_basis = [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]
     return grad_tensor_product_basis(dims, basis, grad_basis)
@@ -745,22 +743,22 @@ def grad_legendre_tensor_product_basis(dims, order):
 
 # {{{ conversion to symbolic
 
-def symbolicize_function(f, dims, ref_coord_var_name="r"):
+def symbolicize_function(f, dim, ref_coord_var_name="r"):
     """For a function *f* (basis or gradient) returned by one of the functions in
     this module, return a :mod:`pymbolic` expression representing the
     same function.
 
-    :arg dims: the number of dimensions of the reference element on which
+    :arg dim: the number of dimensions of the reference element on which
         *basis* is defined.
 
     .. versionadded:: 2020.2
     """
     import pymbolic.primitives as p
-    r_sym = p.make_sym_vector(ref_coord_var_name, dims)
+    r_sym = p.make_sym_vector(ref_coord_var_name, dim)
 
     result = f(r_sym)
 
-    if dims == 1:
+    if dim == 1:
         # Work around inconsistent 1D stupidity. Grrrr!
         # (We fed it an object array, and it gave one back, i.e. it treated its
         # argument as a scalar instead of indexing into it. That tends to
@@ -778,55 +776,233 @@ def symbolicize_function(f, dims, ref_coord_var_name="r"):
 # }}}
 
 
-# {{{ shape basis functions
+# {{{ basis interface
 
-# {{{ simplex
-
-@get_basis.register(Simplex)
-def _(shape: Simplex, order: int):
-    if shape.dims <= 3:
-        return simplex_onb(shape.dims, order)
-    else:
-        return simplex_monomial_basis(shape.dims, order)
+class BasisNotOrthonormal(Exception):
+    pass
 
 
-@get_grad_basis.register(Simplex)
-def _(shape: Simplex, order: int):
-    if shape.dims <= 3:
-        return grad_simplex_onb(shape.dims, order)
-    else:
-        return grad_simplex_monomial_basis(shape.dims, order)
+class Basis:
+    """
+    .. automethod:: orthonormality_weight(r)
+    .. autoattribute:: mode_ids
+    .. autoattribute:: functions
+    .. autoattribute:: gradients
+    """
+
+    def orthonormality_weight(self, rvec):
+        raise NotImplementedError
+
+    @property
+    def mode_ids(self):
+        """Return a tuple of of mode (basis function) identifiers, one for
+        each basis function. Mode identifiers should generally be viewed as opaque.
+        They are hashable. For some bases, they are tuples of length matching
+        the number of dimensions and indicating the order along each reference
+        axis.
+        """
+        raise NotImplementedError
+
+    @property
+    def functions(self):
+        """Return a tuple of (callable) basis functions of length matching
+        :attr:`mode_ids`.  Each function takes a vector of (r,s,t) reference
+        coordinates as input.
+        """
+        raise NotImplementedError
+
+    @property
+    def gradients(self):
+        """Return a tuple of basis functions of length matching :attr:`mode_ids`.
+        Each function takes a vector of (r,s,t) reference coordinates as input.
+        """
+        raise NotImplementedError
+
+# }}}
 
 
-@get_basis_with_mode_ids.register(Simplex)
-def _(shape: Simplex, order: int):
-    if shape.dims <= 3:
-        return simplex_onb_with_mode_ids(shape.dims, order)
-    else:
-        return simplex_monomial_basis_with_mode_ids(shape.dims, order)
+# {{{ shape-based basis retrieval
+
+@singledispatch
+def basis_for_shape(shape: Shape, order: int) -> Basis:
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def orthonormal_basis_for_shape(shape: Shape, order: int) -> Basis:
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def monomial_basis_for_shape(shape: Shape, order: int) -> Basis:
+    raise NotImplementedError(type(shape).__name__)
 
 # }}}
 
 
-# {{{ hypercube
+# {{{ shape: simplex
 
-@get_basis.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    return legendre_tensor_product_basis(shape.dims, order)
-
-
-@get_grad_basis.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    return grad_legendre_tensor_product_basis(shape.dims, order)
+def _pkdo_1d(order, r):
+    i, = order
+    r0, = r
+    return jacobi(0, 0, i, r0)
 
 
-@get_basis_with_mode_ids.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    from modepy.shapes import get_node_tuples
-    mode_ids = get_node_tuples(shape, order)
-    return mode_ids, get_basis(shape, order)
+def _grad_pkdo_1d(order, r):
+    i, = order
+    r0, = r
+    return (grad_jacobi(0, 0, i, r0),)
+
+
+class _SimplexBasis(Basis):
+    def __init__(self, dim, order):
+        self._dim = dim
+        self._order = order
+
+    @property
+    def mode_ids(self):
+        from pytools import \
+                generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
+        return tuple(gnitsam(self._order, self._dim))
+
+
+class _SimplexONB(_SimplexBasis):
+    is_orthonormal = True
+
+    def orthonormality_weight(self, rvec):
+        return 1
+
+    @property
+    def functions(self):
+        if self._dim == 0:
+            return (zerod_basis,)
+        elif self._dim == 1:
+            return tuple(partial(_pkdo_1d, mid) for mid in self.mode_ids)
+        elif self._dim == 2:
+            return tuple(partial(pkdo_2d, mid) for mid in self.mode_ids)
+        elif self._dim == 3:
+            return tuple(partial(pkdo_3d, mid) for mid in self.mode_ids)
+        else:
+            raise NotImplementedError("basis in {self._dim} dimensions")
+
+    @property
+    def gradients(self):
+        if self._dim == 1:
+            return tuple(partial(_grad_pkdo_1d, mid) for mid in self.mode_ids)
+        elif self._dim == 2:
+            return tuple(partial(grad_pkdo_2d, mid) for mid in self.mode_ids)
+        elif self._dim == 3:
+            return tuple(partial(grad_pkdo_3d, mid) for mid in self.mode_ids)
+        else:
+            raise NotImplementedError("gradient in {self._dim} dimensions")
+
+
+class _SimplexMonomialBasis(_SimplexBasis):
+    def orthonormality_weight(self, rvec):
+        raise BasisNotOrthonormal
+
+    @property
+    def functions(self):
+        return tuple(partial(monomial, mid) for mid in self.mode_ids)
+
+    @property
+    def gradients(self):
+        return tuple(partial(grad_monomial, mid) for mid in self.mode_ids)
+
+
+@basis_for_shape.register
+def _(shape: Simplex, order: int):
+    if shape.dim <= 3:
+        return _SimplexONB(shape.dim, order)
+    else:
+        return _SimplexMonomialBasis(shape.dim, order)
+
+
+@orthonormal_basis_for_shape.register
+def _(shape: Simplex, order: int):
+    return _SimplexONB(shape.dim, order)
+
+
+@monomial_basis_for_shape.register
+def _(shape: Simplex, order: int):
+    return _SimplexMonomialBasis(shape.dim, order)
 
 # }}}
+
+
+# {{{ shape: hypercube
+
+class _TensorProductBasis(Basis):
+    def __init__(self, dim, basis_1d, grad_basis_1d, orth_weight):
+        self._dim = dim
+        self._basis_1d = basis_1d
+        self._grad_basis_1d = grad_basis_1d
+        self._orth_weight = orth_weight
+
+    @property
+    def _order(self):
+        return len(self._basis_1d)-1
+
+    def orthonormality_weight(self):
+        if self._orth_weight is None:
+            raise BasisNotOrthonormal
+        else:
+            return self._orth_weight
+
+    @property
+    def mode_ids(self):
+        from pytools import generate_nonnegative_integer_tuples_below as gnitb
+        return tuple(gnitb(self._order+1, self._dim))
+
+    @property
+    def functions(self):
+        return tuple(
+                _TensorProductBasisFunction(mid,
+                    [self._basis_1d[i] for i in mid])
+                for mid in self.mode_ids)
+
+    @property
+    def gradients(self):
+        from pytools import wandering_element
+        func = (self._basis_1d, self._grad_basis_1d)
+        return tuple(
+                _TensorProductGradientBasisFunction(mid, [
+                    [func[i][k] for i, k in zip(iderivative, mid)]
+                    for iderivative in wandering_element(self._dim)
+                    ])
+                for mid in self.mode_ids)
+
+
+@orthonormal_basis_for_shape.register
+def _(shape: Hypercube, order: int):
+    return _TensorProductBasis(shape.dim,
+            [partial(jacobi, 0, 0, n) for n in range(order + 1)],
+            [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)],
+            orth_weight=1)
+
+
+@basis_for_shape.register
+def _(shape: Hypercube, order: int):
+    return orthonormal_basis_for_shape(shape, order)
+
+
+def _monomial_1d(order, r):
+    return r**order
+
+
+def _grad_monomial_1d(order, r):
+    if order == 0:
+        return 0*r
+    else:
+        return order*r**(order-1)
+
+
+@monomial_basis_for_shape.register
+def _(shape: Hypercube, order: int):
+    return _TensorProductBasis(shape.dim,
+            [partial(_monomial_1d, n) for n in range(order + 1)],
+            [partial(_grad_monomial_1d, n) for n in range(order + 1)],
+            orth_weight=None)
 
 # }}}
 

@@ -1,3 +1,22 @@
+"""
+Transformations between coordinate systems on the simplex
+---------------------------------------------------------
+
+All of these expect and return arrays of shape *(dims, npts)*.
+
+.. autofunction:: equilateral_to_unit
+.. autofunction:: barycentric_to_unit
+.. autofunction:: unit_to_barycentric
+.. autofunction:: barycentric_to_equilateral
+.. autofunction:: submesh_for_shape
+
+Interpolation quality
+---------------------
+
+.. autofunction:: estimate_lebesgue_constant
+
+"""
+
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
 __license__ = """
@@ -20,12 +39,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from functools import reduce
+from functools import reduce, singledispatch
 
 import numpy as np
 import numpy.linalg as la
 from math import sqrt
 from pytools import memoize_method, MovedFunctionDeprecationWrapper
+import modepy.shapes as shp
 
 
 try:
@@ -233,25 +253,10 @@ def barycentric_to_equilateral(bary):
 # }}}
 
 
-def pick_random_simplex_unit_coordinate(rng, dims):
-    offset = 0.05
-    base = -1 + offset
-    remaining = 2 - dims*offset
-    r = np.zeros(dims, np.float64)
-    for j in range(dims):
-        rn = rng.uniform(0, remaining)
-        r[j] = base + rn
-        remaining -= rn
-    return r
+# {{{ submeshes
 
-
-def pick_random_hypercube_unit_coordinate(rng, dims):
-    return np.array([rng.uniform(-1.0, 1.0) for _ in range(dims)])
-
-
-# {{{ submeshes, plotting helpers
-
-def simplex_submesh(node_tuples):
+@singledispatch
+def submesh_for_shape(shape: shp.Shape, node_tuples):
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
 
@@ -259,9 +264,15 @@ def simplex_submesh(node_tuples):
         indicating node positions inside the unit element. The
         returned list references indices in this list.
 
-        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
-        may be used to generate *node_tuples*.
+        :func:`modepy.node_tuples_for_shape` may be used to generate *node_tuples*.
+
+    .. versionadded:: 2020.3
     """
+    raise NotImplementedError(type(shape).__name__)
+
+
+@submesh_for_shape.register
+def _(shape: shp.Simplex, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 
@@ -346,25 +357,8 @@ def simplex_submesh(node_tuples):
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
 
-submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
-
-
-def hypercube_submesh(node_tuples):
-    """Return a list of tuples of indices into the node list that
-    generate a tesselation of the reference element.
-
-    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
-        indicating node positions inside the unit element. The
-        returned list references indices in this list.
-
-        :func:`pytools.generate_nonnegative_integer_tuples_below`
-        may be used to generate *node_tuples*.
-
-    See also :func:`simplex_submesh`.
-
-    .. versionadded:: 2020.2
-    """
-
+@submesh_for_shape.register
+def _(shape: shp.Hypercube, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 
@@ -387,6 +381,50 @@ def hypercube_submesh(node_tuples):
     return result
 
 
+def simplex_submesh(node_tuples):
+    """Return a list of tuples of indices into the node list that
+    generate a tesselation of the reference element.
+
+    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
+        indicating node positions inside the unit element. The
+        returned list references indices in this list.
+
+        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
+        may be used to generate *node_tuples*.
+    """
+    return submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
+
+
+submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
+
+
+def hypercube_submesh(node_tuples):
+    """Return a list of tuples of indices into the node list that
+    generate a tesselation of the reference element.
+
+    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
+        indicating node positions inside the unit element. The
+        returned list references indices in this list.
+
+        :func:`pytools.generate_nonnegative_integer_tuples_below`
+        may be used to generate *node_tuples*.
+
+    See also :func:`simplex_submesh`.
+
+    .. versionadded:: 2020.2
+    """
+    from warnings import warn
+    warn("hypercube_submesh is deprecated. "
+            "Use submesh_for_shape instead. "
+            "hypercube_submesh will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
+
+    return submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
+
+# }}}
+
+
+# {{{ plotting helpers
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
     dims = len(nodes)
@@ -431,15 +469,16 @@ def plot_element_values(n, nodes, values, resample_n=None,
 def _evaluate_lebesgue_function(n, nodes, shape):
     huge_n = 30*n
 
-    from modepy.shapes import get_basis, get_node_tuples
-    basis = get_basis(shape, n)
-    equi_node_tuples = get_node_tuples(shape, huge_n)
+    from modepy.modes import basis_for_shape
+    from modepy.nodes import node_tuples_for_shape
+    basis = basis_for_shape(shape, n)
+    equi_node_tuples = node_tuples_for_shape(shape, huge_n)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
 
     from modepy.matrices import vandermonde
-    vdm = vandermonde(basis, nodes)
+    vdm = vandermonde(basis.functions, nodes)
 
-    eq_vdm = vandermonde(basis, equi_nodes)
+    eq_vdm = vandermonde(basis.functions, equi_nodes)
     eq_to_out = la.solve(vdm.T, eq_vdm.T).T
 
     lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
@@ -453,7 +492,7 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
     of the *nodes* at polynomial order *n*.
 
-    :arg nodes: an array of shape *(dims, nnodes)* as returned by
+    :arg nodes: an array of shape *(dim, nnodes)* as returned by
         :func:`modepy.warp_and_blend_nodes`.
     :arg shape: a :class:`~modepy.shapes.Shape`.
     :arg visualize: visualize the function that gives rise to the
@@ -471,13 +510,16 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
 
         Renamed *domain* to *shape*.
     """
-    dims = len(nodes)
+    dim = len(nodes)
     if shape is None:
+        from warnings import warn
+        warn("Not passing shape is deprecated and will stop working "
+                "in 2022.", DeprecationWarning, stacklevel=2)
         from modepy.shapes import Simplex
-        shape = Simplex(dims)
+        shape = Simplex(dim)
     else:
-        if shape.dims != dims:
-            raise ValueError(f"expected {shape.dims}-dimensional nodes")
+        if shape.dim != dim:
+            raise ValueError(f"expected {shape.dim}-dimensional nodes")
 
     lebesgue_worst, equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(n, nodes, shape)
@@ -486,16 +528,9 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     if not visualize:
         return lebesgue_constant
 
-    if shape.dims == 2:
+    if shape.dim == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
-
-        from modepy.shapes import Simplex, Hypercube
-        if isinstance(shape, Simplex):
-            triangles = simplex_submesh(equi_node_tuples)
-        elif isinstance(shape, Hypercube):
-            triangles = hypercube_submesh(equi_node_tuples)
-        else:
-            triangles = None
+        triangles = submesh_for_shape(shape, equi_node_tuples)
 
         try:
             import mayavi.mlab as mlab
@@ -530,7 +565,7 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
             ax.set_aspect("equal")
             plt.show()
     else:
-        raise ValueError(f"visualization is not supported in {shape.dims}D")
+        raise ValueError(f"visualization is not supported in {shape.dim}D")
 
     return lebesgue_constant
 

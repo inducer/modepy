@@ -244,30 +244,36 @@ def mass_matrix(basis, nodes):
 
 
 def modal_face_mass_matrix(trial_basis, order, face_vertices,
-        test_basis=None, shape=None):
+        test_basis=None, volume_shape=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
     :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
-        reference face element.
+        reference volume element.
 
     .. versionadded :: 2016.1
 
     .. versionchanged:: 2020.3
 
-        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
+        Added *volume_shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if shape is None:
-        from modepy.shapes import Simplex
-        shape = Simplex(face_vertices.shape[0])
+    if volume_shape is None:
+        from warnings import warn
+        warn("Not passing volume_shape is deprecated and will stop working "
+                "in 2022.", DeprecationWarning, stacklevel=2)
 
-    from modepy.shapes import get_face_map, get_quadrature
-    face = type(shape)(shape.dims - 1)
-    fmap = get_face_map(shape, face_vertices)
-    quad = get_quadrature(face, order)
+        from modepy.shapes import Simplex
+        volume_shape = Simplex(face_vertices.shape[0])
+
+    from modepy.shapes import face_map_for_shape
+    from modepy.quadrature import quadrature_for_shape
+    # FIXME NOPE
+    face_shape = type(volume_shape)(volume_shape.dim - 1)
+    fmap = face_map_for_shape(volume_shape, face_vertices)
+    quad = quadrature_for_shape(face_shape, order)
 
     assert quad.exact_to > order*2
     mapped_nodes = fmap(quad.nodes)
@@ -287,7 +293,7 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
 
 
 def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
-        face_vertices, test_basis=None, shape=None):
+        face_vertices, test_basis=None, volume_shape=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
     :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
@@ -297,24 +303,28 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
 
     .. versionchanged:: 2020.3
 
-        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
+        Added *volume_shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if shape is None:
-        from modepy.shapes import Simplex
-        shape = Simplex(face_vertices.shape[0])
+    if volume_shape is None:
+        from warnings import warn
+        warn("Not passing volume_shape is deprecated and will stop working "
+                "in 2022.", DeprecationWarning, stacklevel=2)
 
-    from modepy.shapes import get_face_map
-    fmap = get_face_map(shape, face_vertices)
+        from modepy.shapes import Simplex
+        volume_shape = Simplex(face_vertices.shape[0])
+
+    from modepy.shapes import face_map_for_shape
+    fmap = face_map_for_shape(volume_shape, face_vertices)
     face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
     vol_vdm = vandermonde(test_basis, volume_nodes)
 
     modal_fmm = modal_face_mass_matrix(
             trial_basis, order, face_vertices,
-            test_basis=test_basis, shape=shape)
+            test_basis=test_basis, volume_shape=volume_shape)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
 
 

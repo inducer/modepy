@@ -3,9 +3,9 @@ r"""
 (i.e. reference elements).
 
 .. autoclass:: Shape
-.. autofunction:: get_unit_vertices
-.. autofunction:: get_face_vertex_indices
-.. autofunction:: get_face_map
+.. autofunction:: biunit_vertices_for_shape
+.. autofunction:: face_vertex_indices_for_shape
+.. autofunction:: face_map_for_shape
 
 Simplices
 ^^^^^^^^^
@@ -17,7 +17,7 @@ Simplices
 Coordinates on the triangle
 ---------------------------
 
-Unit coordinates :math:`(r, s)`::
+Bi-unit coordinates :math:`(r, s)` (also called 'unit' coordinates)::
 
     ^ s
     |
@@ -29,7 +29,7 @@ Unit coordinates :math:`(r, s)`::
     |    \
     A-----B--> r
 
-Vertices in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0)
     A = (-1, -1)
@@ -58,7 +58,7 @@ Vertices in equilateral coordinates::
 Coordinates on the tetrahedron
 ------------------------------
 
-Unit coordinates :math:`(r, s, t)`::
+Bi-unit coordinates :math:`(r, s, t)` (also called 'unit' coordinates)::
 
                ^ s
                |
@@ -75,7 +75,7 @@ Unit coordinates :math:`(r, s, t)`::
 
 (squint, and it might start making sense...)
 
-Vertices in unit coordinates :math:`(r, s, t)`::
+Vertices in bi-unit coordinates :math:`(r, s, t)`::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
@@ -101,7 +101,7 @@ Hypercubes
 Coordinates on the square
 -------------------------
 
-Unit coordinates on :math:`(r, s)`::
+Bi-unit coordinates on :math:`(r, s)` (also called 'unit' coordinates)::
 
      ^ s
      |
@@ -114,7 +114,7 @@ Unit coordinates on :math:`(r, s)`::
      A---------B --> r
 
 
-Vertices in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0)
     A = (-1, -1)
@@ -127,7 +127,7 @@ Vertices in unit coordinates::
 Coordinates on the cube
 -----------------------
 
-Unit coordinates on :math:`(r, s, t)`::
+Unit coordinates on :math:`(r, s, t)` (also called 'unit' coordinates)::
 
     t
     ^
@@ -146,7 +146,7 @@ Unit coordinates on :math:`(r, s, t)`::
          \
           v r
 
-Verties in unit coordinates::
+Vertices in unit coordinates::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
@@ -199,76 +199,38 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Shape:
     """
-    .. attribute :: dims
+    .. attribute :: dim
     .. attribute :: nfaces
     .. attribute :: nvertices
     """
-    dims: int
+    dim: int
 
 
 @singledispatch
-def get_unit_vertices(shape: Shape):
+def biunit_vertices_for_shape(shape: Shape):
     """
-    :returns: an :class:`~numpy.ndarray` of shape `(nvertices, dims)`.
+    :returns: a :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
     raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
-def get_face_vertex_indices(shape: Shape):
+def face_vertex_indices_for_shape(shape: Shape):
     """
     :results: a tuple of the length :attr:`Shape.nfaces`, where each entry
         is a tuple of indices into the vertices returned by
-        :func:`get_unit_vertices`.
+        :func:`biunit_vertices_for_shape`.
     """
     raise NotImplementedError(type(shape).__name__)
 
 
 @singledispatch
-def get_face_map(shape: Shape, face_vertices: np.ndarray):
+def face_map_for_shape(shape: Shape, face_vertices: np.ndarray):
     """
     :returns: a :class:`~collections.abc.Callable` that takes an array of
-        size `(dims, nnodes)` of unit nodes on the face represented by
+        size `(dim, nnodes)` of unit nodes on the face represented by
         *face_vertices* and maps them to the volume.
     """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_quadrature(shape: Shape, order: int):
-    """
-    :returns: a :class:`~modepy.Quadrature` that is exact up to :math:`2 N + 1`.
-    """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_node_count(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_node_tuples(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_unit_nodes(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_basis(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_grad_basis(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_basis_with_mode_ids(shape: Shape, order: int):
     raise NotImplementedError(type(shape).__name__)
 
 # }}}
@@ -279,23 +241,23 @@ def get_basis_with_mode_ids(shape: Shape, order: int):
 class Simplex(Shape):
     @property
     def nfaces(self):
-        return self.dims + 1
+        return self.dim + 1
 
     @property
     def nvertices(self):
         return self.dim + 1
 
 
-@get_unit_vertices.register(Simplex)
+@biunit_vertices_for_shape.register
 def _(shape: Simplex):
     from modepy.tools import unit_vertices
-    return unit_vertices(shape.dims)
+    return unit_vertices(shape.dim).T.copy()
 
 
-@get_face_vertex_indices.register(Simplex)
+@face_vertex_indices_for_shape.register
 def _(shape: Simplex):
-    fvi = np.empty((shape.dims + 1, shape.dims), dtype=np.int)
-    indices = np.arange(shape.dims + 1)
+    fvi = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
+    indices = np.arange(shape.dim + 1)
 
     for iface in range(shape.nfaces):
         fvi[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
@@ -303,27 +265,16 @@ def _(shape: Simplex):
     return fvi
 
 
-@get_face_map.register(Simplex)
+@face_map_for_shape.register
 def _(shape: Simplex, face_vertices: np.ndarray):
-    dims, npoints = face_vertices.shape
-    if npoints != dims:
+    dim, npoints = face_vertices.shape
+    if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
 
     origin = face_vertices[:, 0].reshape(-1, 1)
     face_basis = face_vertices[:, 1:] - origin
 
     return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
-
-
-@get_quadrature.register(Simplex)
-def _(shape: Simplex, order: int):
-    import modepy as mp
-    try:
-        quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dims)
-    except (mp.QuadratureRuleUnavailable, ValueError):
-        quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dims)
-
-    return quad
 
 # }}}
 
@@ -333,20 +284,20 @@ def _(shape: Simplex, order: int):
 class Hypercube(Shape):
     @property
     def nfaces(self):
-        return 2 * self.dims
+        return 2 * self.dim
 
     @property
     def nvertices(self):
-        return 2**self.dims
+        return 2**self.dim
 
 
-@get_unit_vertices.register(Hypercube)
+@biunit_vertices_for_shape.register
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes(shape.dims, np.array([-1.0, 1.0])).T
+    return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
 
 
-@get_face_vertex_indices.register(Hypercube)
+@face_vertex_indices_for_shape.register
 def _(shape: Hypercube):
     # FIXME: replace by nicer n-dimensional formula
     return {
@@ -362,31 +313,19 @@ def _(shape: Hypercube):
             (0b000, 0b001, 0b100, 0b101,),
             (0b010, 0b011, 0b110, 0b111,),
             )
-        }[shape.dims]
+        }[shape.dim]
 
 
-@get_face_map.register(Hypercube)
+@face_map_for_shape.register
 def _(shape: Hypercube, face_vertices: np.ndarray):
-    dims, npoints = face_vertices.shape
-    if npoints != 2**(dims - 1):
+    dim, npoints = face_vertices.shape
+    if npoints != 2**(dim - 1):
         raise ValueError("'face_vertices' has wrong shape")
 
     origin = face_vertices[:, 0].reshape(-1, 1)
     face_basis = face_vertices[:, -2:0:-1] - origin
 
     return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
-
-
-@get_quadrature.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    import modepy as mp
-    if shape.dims == 0:
-        quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
-    else:
-        from modepy.quadrature import LegendreGaussTensorProductQuadrature
-        quad = LegendreGaussTensorProductQuadrature(order, shape.dims)
-
-    return quad
 
 # }}}
 

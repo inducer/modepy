@@ -1,3 +1,32 @@
+"""
+Generic Shape-Based Interface
+-----------------------------
+
+.. autofunction:: node_count_for_shape
+.. autofunction:: node_tuples_for_shape
+.. autofunction:: equispaced_nodes_for_shape
+.. autofunction:: edge_clustered_nodes_for_shape
+
+Simplices
+---------
+
+.. currentmodule:: modepy
+
+.. autofunction:: equidistant_nodes
+.. autofunction:: warp_and_blend_nodes
+
+Also see :class:`modepy.VioreanuRokhlinSimplexQuadrature` if nodes on the
+boundary are not required.
+
+Hypercubes
+----------
+
+.. currentmodule:: modepy
+
+.. autofunction:: tensor_product_nodes
+.. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
+"""
+
 __copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, " \
         "Tim Warburton, Jan Hesthaven, Xueyu Zhu"
 
@@ -24,8 +53,9 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 
-from modepy.shapes import Simplex, Hypercube
-from modepy.shapes import get_node_count, get_node_tuples, get_unit_nodes
+from functools import singledispatch, partial
+
+from modepy.shapes import Shape, Simplex, Hypercube
 
 
 # {{{ equidistant nodes
@@ -38,15 +68,15 @@ def equidistant_nodes(dims, n, node_tuples=None):
     :arg node_tuples: a list of tuples of integers indicating the node order.
         Use default order if *None*, see
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
-    :returns: An array of shape *(dims, nnodes)* containing unit coordinates
+    :returns: An array of shape *(dims, nnodes)* containing bi-unit coordinates
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
 
     shape = Simplex(dims)
     if node_tuples is None:
-        node_tuples = get_node_tuples(shape, n)
+        node_tuples = node_tuples_for_shape(shape, n)
     else:
-        if len(node_tuples) != get_node_count(shape, n):
+        if len(node_tuples) != node_count_for_shape(shape, n):
             raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (dims, nnodes)
@@ -68,9 +98,9 @@ def warp_factor(n, output_nodes, scaled=True):
     equi_nodes = np.linspace(-1, 1, n+1)
 
     from modepy.matrices import vandermonde
-    from modepy.modes import simplex_onb
+    from modepy.modes import jacobi
 
-    basis = simplex_onb(1, n)
+    basis = [partial(jacobi, 0, 0, n) for n in range(n + 1)]
     Veq = vandermonde(basis, equi_nodes)  # noqa
 
     # create interpolator from equi_nodes to output_nodes
@@ -127,9 +157,9 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
 
     shape = Simplex(2)
     if node_tuples is None:
-        node_tuples = get_node_tuples(shape, n)
+        node_tuples = node_tuples_for_shape(shape, n)
     else:
-        if len(node_tuples) != get_node_count(shape, n):
+        if len(node_tuples) != node_count_for_shape(shape, n):
             raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (2, nnodes)
@@ -163,9 +193,9 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
     shape = Simplex(3)
     if node_tuples is None:
-        node_tuples = get_node_tuples(shape, n)
+        node_tuples = node_tuples_for_shape(shape, n)
     else:
-        if len(node_tuples) != get_node_count(shape, n):
+        if len(node_tuples) != node_count_for_shape(shape, n):
             raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (3, nnodes)
@@ -320,63 +350,115 @@ def legendre_gauss_lobatto_tensor_product_nodes(dims, n):
 # }}}
 
 
-# {{{ shape nodes
+# {{{ shape-based interface
+
+@singledispatch
+def node_count_for_shape(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def node_tuples_for_shape(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def equispaced_nodes_for_shape(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def edge_clustered_nodes_for_shape(shape: Shape, order: int):
+    raise NotImplementedError(type(shape).__name__)
+
+
+@singledispatch
+def random_nodes_for_shape(shape: Shape, nnodes: int, rng=None):
+    """
+    :arg generator: a :class:`numpy.random.Generator`.
+    :returns: a :class:`numpy.ndarray` that returns an array of
+        shape `(dim, nnodes)` of random nodes in the reference element.
+    """
+    raise NotImplementedError(type(shape).__name__)
+
 
 # {{{ simplex
 
-@get_node_count.register(Simplex)
+@node_count_for_shape.register
 def _(shape: Simplex, order: int):
     try:
         from math import comb       # comb is v3.8+
-        node_count = comb(order + shape.dims, shape.dims)
+        node_count = comb(order + shape.dim, shape.dim)
     except ImportError:
         from functools import reduce
         from operator import mul
-        node_count = reduce(mul, range(order + 1, order + shape.dims + 1), 1) \
-                // reduce(mul, range(1, shape.dims + 1), 1)
+        node_count = reduce(mul, range(order + 1, order + shape.dim + 1), 1) \
+                // reduce(mul, range(1, shape.dim + 1), 1)
 
     return node_count
 
 
-@get_node_tuples.register(Simplex)
+@node_tuples_for_shape.register
 def _(shape: Simplex, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
-    if shape.dims == 0:
-        return ((0,),)
-    else:
-        return tuple(gnitsam(order, shape.dims))
+    return tuple(gnitsam(order, shape.dim))
 
 
-@get_unit_nodes.register(Simplex)
+@edge_clustered_nodes_for_shape.register
 def _(shape: Simplex, order: int):
     import modepy as mp
-    return mp.warp_and_blend_nodes(shape.dims, order)
+    return mp.warp_and_blend_nodes(shape.dim, order)
+
+
+@random_nodes_for_shape.register
+def _(shape: Simplex, nnodes: int, rng=None):
+    if rng is None:
+        rng = np.random
+
+    result = np.zeros((shape.dim, nnodes))
+    nnodes_obtained = 0
+    while True:
+        new_nodes = rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes-nnodes_obtained))
+        new_nodes = new_nodes[:, new_nodes.sum(axis=0) < 2-shape.dim]
+        nnew_nodes = new_nodes.shape[1]
+        result[:, nnodes_obtained:nnodes_obtained+nnew_nodes] = new_nodes
+        nnodes_obtained += nnew_nodes
+
+        if nnodes_obtained == nnodes:
+            return result
 
 # }}}
 
 
 # {{{ hypercube
 
-@get_node_count.register(Hypercube)
+@node_count_for_shape.register
 def _(shape: Hypercube, order: int):
-    return (order + 1)**shape.dims
+    return (order + 1)**shape.dim
 
 
-@get_node_tuples.register(Hypercube)
+@node_tuples_for_shape.register
 def _(shape: Hypercube, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_below as gnitb
-    if shape.dims == 0:
+    if shape.dim == 0:
         return ((0,),)
     else:
-        return tuple(gnitb(order, shape.dims))
+        return tuple(gnitb(order, shape.dim))
 
 
-@get_unit_nodes.register(Hypercube)
+@edge_clustered_nodes_for_shape.register
 def _(shape: Hypercube, order: int):
     import modepy as mp
-    return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dims, order)
+    return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dim, order)
+
+
+@random_nodes_for_shape.register
+def _(shape: Hypercube, nnodes: int, rng=None):
+    if rng is None:
+        rng = np.random
+    return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
 
 # }}}
 

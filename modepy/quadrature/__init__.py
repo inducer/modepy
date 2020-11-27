@@ -1,3 +1,11 @@
+"""
+.. currentmodule:: modepy
+
+.. autoclass:: Quadrature
+
+.. autoclass:: quadrature_for_shape
+"""
+
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
         "Jan Hesthaven, Xueyu Zhu")
 
@@ -21,8 +29,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from functools import singledispatch
 
 import numpy as np
+from modepy.shapes import Shape, Simplex, Hypercube
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -112,3 +122,40 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
         super().__init__(
                 dims, LegendreGaussQuadrature(N, backend=backend))
+
+
+# {{{ quadrature_for_shape
+
+@singledispatch
+def quadrature_for_shape(shape: Shape, order: int) -> Quadrature:
+    """
+    :returns: a :class:`~modepy.Quadrature` that is exact up to *order*
+    (as passed to the functions in :mod:`modepy.modes`) :math:`2 N + 1`.
+    """
+    raise NotImplementedError(type(shape).__name__)
+
+
+@quadrature_for_shape.register(Simplex)
+def _(shape: Simplex, order: int):
+    import modepy as mp
+    try:
+        quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dim)
+    except (mp.QuadratureRuleUnavailable, ValueError):
+        quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dim)
+
+    return quad
+
+
+@quadrature_for_shape.register(Hypercube)
+def _(shape: Hypercube, order: int):
+    import modepy as mp
+    if shape.dim == 0:
+        quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
+    else:
+        from modepy.quadrature import LegendreGaussTensorProductQuadrature
+        quad = LegendreGaussTensorProductQuadrature(order, shape.dim)
+
+    return quad
+# }}}
+
+# vim: foldmethod=marker

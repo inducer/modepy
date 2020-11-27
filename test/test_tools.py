@@ -23,7 +23,10 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 import modepy as mp
-from modepy.shapes import Simplex, Hypercube
+
+import modepy.shapes as shp
+import modepy.nodes as nd
+import modepy.modes as md
 
 from functools import partial
 import pytest
@@ -89,9 +92,10 @@ def constant(x):
     ("c1-2d", partial(c1, -0.1), 2, 15, -2.3),
     ])
 def test_modal_decay(case_name, test_func, dims, n, expected_expn):
+    shape = shp.Simplex(dims)
     nodes = mp.warp_and_blend_nodes(dims, n)
-    basis = mp.simplex_onb(dims, n)
-    vdm = mp.vandermonde(basis, nodes)
+    basis = mp.orthonormal_basis_for_shape(shape, n)
+    vdm = mp.vandermonde(basis.functions, nodes)
 
     f = test_func(nodes[0])
     coeffs = la.solve(vdm, f)
@@ -119,10 +123,12 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     ("const-2d", constant, 2, 5),
     ])
 def test_residual_estimation(case_name, test_func, dims, n):
+    shape = shp.Simplex(dims)
+
     def estimate_resid(inner_n):
         nodes = mp.warp_and_blend_nodes(dims, inner_n)
-        basis = mp.simplex_onb(dims, inner_n)
-        vdm = mp.vandermonde(basis, nodes)
+        basis = mp.orthonormal_basis_for_shape(shape, inner_n)
+        vdm = mp.vandermonde(basis.functions, nodes)
 
         f = test_func(nodes[0])
         coeffs = la.solve(vdm, f)
@@ -142,27 +148,26 @@ def test_residual_estimation(case_name, test_func, dims, n):
 # {{{ test_resampling_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
 def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
-    from modepy.shapes import get_unit_nodes, get_basis
     shape = shape_cls(dims)
 
-    coarse_nodes = get_unit_nodes(shape, ncoarse)
-    coarse_basis = get_basis(shape, ncoarse)
+    coarse_nodes = nd.edge_clustered_nodes_for_shape(shape, ncoarse)
+    coarse_basis = md.basis_for_shape(shape, ncoarse)
 
-    fine_nodes = get_unit_nodes(shape, nfine)
-    fine_basis = get_basis(shape, nfine)
+    fine_nodes = nd.edge_clustered_nodes_for_shape(shape, nfine)
+    fine_basis = md.basis_for_shape(shape, nfine)
 
     my_eye = np.dot(
-            mp.resampling_matrix(fine_basis, coarse_nodes, fine_nodes),
-            mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes))
+            mp.resampling_matrix(fine_basis.functions, coarse_nodes, fine_nodes),
+            mp.resampling_matrix(coarse_basis.functions, fine_nodes, coarse_nodes))
 
     assert la.norm(my_eye - np.eye(len(my_eye))) < 3e-13
 
     my_eye_least_squares = np.dot(
-            mp.resampling_matrix(coarse_basis, coarse_nodes, fine_nodes,
+            mp.resampling_matrix(coarse_basis.functions, coarse_nodes, fine_nodes,
                 least_squares_ok=True),
-            mp.resampling_matrix(coarse_basis, fine_nodes, coarse_nodes),
+            mp.resampling_matrix(coarse_basis.functions, fine_nodes, coarse_nodes),
             )
 
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
@@ -173,16 +178,14 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
 # {{{ test_diff_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
 def test_diff_matrix(dims, shape_cls, order=5):
-    from modepy.shapes import get_unit_nodes, get_basis, get_grad_basis
     shape = shape_cls(dims)
 
-    nodes = get_unit_nodes(shape, order)
-    basis = get_basis(shape, order)
-    grad_basis = get_grad_basis(shape, order)
+    nodes = nd.edge_clustered_nodes_for_shape(shape, order)
+    basis = md.basis_for_shape(shape, order)
 
-    diff_mat = mp.differentiation_matrices(basis, grad_basis, nodes)
+    diff_mat = mp.differentiation_matrices(basis.functions, basis.gradients, nodes)
     if isinstance(diff_mat, tuple):
         diff_mat = diff_mat[0]
 
@@ -198,16 +201,17 @@ def test_diff_matrix(dims, shape_cls, order=5):
 
 @pytest.mark.parametrize("dims", [2, 3])
 def test_diff_matrix_permutation(dims):
+    shape = shp.Simplex(dims)
     order = 5
 
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
     node_tuples = list(gnitstam(order, dims))
 
-    simplex_onb = mp.simplex_onb(dims, order)
-    grad_simplex_onb = mp.grad_simplex_onb(dims, order)
+    simplex_onb = mp.orthonormal_basis_for_shape(shape, order)
     nodes = np.array(mp.warp_and_blend_nodes(dims, order, node_tuples=node_tuples))
-    diff_matrices = mp.differentiation_matrices(simplex_onb, grad_simplex_onb, nodes)
+    diff_matrices = mp.differentiation_matrices(
+            simplex_onb.functions, simplex_onb.gradients, nodes)
 
     for iref_axis in range(dims):
         perm = mp.diff_matrix_permutation(node_tuples, iref_axis)
@@ -222,24 +226,24 @@ def test_diff_matrix_permutation(dims):
 # {{{ test_face_mass_matrix
 
 @pytest.mark.parametrize("dims", [2, 3])
-@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
 def test_modal_face_mass_matrix(dims, shape_cls, order=3):
     np.set_printoptions(linewidth=200)
     shape = shape_cls(dims)
 
-    from modepy.shapes import get_unit_vertices, get_basis
-    vertices = get_unit_vertices(shape).T
-    basis = get_basis(shape, order - 1)
+    vertices = shp.biunit_vertices_for_shape(shape)
+    basis = md.basis_for_shape(shape, order - 1)
 
-    from modepy.shapes import get_face_vertex_indices
-    fvi = get_face_vertex_indices(shape)
+    fvi = shp.face_vertex_indices_for_shape(shape)
 
     from modepy.matrices import modal_face_mass_matrix
     for iface in range(shape.nfaces):
         face_vertices = vertices[:, fvi[iface]]
 
-        fmm = modal_face_mass_matrix(basis, order, face_vertices, shape=shape)
-        fmm2 = modal_face_mass_matrix(basis, order+1, face_vertices, shape=shape)
+        fmm = modal_face_mass_matrix(
+                basis.functions, order, face_vertices, volume_shape=shape)
+        fmm2 = modal_face_mass_matrix(
+                basis.functions, order+1, face_vertices, volume_shape=shape)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
@@ -252,35 +256,35 @@ def test_modal_face_mass_matrix(dims, shape_cls, order=3):
 
 
 @pytest.mark.parametrize("dims", [2, 3])
-@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
 def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
     np.set_printoptions(linewidth=200)
     volume = shape_cls(dims)
     face = shape_cls(dims - 1)
 
-    from modepy.shapes import get_unit_vertices, get_unit_nodes, get_basis
-    vertices = get_unit_vertices(volume).T
-    volume_nodes = get_unit_nodes(volume, order)
-    volume_basis = get_basis(volume, order)
-    face_nodes = get_unit_nodes(face, order)
+    vertices = nd.edge_clustered_nodes_for_shape(volume, order)
+    volume_nodes = nd.edge_clustered_nodes_for_shape(volume, order)
+    volume_basis = md.basis_for_shape(volume, order)
+    face_nodes = nd.edge_clustered_nodes_for_shape(face, order)
 
-    from modepy.shapes import get_face_vertex_indices
-    fvi = get_face_vertex_indices(volume)
+    fvi = shp.face_vertex_indices_for_shape(volume)
 
     from modepy.matrices import nodal_face_mass_matrix
     for iface in range(volume.nfaces):
         face_vertices = vertices[:, fvi[iface]]
 
         fmm = nodal_face_mass_matrix(
-                volume_basis, volume_nodes, face_nodes, order, face_vertices,
-                shape=volume)
+                volume_basis.functions, volume_nodes,
+                face_nodes, order, face_vertices,
+                volume_shape=volume)
         fmm2 = nodal_face_mass_matrix(
-                volume_basis, volume_nodes, face_nodes, order+1, face_vertices,
-                shape=volume)
+                volume_basis.functions,
+                volume_nodes, face_nodes, order+1, face_vertices,
+                volume_shape=volume)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
-        assert error < 1e-11, f"error {error:.5e} on face {iface}"
+        assert error < 5e-11, f"error {error:.5e} on face {iface}"
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)
@@ -288,8 +292,8 @@ def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
         logger.info("fmm: nnz %d\n%s", nnz, fmm)
 
     logger.info("mass matrix:\n%s", mp.mass_matrix(
-        get_basis(face, order),
-        get_unit_nodes(face, order)))
+        md.basis_for_shape(face, order).functions,
+        nd.edge_clustered_nodes_for_shape(face, order)))
 
 # }}}
 
@@ -298,13 +302,12 @@ def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
 
 @pytest.mark.parametrize("dims", [1, 2])
 @pytest.mark.parametrize("order", [3, 5, 8])
-@pytest.mark.parametrize("shape_cls", [Simplex, Hypercube])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
 def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
     logging.basicConfig(level=logging.INFO)
     shape = shape_cls(dims)
 
-    from modepy.shapes import get_unit_nodes
-    nodes = get_unit_nodes(shape, order)
+    nodes = nd.edge_clustered_nodes_for_shape(shape, order)
 
     from modepy.tools import estimate_lebesgue_constant
     lebesgue_constant = estimate_lebesgue_constant(order, nodes, shape=shape)
@@ -346,8 +349,9 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
 
 @pytest.mark.parametrize("dims", [2, 3, 4])
 def test_hypercube_submesh(dims):
-    from modepy.tools import hypercube_submesh
+    from modepy.tools import submesh_for_shape
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
+    shape = shp.Hypercube(dims)
 
     node_tuples = list(gnitb(3, dims))
 
@@ -356,7 +360,7 @@ def test_hypercube_submesh(dims):
 
     assert len(node_tuples) == 3**dims
 
-    elements = hypercube_submesh(node_tuples)
+    elements = submesh_for_shape(shape, node_tuples)
 
     for e in elements:
         logger.info("element: %s", e)
