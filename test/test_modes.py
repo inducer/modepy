@@ -156,9 +156,10 @@ def test_basis_grad(shape, order, basis_getter):
             logger.info("error: %.5", err)
             eoc_rec.add_data_point(h, err)
 
-        print(eoc_rec)
-        assert (eoc_rec.max_error() < 1e-8
-                or eoc_rec.order_estimate() >= 1.5)
+        tol = 1e-8
+        if eoc_rec.max_error() >= tol:
+            print(eoc_rec)
+        assert (eoc_rec.max_error() < tol or eoc_rec.order_estimate() >= 1.5)
 
 
 # {{{ test symbolic modes
