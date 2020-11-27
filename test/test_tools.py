@@ -223,31 +223,92 @@ def test_diff_matrix_permutation(dims):
 # }}}
 
 
-# {{{ test_face_mass_matrix
+# {{{ face mass matrices (deprecated)
 
 @pytest.mark.parametrize("dims", [2, 3])
-@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
-def test_modal_face_mass_matrix(dims, shape_cls, order=3):
-    np.set_printoptions(linewidth=200)
-    shape = shape_cls(dims)
+def test_deprecated_modal_face_mass_matrix(dims, order=3):
+    # FIXME DEPRECATED remove along with modal_face_mass_matrix (>=2022)
+    shape = shp.Simplex(dims)
 
     vertices = shp.biunit_vertices_for_shape(shape)
     basis = md.basis_for_shape(shape, order - 1)
 
-    fvi = shp.face_vertex_indices_for_shape(shape)
-
     from modepy.matrices import modal_face_mass_matrix
-    for iface in range(shape.nfaces):
-        face_vertices = vertices[:, fvi[iface]]
+    for face in shp.faces_for_shape(shape):
+        face_vertices = vertices[:, face.volume_vertex_indices]
 
         fmm = modal_face_mass_matrix(
-                basis.functions, order, face_vertices, volume_shape=shape)
+                basis.functions, order, face_vertices)
         fmm2 = modal_face_mass_matrix(
-                basis.functions, order+1, face_vertices, volume_shape=shape)
+                basis.functions, order+1, face_vertices)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
-        assert error < 1e-11, f"error {error:.5e} on face {iface}"
+        assert error < 1e-11, f"error {error:.5e} on face {face.face_index}"
+
+        fmm[np.abs(fmm) < 1e-13] = 0
+        nnz = np.sum(fmm > 0)
+
+        logger.info("fmm: nnz %d\n%s", nnz, fmm)
+
+
+@pytest.mark.parametrize("dims", [2, 3])
+def test_deprecated_nodal_face_mass_matrix(dims, order=3):
+    # FIXME DEPRECATED remove along with nodal_face_mass_matrix (>=2022)
+    volume = shp.Simplex(dims)
+
+    vertices = shp.biunit_vertices_for_shape(volume)
+    volume_nodes = nd.edge_clustered_nodes_for_shape(volume, order)
+    volume_basis = md.basis_for_shape(volume, order)
+
+    from modepy.matrices import nodal_face_mass_matrix
+    for face in shp.faces_for_shape(volume):
+        face_nodes = nd.edge_clustered_nodes_for_shape(face, order)
+        face_vertices = vertices[:, face.volume_vertex_indices]
+
+        fmm = nodal_face_mass_matrix(
+                volume_basis.functions, volume_nodes,
+                face_nodes, order, face_vertices)
+        fmm2 = nodal_face_mass_matrix(
+                volume_basis.functions,
+                volume_nodes, face_nodes, order+1, face_vertices)
+
+        error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
+        logger.info("fmm error: %.5e", error)
+        assert error < 5e-11, f"error {error:.5e} on face {face.face_index}"
+
+        fmm[np.abs(fmm) < 1e-13] = 0
+        nnz = np.sum(fmm > 0)
+
+        logger.info("fmm: nnz %d\n%s", nnz, fmm)
+
+    logger.info("mass matrix:\n%s", mp.mass_matrix(
+        md.basis_for_shape(face, order).functions,
+        nd.edge_clustered_nodes_for_shape(face, order)))
+
+# }}}
+
+
+# {{{ face mass matrices
+
+@pytest.mark.parametrize("dims", [2, 3])
+@pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
+def test_modal_mass_matrix_for_face(dims, shape_cls, order=3):
+    shape = shape_cls(dims)
+
+    vol_basis = md.basis_for_shape(shape, order)
+
+    from modepy.matrices import modal_mass_matrix_for_face
+    for face in shp.faces_for_shape(shape):
+        face_basis = md.basis_for_shape(face, order)
+        fmm = modal_mass_matrix_for_face(
+                face, face_basis.functions, vol_basis.functions, order)
+        fmm2 = modal_mass_matrix_for_face(
+                face, face_basis.functions, vol_basis.functions, order+1)
+
+        error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
+        logger.info("fmm error: %.5e", error)
+        assert error < 1e-11, f"error {error:.5e} on face {face.face_index}"
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)
@@ -257,34 +318,27 @@ def test_modal_face_mass_matrix(dims, shape_cls, order=3):
 
 @pytest.mark.parametrize("dims", [2, 3])
 @pytest.mark.parametrize("shape_cls", [shp.Simplex, shp.Hypercube])
-def test_nodal_face_mass_matrix(dims, shape_cls, order=3):
-    np.set_printoptions(linewidth=200)
+def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     volume = shape_cls(dims)
     face = shape_cls(dims - 1)
 
-    vertices = nd.edge_clustered_nodes_for_shape(volume, order)
     volume_nodes = nd.edge_clustered_nodes_for_shape(volume, order)
     volume_basis = md.basis_for_shape(volume, order)
     face_nodes = nd.edge_clustered_nodes_for_shape(face, order)
 
-    fvi = shp.face_vertex_indices_for_shape(volume)
-
-    from modepy.matrices import nodal_face_mass_matrix
-    for iface in range(volume.nfaces):
-        face_vertices = vertices[:, fvi[iface]]
-
-        fmm = nodal_face_mass_matrix(
-                volume_basis.functions, volume_nodes,
-                face_nodes, order, face_vertices,
-                volume_shape=volume)
-        fmm2 = nodal_face_mass_matrix(
-                volume_basis.functions,
-                volume_nodes, face_nodes, order+1, face_vertices,
-                volume_shape=volume)
+    from modepy.matrices import nodal_mass_matrix_for_face
+    for face in shp.faces_for_shape(volume):
+        face_basis = md.basis_for_shape(face, order)
+        fmm = nodal_mass_matrix_for_face(
+                face, face_basis.functions, volume_basis.functions,
+                volume_nodes, face_nodes, order)
+        fmm2 = nodal_mass_matrix_for_face(
+                face, face_basis.functions, volume_basis.functions,
+                volume_nodes, face_nodes, order+1)
 
         error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
         logger.info("fmm error: %.5e", error)
-        assert error < 5e-11, f"error {error:.5e} on face {iface}"
+        assert error < 5e-11, f"error {error:.5e} on face {face.face_index}"
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)

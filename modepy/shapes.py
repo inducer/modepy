@@ -1,11 +1,13 @@
+# {{{ docstring
+
 r"""
 :mod:`modepy.shapes` provides a generic description of the supported shapes
 (i.e. reference elements).
 
 .. autoclass:: Shape
+.. autoclass:: Face
 .. autofunction:: biunit_vertices_for_shape
-.. autofunction:: face_vertex_indices_for_shape
-.. autofunction:: face_map_for_shape
+.. autofunction:: faces_for_shape
 
 Simplices
 ^^^^^^^^^
@@ -162,6 +164,7 @@ The order of the vertices in the hypercubes follows binary counting
 in ``rst``. For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 """
 
+# }}}
 
 __copyright__ = """
 Copyright (c) 2013 Andreas Kloeckner
@@ -189,8 +192,9 @@ THE SOFTWARE.
 """
 
 import numpy as np
+from typing import Tuple, Callable
 
-from functools import singledispatch
+from functools import singledispatch, partial
 from dataclasses import dataclass
 
 
@@ -214,22 +218,35 @@ def biunit_vertices_for_shape(shape: Shape):
     raise NotImplementedError(type(shape).__name__)
 
 
-@singledispatch
-def face_vertex_indices_for_shape(shape: Shape):
-    """
-    :results: a tuple of the length :attr:`Shape.nfaces`, where each entry
-        is a tuple of indices into the vertices returned by
-        :func:`biunit_vertices_for_shape`.
-    """
-    raise NotImplementedError(type(shape).__name__)
+@dataclass(frozen=True)
+class Face:
+    """Inherits from :class:`Shape`.
 
+    .. attribute:: volume_shape
+        The volume_shape :class:`Shape` from which this face descends.
 
-@singledispatch
-def face_map_for_shape(shape: Shape, face_vertices: np.ndarray):
-    """
-    :returns: a :class:`~collections.abc.Callable` that takes an array of
+    .. attribute:: face_index
+        The face index in :attr:`volume_shape` of this face.
+
+    .. attribute:: volume_vertex_indices
+        a tuple of indices into the vertices returned by
+        :func:`biunit_vertices_for_shape` for the :attr:`volume_shape`.
+
+    .. attribute:: map_to_volume
+        a :class:`~collections.abc.Callable` that takes an array of
         size `(dim, nnodes)` of unit nodes on the face represented by
-        *face_vertices* and maps them to the volume.
+        *face_vertices* and maps them to the :attr:`volume_shape`.
+    """
+    volume_shape: Shape
+    face_index: int
+    volume_vertex_indices: Tuple[int]
+    map_to_volume: Callable[[np.ndarray], np.ndarray]
+
+
+@singledispatch
+def faces_for_shape(shape: Shape):
+    """
+    :results: a tuple of :class:`Face` representing the faces of *shape*.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -248,25 +265,18 @@ class Simplex(Shape):
         return self.dim + 1
 
 
+@dataclass(frozen=True)
+class _SimplexFace(Simplex, Face):
+    pass
+
+
 @biunit_vertices_for_shape.register
 def _(shape: Simplex):
     from modepy.tools import unit_vertices
     return unit_vertices(shape.dim).T.copy()
 
 
-@face_vertex_indices_for_shape.register
-def _(shape: Simplex):
-    fvi = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
-    indices = np.arange(shape.dim + 1)
-
-    for iface in range(shape.nfaces):
-        fvi[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
-
-    return fvi
-
-
-@face_map_for_shape.register
-def _(shape: Simplex, face_vertices: np.ndarray):
+def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
     dim, npoints = face_vertices.shape
     if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
@@ -274,7 +284,26 @@ def _(shape: Simplex, face_vertices: np.ndarray):
     origin = face_vertices[:, 0].reshape(-1, 1)
     face_basis = face_vertices[:, 1:] - origin
 
-    return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+
+
+@faces_for_shape.register
+def _(shape: Simplex):
+    face_vertex_indices = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
+    indices = np.arange(shape.dim + 1)
+
+    for iface in range(shape.nfaces):
+        face_vertex_indices[iface, :] = \
+                np.hstack([indices[:iface], indices[iface + 1:]])
+
+    vertices = biunit_vertices_for_shape(shape)
+    return [
+            _SimplexFace(
+                dim=shape.dim-1,
+                volume_shape=shape, face_index=iface,
+                volume_vertex_indices=fvi,
+                map_to_volume=partial(_simplex_face_to_vol_map, vertices[:, fvi]))
+            for iface, fvi in enumerate(face_vertex_indices)]
 
 # }}}
 
@@ -291,16 +320,33 @@ class Hypercube(Shape):
         return 2**self.dim
 
 
+@dataclass(frozen=True)
+class _HypercubeFace(Hypercube, Face):
+    pass
+
+
 @biunit_vertices_for_shape.register
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
 
 
-@face_vertex_indices_for_shape.register
+def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
+    dim, npoints = face_vertices.shape
+    if npoints != 2**(dim - 1):
+        raise ValueError("'face_vertices' has wrong shape")
+
+    origin = face_vertices[:, 0].reshape(-1, 1)
+    # FIXME Remove yucky flip
+    face_basis = face_vertices[:, -2:0:-1] - origin
+
+    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+
+
+@faces_for_shape.register
 def _(shape: Hypercube):
     # FIXME: replace by nicer n-dimensional formula
-    return {
+    face_vertex_indices = {
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
         3: (
@@ -315,17 +361,14 @@ def _(shape: Hypercube):
             )
         }[shape.dim]
 
-
-@face_map_for_shape.register
-def _(shape: Hypercube, face_vertices: np.ndarray):
-    dim, npoints = face_vertices.shape
-    if npoints != 2**(dim - 1):
-        raise ValueError("'face_vertices' has wrong shape")
-
-    origin = face_vertices[:, 0].reshape(-1, 1)
-    face_basis = face_vertices[:, -2:0:-1] - origin
-
-    return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+    vertices = biunit_vertices_for_shape(shape)
+    return [
+            _HypercubeFace(
+                dim=shape.dim-1,
+                volume_shape=shape, face_index=iface,
+                volume_vertex_indices=fvi,
+                map_to_volume=partial(_hypercube_face_to_vol_map, vertices[:, fvi]))
+            for iface, fvi in enumerate(face_vertex_indices)]
 
 # }}}
 
