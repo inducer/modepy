@@ -36,18 +36,21 @@ from modepy.modes import (
         tensor_product_basis, grad_tensor_product_basis,
         legendre_tensor_product_basis, grad_legendre_tensor_product_basis,
 
+        Basis, BasisNotOrthonormal,
         basis_for_shape, orthonormal_basis_for_shape, monomial_basis_for_shape)
 from modepy.nodes import (
         equidistant_nodes, warp_and_blend_nodes,
         tensor_product_nodes, legendre_gauss_lobatto_tensor_product_nodes,
 
-        node_count_for_shape, node_tuples_for_shape, edge_clustered_nodes_for_shape,
+        node_count_for_shape, node_tuples_for_shape,
+        equispaced_nodes_for_shape, edge_clustered_nodes_for_shape,
         random_nodes_for_shape)
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
         diff_matrix_permutation,
         inverse_mass_matrix, mass_matrix,
-        modal_face_mass_matrix, nodal_face_mass_matrix)
+        modal_face_mass_matrix, nodal_face_mass_matrix,
+        modal_mass_matrix_for_face, nodal_mass_matrix_for_face)
 from modepy.quadrature import (
         Quadrature, QuadratureRuleUnavailable,
         TensorProductQuadrature, LegendreGaussTensorProductQuadrature,
@@ -80,17 +83,20 @@ __all__ = [
         "simplex_best_available_basis", "grad_simplex_best_available_basis",
         "tensor_product_basis", "grad_tensor_product_basis",
         "legendre_tensor_product_basis", "grad_legendre_tensor_product_basis",
+        "Basis", "BasisNotOrthonormal",
         "basis_for_shape", "orthonormal_basis_for_shape", "monomial_basis_for_shape",
 
         "equidistant_nodes", "warp_and_blend_nodes",
         "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
         "node_count_for_shape", "node_tuples_for_shape",
-        "edge_clustered_nodes_for_shape", "random_nodes_for_shape",
+        "edge_clustered_nodes_for_shape", "equispaced_nodes_for_shape",
+        "random_nodes_for_shape",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
         "diff_matrix_permutation",
-        "inverse_mass_matrix", "mass_matrix", "modal_face_mass_matrix",
-        "nodal_face_mass_matrix",
+        "inverse_mass_matrix", "mass_matrix",
+        "modal_face_mass_matrix", "nodal_face_mass_matrix",
+        "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
 
         "Quadrature", "QuadratureRuleUnavailable",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",

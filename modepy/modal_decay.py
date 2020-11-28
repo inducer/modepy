@@ -25,7 +25,7 @@ import numpy as np
 import numpy.linalg as la
 
 __doc__ = """Estimate the smoothness of a function represented in a basis
-returned by :func:`modepy.simplex_onb`.
+returned by :func:`modepy.orthonormal_basis_for_shape`.
 
 The method implemented in this module follows this article:
 

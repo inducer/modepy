@@ -75,7 +75,7 @@ def vandermonde(functions, nodes):
 
     *functions* are allowed to return :class:`tuple` instances.
     In this case, a tuple of matrices is returned--i.e. this function
-    works directly on :func:`modepy.grad_simplex_onb` and returns
+    works directly on :func:`modepy.Basis.gradients` and returns
     a tuple of matrices.
     """
 
@@ -110,7 +110,7 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
 
     :arg basis: A sequence of basis functions accepting
         arrays of shape *(dims, npts)*, like those returned by
-        :func:`modepy.simplex_onb`.
+        :func:`modepy.orthonormal_basis_for_shape`.
     :arg new_nodes: An array of shape *(dims, n_new_nodes)*
     :arg old_nodes: An array of shape *(dims, n_old_nodes)*
     :arg least_squares_ok: If *False*, then nodal values at *old_nodes*
@@ -161,10 +161,10 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
 
     :arg basis: A sequence of basis functions accepting arrays
         of shape *(dims, npts)*,
-        like those returned by :func:`modepy.simplex_onb`.
+        like those returned by :func:`modepy.orthonormal_basis_for_shape`.
     :arg grad_basis: A sequence of functions returning the
         gradients of *basis*,
-        like those returned by :func:`modepy.grad_simplex_onb`.
+        like those in :attr:`modepy.Basis.gradients`.
     :arg nodes: An array of shape *(dims, n_nodes)*
     :arg from_nodes:  An array of shape *(dims, n_from_nodes)*.
         If *None*, assumed to be the same as *nodes*.

@@ -88,6 +88,15 @@ Monomials
 Conversion to Symbolic
 ----------------------
 .. autofunction:: symbolicize_function
+
+Redirections to Canonical Names
+-------------------------------
+
+.. currentmodule:: modepy.modes
+
+.. class:: Basis
+
+    See :class:`modepy.Basis`.
 """
 
 

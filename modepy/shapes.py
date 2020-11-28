@@ -165,6 +165,27 @@ Vertices in bi-unit coordinates::
 The order of the vertices in the hypercubes follows binary counting
 in ``tsr`` (i.e. in reverse axis order).
 For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
+
+Redirections to Canonical Names
+-------------------------------
+
+.. currentmodule:: modepy.shapes
+
+.. class:: Shape
+
+    See :class:`modepy.Shape`.
+
+.. class:: Face
+
+    See :class:`modepy.Face`.
+
+.. class:: Simplex
+
+    See :class:`modepy.Simplex`.
+
+.. class:: Hypercube
+
+    See :class:`modepy.Hypercube`.
 """
 
 # }}}
