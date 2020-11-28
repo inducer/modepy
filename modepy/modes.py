@@ -482,7 +482,6 @@ def simplex_onb_with_mode_ids(dims, n):
             DeprecationWarning, stacklevel=2)
 
     if dims == 1:
-        # FIXME: should also use get_node_tuples
         mode_ids = tuple(range(n+1))
         return mode_ids, tuple(partial(jacobi, 0, 0, i) for i in mode_ids)
     else:
@@ -576,8 +575,8 @@ def simplex_monomial_basis_with_mode_ids(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from modepy.shapes import get_node_tuples
-    mode_ids = get_node_tuples(Simplex(dims), n)
+    from modepy.nodes import node_tuples_for_shape
+    mode_ids = node_tuples_for_shape(Simplex(dims), n)
 
     return mode_ids, tuple(partial(monomial, order) for order in mode_ids)
 
@@ -692,8 +691,8 @@ def tensor_product_basis(dims, basis_1d):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from modepy.shapes import Hypercube, get_node_tuples
-    mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
+    from modepy.nodes import node_tuples_for_shape
+    mode_ids = node_tuples_for_shape(Hypercube(dims), len(basis_1d))
 
     return tuple(
             _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
@@ -715,8 +714,8 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
             DeprecationWarning, stacklevel=2)
 
     from pytools import wandering_element
-    from modepy.shapes import Hypercube, get_node_tuples
-    mode_ids = get_node_tuples(Hypercube(dims), len(basis_1d))
+    from modepy.nodes import node_tuples_for_shape
+    mode_ids = node_tuples_for_shape(Hypercube(dims), len(basis_1d))
 
     func = (basis_1d, grad_basis_1d)
     return tuple(
