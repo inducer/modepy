@@ -910,7 +910,7 @@ class _SimplexMonomialBasis(_SimplexBasis):
         return tuple(partial(grad_monomial, mid) for mid in self.mode_ids)
 
 
-@basis_for_shape.register
+@basis_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     if shape.dim <= 3:
         return _SimplexONB(shape.dim, order)
@@ -918,12 +918,12 @@ def _(shape: Simplex, order: int):
         return _SimplexMonomialBasis(shape.dim, order)
 
 
-@orthonormal_basis_for_shape.register
+@orthonormal_basis_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     return _SimplexONB(shape.dim, order)
 
 
-@monomial_basis_for_shape.register
+@monomial_basis_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     return _SimplexMonomialBasis(shape.dim, order)
 
@@ -973,7 +973,7 @@ class _TensorProductBasis(Basis):
                 for mid in self.mode_ids)
 
 
-@orthonormal_basis_for_shape.register
+@orthonormal_basis_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     return _TensorProductBasis(shape.dim,
             [partial(jacobi, 0, 0, n) for n in range(order + 1)],
@@ -981,7 +981,7 @@ def _(shape: Hypercube, order: int):
             orth_weight=1)
 
 
-@basis_for_shape.register
+@basis_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     return orthonormal_basis_for_shape(shape, order)
 
@@ -997,7 +997,7 @@ def _grad_monomial_1d(order, r):
         return order*r**(order-1)
 
 
-@monomial_basis_for_shape.register
+@monomial_basis_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     return _TensorProductBasis(shape.dim,
             [partial(_monomial_1d, n) for n in range(order + 1)],

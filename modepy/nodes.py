@@ -382,7 +382,7 @@ def random_nodes_for_shape(shape: Shape, nnodes: int, rng=None):
 
 # {{{ simplex
 
-@node_count_for_shape.register
+@node_count_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     try:
         from math import comb       # comb is v3.8+
@@ -396,20 +396,20 @@ def _(shape: Simplex, order: int):
     return node_count
 
 
-@node_tuples_for_shape.register
+@node_tuples_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
     return tuple(gnitsam(order, shape.dim))
 
 
-@edge_clustered_nodes_for_shape.register
+@edge_clustered_nodes_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
     import modepy as mp
     return mp.warp_and_blend_nodes(shape.dim, order)
 
 
-@random_nodes_for_shape.register
+@random_nodes_for_shape.register(Simplex)
 def _(shape: Simplex, nnodes: int, rng=None):
     if rng is None:
         rng = np.random
@@ -431,12 +431,12 @@ def _(shape: Simplex, nnodes: int, rng=None):
 
 # {{{ hypercube
 
-@node_count_for_shape.register
+@node_count_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     return (order + 1)**shape.dim
 
 
-@node_tuples_for_shape.register
+@node_tuples_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     from pytools import \
             generate_nonnegative_integer_tuples_below as gnitb
@@ -446,13 +446,13 @@ def _(shape: Hypercube, order: int):
         return tuple(gnitb(order, shape.dim))
 
 
-@edge_clustered_nodes_for_shape.register
+@edge_clustered_nodes_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
     import modepy as mp
     return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dim, order)
 
 
-@random_nodes_for_shape.register
+@random_nodes_for_shape.register(Hypercube)
 def _(shape: Hypercube, nnodes: int, rng=None):
     if rng is None:
         rng = np.random

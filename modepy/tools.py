@@ -271,7 +271,7 @@ def submesh_for_shape(shape: shp.Shape, node_tuples):
     raise NotImplementedError(type(shape).__name__)
 
 
-@submesh_for_shape.register
+@submesh_for_shape.register(shp.Simplex)
 def _(shape: shp.Simplex, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
@@ -357,7 +357,7 @@ def _(shape: shp.Simplex, node_tuples):
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
 
-@submesh_for_shape.register
+@submesh_for_shape.register(shp.Hypercube)
 def _(shape: shp.Hypercube, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)

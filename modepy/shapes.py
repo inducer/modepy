@@ -273,7 +273,7 @@ class _SimplexFace(Simplex, Face):
     pass
 
 
-@biunit_vertices_for_shape.register
+@biunit_vertices_for_shape.register(Simplex)
 def _(shape: Simplex):
     from modepy.tools import unit_vertices
     return unit_vertices(shape.dim).T.copy()
@@ -290,7 +290,7 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@faces_for_shape.register
+@faces_for_shape.register(Simplex)
 def _(shape: Simplex):
     face_vertex_indices = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
     indices = np.arange(shape.dim + 1)
@@ -328,7 +328,7 @@ class _HypercubeFace(Hypercube, Face):
     pass
 
 
-@biunit_vertices_for_shape.register
+@biunit_vertices_for_shape.register(Hypercube)
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
@@ -349,7 +349,7 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@faces_for_shape.register
+@faces_for_shape.register(Hypercube)
 def _(shape: Hypercube):
     # FIXME: replace by nicer n-dimensional formula
     face_vertex_indices = {
