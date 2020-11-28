@@ -4,6 +4,8 @@ r"""
 :mod:`modepy.shapes` provides a generic description of the supported shapes
 (i.e. reference elements).
 
+.. currentmodule:: modepy
+
 .. autoclass:: Shape
 .. autoclass:: Face
 .. autofunction:: biunit_vertices_for_shape

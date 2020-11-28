@@ -23,9 +23,9 @@ THE SOFTWARE.
 
 
 from modepy.shapes import (
-        Shape, Simplex, Hypercube,
+        Shape, Face, Simplex, Hypercube,
 
-        biunit_vertices_for_shape
+        biunit_vertices_for_shape, faces_for_shape
         )
 from modepy.modes import (
         jacobi, grad_jacobi,
@@ -70,8 +70,8 @@ GaussLegendreQuadrature = LegendreGaussQuadrature
 __all__ = [
         "__version__",
 
-        "Shape", "Simplex", "Hypercube",
-        "biunit_vertices_for_shape",
+        "Shape", "Face", "Simplex", "Hypercube",
+        "biunit_vertices_for_shape", "faces_for_shape",
 
         "jacobi", "grad_jacobi",
         "simplex_onb", "grad_simplex_onb", "simplex_onb_with_mode_ids",
