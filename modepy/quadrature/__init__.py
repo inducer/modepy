@@ -130,7 +130,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
 def quadrature_for_shape(shape: Shape, order: int) -> Quadrature:
     """
     :returns: a :class:`~modepy.Quadrature` that is exact up to *order*
-    (as passed to the functions in :mod:`modepy.modes`) :math:`2 N + 1`.
+        (as passed to the functions in :mod:`modepy.modes`) :math:`2 N + 1`.
     """
     raise NotImplementedError(type(shape).__name__)
 
