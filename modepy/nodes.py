@@ -325,20 +325,18 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
 def tensor_product_nodes(dims, nodes_1d):
     """
-    :returns: an array of shape ``(dims, nnodes_1d**dims)``. The
-        order of nodes is such that the nodes along the last
-        axis vary fastest.
+    :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
     .. versionadded:: 2017.1
-    """
-    if dims == 0:
-        # NOTE: using this to maintain consistency in the 0d case
-        return warp_and_blend_nodes(dims, 1)
 
+    .. versionchanged:: 2020.3
+
+        The node ordering has changed and is no longer documented.
+    """
     nnodes_1d = len(nodes_1d)
     result = np.empty((dims,) + (nnodes_1d,) * dims)
     for d in range(dims):
-        result[-d - 1] = nodes_1d.reshape(*((-1,) + (1,)*d))
+        result[d] = nodes_1d.reshape(*((-1,) + (1,)*d))
 
     return result.reshape(dims, -1)
 

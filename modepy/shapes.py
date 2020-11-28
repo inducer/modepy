@@ -129,12 +129,12 @@ Vertices in bi-unit coordinates::
 Coordinates on the cube
 -----------------------
 
-Unit coordinates on :math:`(r, s, t)` (also called 'unit' coordinates)::
+Bi-unit coordinates on :math:`(r, s, t)` (also called 'unit' coordinates)::
 
     t
     ^
     |
-    B----------D
+    E----------G
     |\         |\
     | \        | \
     |  \       |  \
@@ -144,24 +144,25 @@ Unit coordinates on :math:`(r, s, t)` (also called 'unit' coordinates)::
      \  |       \  |
       \ |        \ |
        \|         \|
-        E----------G
+        B----------D
          \
           v r
 
-Vertices in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
-    B = (-1, -1,  1)
+    B = ( 1, -1, -1)
     C = (-1,  1, -1)
-    D = (-1,  1,  1)
-    E = ( 1, -1, -1)
+    D = ( 1,  1, -1)
+    E = (-1, -1,  1)
     F = ( 1, -1,  1)
-    G = ( 1,  1, -1)
+    G = (-1,  1,  1)
     H = ( 1,  1,  1)
 
 The order of the vertices in the hypercubes follows binary counting
-in ``rst``. For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
+in ``tsr`` (i.e. in reverse axis order).
+For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 """
 
 # }}}
@@ -337,8 +338,11 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
         raise ValueError("'face_vertices' has wrong shape")
 
     origin = face_vertices[:, 0].reshape(-1, 1)
-    # FIXME Remove yucky flip
-    face_basis = face_vertices[:, -2:0:-1] - origin
+
+    # works up to (and including) 3D:
+    # - no-op for 1D, 2D
+    # - For square faces, eliminate middle node
+    face_basis = face_vertices[:, 1:3] - origin
 
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 

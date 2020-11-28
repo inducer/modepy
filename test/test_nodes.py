@@ -137,7 +137,7 @@ def test_tensor_product_nodes(dim):
     nodes_1d = np.arange(nnodes)
     nodes = nd.tensor_product_nodes(dim, nodes_1d)
     assert np.allclose(
-            nodes[-1],
+            nodes[0],
             np.array(nodes_1d.tolist() * nnodes**(dim - 1)))
 
 
