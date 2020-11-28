@@ -410,8 +410,7 @@ def _(shape: Simplex, order: int):
 
 @edge_clustered_nodes_for_shape.register(Simplex)
 def _(shape: Simplex, order: int):
-    import modepy as mp
-    return mp.warp_and_blend_nodes(shape.dim, order)
+    return warp_and_blend_nodes(shape.dim, order)
 
 
 @random_nodes_for_shape.register(Simplex)
