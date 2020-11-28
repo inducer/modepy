@@ -452,10 +452,6 @@ def grad_monomial(order, rst):
 
 # {{{ DEPRECATED dimension-independent interface for simplices
 
-def zerod_basis(x):
-    return 1 + 0*x[()]
-
-
 def simplex_onb_with_mode_ids(dims, n):
     """Return a list of orthonormal basis functions in dimension *dims* of maximal
     total degree *n*.
@@ -846,6 +842,12 @@ def monomial_basis_for_shape(shape: Shape, order: int) -> Basis:
     raise NotImplementedError(type(shape).__name__)
 
 # }}}
+
+
+def zerod_basis(x):
+    assert len(x) == 0
+    x_sub = np.ones(x.shape[1:], x.dtype)
+    return 1 + x_sub
 
 
 # {{{ shape: simplex
