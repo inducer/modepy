@@ -36,7 +36,7 @@ from modepy.modes import (
         tensor_product_basis, grad_tensor_product_basis,
         legendre_tensor_product_basis, grad_legendre_tensor_product_basis,
 
-        Basis, BasisNotOrthonormal,
+        Basis, BasisNotOrthonormal, TensorProductBasis,
         basis_for_shape, orthonormal_basis_for_shape, monomial_basis_for_shape)
 from modepy.nodes import (
         equidistant_nodes, warp_and_blend_nodes,
@@ -83,7 +83,7 @@ __all__ = [
         "simplex_best_available_basis", "grad_simplex_best_available_basis",
         "tensor_product_basis", "grad_tensor_product_basis",
         "legendre_tensor_product_basis", "grad_legendre_tensor_product_basis",
-        "Basis", "BasisNotOrthonormal",
+        "Basis", "BasisNotOrthonormal", "TensorProductBasis",
         "basis_for_shape", "orthonormal_basis_for_shape", "monomial_basis_for_shape",
 
         "equidistant_nodes", "warp_and_blend_nodes",
