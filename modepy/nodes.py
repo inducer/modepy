@@ -452,8 +452,7 @@ def _(shape: Hypercube, order: int):
 
 @edge_clustered_nodes_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
-    import modepy as mp
-    return mp.legendre_gauss_lobatto_tensor_product_nodes(shape.dim, order)
+    return legendre_gauss_lobatto_tensor_product_nodes(shape.dim, order)
 
 
 @random_nodes_for_shape.register(Hypercube)
