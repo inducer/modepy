@@ -993,8 +993,9 @@ class TensorProductBasis(Basis):
     def functions(self):
         return tuple(
                 _TensorProductBasisFunction(mid,
-                    [basis[i] for i in mid])
-                for mid, basis in zip(self.mode_ids, self._bases_1d))
+                    [self._bases_1d[iaxis][mid_i]
+                        for iaxis, mid_i in enumerate(mid)])
+                for mid in self.mode_ids)
 
     @property
     def gradients(self):
