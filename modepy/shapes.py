@@ -260,7 +260,7 @@ class Face:
         :func:`biunit_vertices_for_shape` for the :attr:`volume_shape`.
 
     .. attribute:: map_to_volume
-    
+
         A :class:`~collections.abc.Callable` that takes an array of
         size `(dim, nnodes)` of unit nodes on the face represented by
         *face_vertices* and maps them to the :attr:`volume_shape`.
