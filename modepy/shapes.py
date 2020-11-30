@@ -237,7 +237,7 @@ class Shape:
 @singledispatch
 def biunit_vertices_for_shape(shape: Shape):
     """
-    :returns: a :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
+    :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -247,17 +247,21 @@ class Face:
     """Inherits from :class:`Shape`.
 
     .. attribute:: volume_shape
-        The volume_shape :class:`Shape` from which this face descends.
+
+        The volume :class:`Shape` from which this face descends.
 
     .. attribute:: face_index
+
         The face index in :attr:`volume_shape` of this face.
 
     .. attribute:: volume_vertex_indices
-        a tuple of indices into the vertices returned by
+
+        A tuple of indices into the vertices returned by
         :func:`biunit_vertices_for_shape` for the :attr:`volume_shape`.
 
     .. attribute:: map_to_volume
-        a :class:`~collections.abc.Callable` that takes an array of
+    
+        A :class:`~collections.abc.Callable` that takes an array of
         size `(dim, nnodes)` of unit nodes on the face represented by
         *face_vertices* and maps them to the :attr:`volume_shape`.
     """

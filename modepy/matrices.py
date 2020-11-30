@@ -161,7 +161,7 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
 
     :arg basis: A sequence of basis functions accepting arrays
         of shape *(dims, npts)*,
-        like those returned by :func:`modepy.orthonormal_basis_for_shape`.
+        like those returned by :func:`modepy.Basis.functions`.
     :arg grad_basis: A sequence of functions returning the
         gradients of *basis*,
         like those in :attr:`modepy.Basis.gradients`.
