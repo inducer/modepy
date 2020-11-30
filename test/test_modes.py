@@ -21,6 +21,7 @@ THE SOFTWARE.
 """
 
 
+from functools import partial
 import numpy as np
 import numpy.linalg as la
 import pytest
@@ -109,25 +110,37 @@ def test_orthogonality(shape, order, ebound):
     # print(order, maxerr)
 
 
-@pytest.mark.parametrize("shape", [
-    shp.Simplex(1),
-    shp.Simplex(2),
-    shp.Simplex(3),
-    shp.Hypercube(1),
-    shp.Hypercube(2),
-    shp.Hypercube(3),
-    ])
+def get_inhomogeneous_tensor_prod_basis(shape, _):
+    assert isinstance(shape, md.Hypercube)
+    orders = (3, 5, 7)[:shape.dim]
+
+    return md.TensorProductBasis(
+            [[partial(md.jacobi, 0, 0, n) for n in range(o)]
+                for o in orders],
+            [[partial(md.grad_jacobi, 0, 0, n) for n in range(o)]
+                for o in orders],
+            orth_weight=1)
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
-@pytest.mark.parametrize("basis_getter", [
-    (md.basis_for_shape),
-    (md.orthonormal_basis_for_shape),
-    (md.monomial_basis_for_shape),
+@pytest.mark.parametrize(("shape_cls", "basis_getter"), [
+    (shp.Simplex, md.basis_for_shape),
+    (shp.Simplex, md.orthonormal_basis_for_shape),
+    (shp.Simplex, md.monomial_basis_for_shape),
+
+    (shp.Hypercube, md.basis_for_shape),
+    (shp.Hypercube, md.orthonormal_basis_for_shape),
+    (shp.Hypercube, md.monomial_basis_for_shape),
+
+    (shp.Hypercube, get_inhomogeneous_tensor_prod_basis),
     ])
-def test_basis_grad(shape, order, basis_getter):
+def test_basis_grad(dim, shape_cls, order, basis_getter):
     """Do a simplistic FD-style check on the gradients of the basis."""
 
     h = 1.0e-4
 
+    shape = shape_cls(dim)
     rng = np.random.Generator(np.random.PCG64(17))
     basis = basis_getter(shape, order)
 

@@ -85,6 +85,11 @@ Monomials
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
 
+Tensor product adapter
+----------------------
+
+.. autoclass:: TensorProductBasis
+
 Conversion to Symbolic
 ----------------------
 .. autofunction:: symbolicize_function
@@ -942,16 +947,32 @@ def _(shape: Simplex, order: int):
 
 # {{{ shape: hypercube
 
-class _TensorProductBasis(Basis):
-    def __init__(self, dim, basis_1d, grad_basis_1d, orth_weight):
-        self._dim = dim
-        self._basis_1d = basis_1d
-        self._grad_basis_1d = grad_basis_1d
+class TensorProductBasis(Basis):
+    """Adapts multiple one-dimensional bases into a tensor product basis.
+
+    .. automethod:: __init__
+    """
+
+    def __init__(self, bases_1d, grad_bases_1d, orth_weight):
+        """
+        :arg bases_1d: a sequence (one entry per axis/dimension)
+            of sequences (representing the basis) of 1D functions
+            representing the approximation basis.
+        :arg grad_bases_1d: a sequence (one entry per axis/dimension)
+            representing the derivatives of *bases_1d*.
+        """
+        self._bases_1d = bases_1d
+        self._grad_bases_1d = grad_bases_1d
         self._orth_weight = orth_weight
 
-    @property
-    def _order(self):
-        return len(self._basis_1d)-1
+        if len(bases_1d) != len(grad_bases_1d):
+            raise ValueError("bases_1d and grad_bases_1d must have the same length")
+
+        for i, (b, gb) in enumerate(zip(bases_1d, grad_bases_1d)):
+            if len(b) != len(gb):
+                raise ValueError(
+                        f"bases_1d[{i}] and grad_bases_1d[{i}] "
+                        "must have the same length")
 
     def orthonormality_weight(self):
         if self._orth_weight is None:
@@ -960,24 +981,30 @@ class _TensorProductBasis(Basis):
             return self._orth_weight
 
     @property
+    def _dim(self):
+        return len(self._bases_1d)
+
+    @property
     def mode_ids(self):
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
-        return tuple(gnitb(self._order+1, self._dim))
+        return tuple(gnitb([len(b) for b in self._bases_1d]))
 
     @property
     def functions(self):
         return tuple(
                 _TensorProductBasisFunction(mid,
-                    [self._basis_1d[i] for i in mid])
-                for mid in self.mode_ids)
+                    [basis[i] for i in mid])
+                for mid, basis in zip(self.mode_ids, self._bases_1d))
 
     @property
     def gradients(self):
         from pytools import wandering_element
-        func = (self._basis_1d, self._grad_basis_1d)
+        func = (self._bases_1d, self._grad_bases_1d)
         return tuple(
                 _TensorProductGradientBasisFunction(mid, [
-                    [func[i][k] for i, k in zip(iderivative, mid)]
+                    [func[is_deriv][iaxis][mid_i]
+                        for iaxis, (is_deriv, mid_i) in
+                        enumerate(zip(iderivative, mid))]
                     for iderivative in wandering_element(self._dim)
                     ])
                 for mid in self.mode_ids)
@@ -985,9 +1012,9 @@ class _TensorProductBasis(Basis):
 
 @orthonormal_basis_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
-    return _TensorProductBasis(shape.dim,
-            [partial(jacobi, 0, 0, n) for n in range(order + 1)],
-            [partial(grad_jacobi, 0, 0, n) for n in range(order + 1)],
+    return TensorProductBasis(
+            [[partial(jacobi, 0, 0, n) for n in range(order + 1)]] * shape.dim,
+            [[partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]] * shape.dim,
             orth_weight=1)
 
 
@@ -1009,9 +1036,9 @@ def _grad_monomial_1d(order, r):
 
 @monomial_basis_for_shape.register(Hypercube)
 def _(shape: Hypercube, order: int):
-    return _TensorProductBasis(shape.dim,
-            [partial(_monomial_1d, n) for n in range(order + 1)],
-            [partial(_grad_monomial_1d, n) for n in range(order + 1)],
+    return TensorProductBasis(
+            [[partial(_monomial_1d, n) for n in range(order + 1)]] * shape.dim,
+            [[partial(_grad_monomial_1d, n) for n in range(order + 1)]] * shape.dim,
             orth_weight=None)
 
 # }}}
