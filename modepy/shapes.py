@@ -244,7 +244,8 @@ def biunit_vertices_for_shape(shape: Shape):
 
 @dataclass(frozen=True)
 class Face:
-    """Inherits from :class:`Shape`.
+    """Mix-in to be used with a concrete :class:`Shape` subclass to represent
+    geometry information about a face of a shape.
 
     .. attribute:: volume_shape
 
