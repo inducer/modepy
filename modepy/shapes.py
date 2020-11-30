@@ -329,7 +329,7 @@ def _(shape: Simplex):
             _SimplexFace(
                 dim=shape.dim-1,
                 volume_shape=shape, face_index=iface,
-                volume_vertex_indices=fvi,
+                volume_vertex_indices=tuple(fvi),
                 map_to_volume=partial(_simplex_face_to_vol_map, vertices[:, fvi]))
             for iface, fvi in enumerate(face_vertex_indices)]
 
