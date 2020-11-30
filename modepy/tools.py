@@ -8,6 +8,9 @@ All of these expect and return arrays of shape *(dims, npts)*.
 .. autofunction:: barycentric_to_unit
 .. autofunction:: unit_to_barycentric
 .. autofunction:: barycentric_to_equilateral
+
+Submeshes
+---------
 .. autofunction:: submesh_for_shape
 
 Interpolation quality
