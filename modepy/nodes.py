@@ -7,8 +7,8 @@ Generic Shape-Based Interface
 .. currentmodule:: modepy
 
 .. autofunction:: node_tuples_for_space
-.. autofunction:: equispaced_nodes_for_space
-.. autofunction:: edge_clustered_nodes_for_space
+.. autofunction:: equispaced_nodes
+.. autofunction:: edge_clustered_nodes
 .. autofunction:: random_nodes_for_shape
 
 Simplices
@@ -362,13 +362,13 @@ def node_tuples_for_space(space: FunctionSpace) -> List[Tuple[int]]:
 
 
 @singledispatch
-def equispaced_nodes_for_space(space: FunctionSpace):
-    raise NotImplementedError(type(space).__name__)
+def equispaced_nodes(space: FunctionSpace, shape: Shape):
+    raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
 @singledispatch
-def edge_clustered_nodes_for_space(space: FunctionSpace):
-    raise NotImplementedError(type(space).__name__)
+def edge_clustered_nodes(space: FunctionSpace, shape: Shape):
+    raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
 @singledispatch
@@ -392,8 +392,24 @@ def _(space: PN):
     return tuple(gnitsam(space.order, space.spatial_dim))
 
 
-@edge_clustered_nodes_for_space.register(PN)
-def _(space: PN):
+@equispaced_nodes.register(PN)
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    return (np.array(node_tuples_for_space(space), dtype=np.float64)
+            / space.order*2 - 1).T
+
+
+@edge_clustered_nodes.register(PN)
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
     return warp_and_blend_nodes(space.spatial_dim, space.order)
 
 
@@ -430,8 +446,24 @@ def _(space: QN):
         return tuple(gnitb(space.order, space.spatial_dim))
 
 
-@edge_clustered_nodes_for_space.register(QN)
-def _(space: QN):
+@equispaced_nodes.register(QN)
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    return (np.array(node_tuples_for_space(space), dtype=np.float64)
+            / space.order*2 - 1).T
+
+
+@edge_clustered_nodes.register(QN)
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
     return legendre_gauss_lobatto_tensor_product_nodes(
             space.spatial_dim, space.order)
 

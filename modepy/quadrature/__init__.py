@@ -3,7 +3,7 @@
 
 .. autoclass:: Quadrature
 
-.. autoclass:: quadrature_for_space
+.. autoclass:: quadrature
 
 Redirections to Canonical Names
 -------------------------------
@@ -41,6 +41,7 @@ THE SOFTWARE.
 from functools import singledispatch
 
 import numpy as np
+from modepy.shapes import Shape, Simplex, Hypercube
 from modepy.spaces import FunctionSpace, PN, QN
 
 
@@ -133,19 +134,24 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
                 dims, LegendreGaussQuadrature(N, backend=backend))
 
 
-# {{{ quadrature_for_space
+# {{{ quadrature
 
 @singledispatch
-def quadrature_for_space(space: FunctionSpace) -> Quadrature:
+def quadrature(space: FunctionSpace, shape: Shape) -> Quadrature:
     """
     :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
         in *space*.
     """
-    raise NotImplementedError(type(space).__name__)
+    raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
-@quadrature_for_space.register(PN)
-def _(space: PN):
+@quadrature.register(PN)
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
     import modepy as mp
     try:
         quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
@@ -158,8 +164,13 @@ def _(space: PN):
     return quad
 
 
-@quadrature_for_space.register(QN)
-def _(space: QN):
+@quadrature.register(QN)
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
     import modepy as mp
     if space.spatial_dim == 0:
         quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
@@ -168,6 +179,7 @@ def _(space: QN):
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
     return quad
+
 # }}}
 
 # vim: foldmethod=marker

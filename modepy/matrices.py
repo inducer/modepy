@@ -25,7 +25,7 @@ from warnings import warn
 import numpy as np
 import numpy.linalg as la
 
-from modepy.shapes import Face
+from modepy.shapes import Face, Simplex
 from modepy.spaces import PN
 from modepy.quadrature import Quadrature
 
@@ -281,8 +281,6 @@ def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
 def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
-    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
-        reference volume element.
 
     .. versionadded :: 2016.1
     """
@@ -296,8 +294,8 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
 
     vol_dims = face_vertices.shape[0]
 
-    from modepy.quadrature import quadrature_for_space
-    quad = quadrature_for_space(PN(vol_dims - 1, order*2))
+    from modepy.quadrature import quadrature
+    quad = quadrature(PN(vol_dims - 1, order*2), Simplex(vol_dims-1))
 
     assert quad.exact_to >= order*2
 
@@ -320,8 +318,6 @@ def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
         face_vertices, test_basis=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
-    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
-        reference face element.
 
     .. versionadded :: 2016.1
     """
