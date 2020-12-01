@@ -267,7 +267,7 @@ def submesh_for_shape(shape: shp.Shape, node_tuples):
         indicating node positions inside the unit element. The
         returned list references indices in this list.
 
-        :func:`modepy.node_tuples_for_shape` may be used to generate *node_tuples*.
+        :func:`modepy.node_tuples_for_space` may be used to generate *node_tuples*.
 
     .. versionadded:: 2020.3
     """
@@ -472,10 +472,14 @@ def plot_element_values(n, nodes, values, resample_n=None,
 def _evaluate_lebesgue_function(n, nodes, shape):
     huge_n = 30*n
 
-    from modepy.modes import basis_for_shape
-    from modepy.nodes import node_tuples_for_shape
-    basis = basis_for_shape(shape, n)
-    equi_node_tuples = node_tuples_for_shape(shape, huge_n)
+    from modepy.spaces import space_for_shape
+    from modepy.modes import basis_for_space
+    from modepy.nodes import node_tuples_for_space
+    space = space_for_shape(shape, n)
+    huge_space = space_for_shape(shape, huge_n)
+
+    basis = basis_for_space(space)
+    equi_node_tuples = node_tuples_for_space(huge_space)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
 
     from modepy.matrices import vandermonde

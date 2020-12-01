@@ -27,6 +27,8 @@ from modepy.shapes import (
 
         biunit_vertices_for_shape, faces_for_shape
         )
+from modepy.spaces import (
+        FunctionSpace, PN, QN, space_for_shape)
 from modepy.modes import (
         jacobi, grad_jacobi,
         simplex_onb, grad_simplex_onb, simplex_onb_with_mode_ids,
@@ -35,15 +37,16 @@ from modepy.modes import (
         simplex_best_available_basis, grad_simplex_best_available_basis,
         tensor_product_basis, grad_tensor_product_basis,
         legendre_tensor_product_basis, grad_legendre_tensor_product_basis,
+        symbolicize_function,
 
         Basis, BasisNotOrthonormal, TensorProductBasis,
-        basis_for_shape, orthonormal_basis_for_shape, monomial_basis_for_shape)
+        basis_for_space, orthonormal_basis_for_space, monomial_basis_for_space)
 from modepy.nodes import (
         equidistant_nodes, warp_and_blend_nodes,
         tensor_product_nodes, legendre_gauss_lobatto_tensor_product_nodes,
 
-        node_count_for_shape, node_tuples_for_shape,
-        equispaced_nodes_for_shape, edge_clustered_nodes_for_shape,
+        node_tuples_for_space,
+        equispaced_nodes_for_space, edge_clustered_nodes_for_space,
         random_nodes_for_shape)
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
@@ -54,7 +57,7 @@ from modepy.matrices import (vandermonde,
 from modepy.quadrature import (
         Quadrature, QuadratureRuleUnavailable,
         TensorProductQuadrature, LegendreGaussTensorProductQuadrature,
-        quadrature_for_shape)
+        quadrature_for_space)
 from modepy.quadrature.jacobi_gauss import (
         JacobiGaussQuadrature, LegendreGaussQuadrature, ChebyshevGaussQuadrature,
         GaussGegenbauerQuadrature,
@@ -76,6 +79,8 @@ __all__ = [
         "Shape", "Face", "Simplex", "Hypercube",
         "biunit_vertices_for_shape", "faces_for_shape",
 
+        "FunctionSpace", "PN", "QN", "space_for_shape",
+
         "jacobi", "grad_jacobi",
         "simplex_onb", "grad_simplex_onb", "simplex_onb_with_mode_ids",
         "simplex_monomial_basis", "grad_simplex_monomial_basis",
@@ -83,13 +88,15 @@ __all__ = [
         "simplex_best_available_basis", "grad_simplex_best_available_basis",
         "tensor_product_basis", "grad_tensor_product_basis",
         "legendre_tensor_product_basis", "grad_legendre_tensor_product_basis",
+        "symbolicize_function",
+
         "Basis", "BasisNotOrthonormal", "TensorProductBasis",
-        "basis_for_shape", "orthonormal_basis_for_shape", "monomial_basis_for_shape",
+        "basis_for_space", "orthonormal_basis_for_space", "monomial_basis_for_space",
 
         "equidistant_nodes", "warp_and_blend_nodes",
         "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
-        "node_count_for_shape", "node_tuples_for_shape",
-        "edge_clustered_nodes_for_shape", "equispaced_nodes_for_shape",
+        "node_tuples_for_space",
+        "edge_clustered_nodes_for_space", "equispaced_nodes_for_space",
         "random_nodes_for_shape",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
@@ -100,7 +107,7 @@ __all__ = [
 
         "Quadrature", "QuadratureRuleUnavailable",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",
-        "quadrature_for_shape",
+        "quadrature_for_space",
 
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
         "GaussLegendreQuadrature", "ChebyshevGaussQuadrature",

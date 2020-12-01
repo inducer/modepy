@@ -25,9 +25,7 @@ from functools import partial
 import numpy as np
 import numpy.linalg as la
 import pytest
-import modepy.modes as md
-import modepy.nodes as nd
-import modepy.shapes as shp
+import modepy as mp
 from pymbolic.mapper.stringifier import (
         CSESplittingStringifyMapperMixin, StringifyMapper)
 from pymbolic.mapper.evaluator import EvaluationMapper
@@ -54,7 +52,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     quad = JacobiGaussQuadrature(alpha, beta, 4*max_n)
 
     from functools import partial
-    jac_f = [partial(md.jacobi, alpha, beta, n) for n in range(max_n)]
+    jac_f = [partial(mp.jacobi, alpha, beta, n) for n in range(max_n)]
     maxerr = 0
 
     for i, fi in enumerate(jac_f):
@@ -80,18 +78,17 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     # (9, 2e-13),
     ])
 @pytest.mark.parametrize("shape", [
-    shp.Simplex(2),
-    shp.Simplex(3),
-    shp.Hypercube(2),
-    shp.Hypercube(3),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
     ])
 def test_orthogonality(shape, order, ebound):
     """Test orthogonality of ONBs using cubature."""
 
-    from modepy.quadrature import quadrature_for_shape
-
-    cub = quadrature_for_shape(shape, order)
-    basis = md.orthonormal_basis_for_shape(shape, order)
+    qspace = mp.space_for_shape(shape, 2*order)
+    cub = mp.quadrature_for_space(qspace)
+    basis = mp.orthonormal_basis_for_space(mp.space_for_shape(shape, order))
 
     maxerr = 0
     for i, f in enumerate(basis.functions):
@@ -110,14 +107,15 @@ def test_orthogonality(shape, order, ebound):
     # print(order, maxerr)
 
 
-def get_inhomogeneous_tensor_prod_basis(shape, _):
-    assert isinstance(shape, md.Hypercube)
-    orders = (3, 5, 7)[:shape.dim]
+def get_inhomogeneous_tensor_prod_basis(space):
+    # FIXME: Yuck. A total lie. Not a basis for the space at all.
+    assert isinstance(space, mp.QN)
+    orders = (3, 5, 7)[:space.spatial_dim]
 
-    return md.TensorProductBasis(
-            [[partial(md.jacobi, 0, 0, n) for n in range(o)]
+    return mp.TensorProductBasis(
+            [[partial(mp.jacobi, 0, 0, n) for n in range(o)]
                 for o in orders],
-            [[partial(md.grad_jacobi, 0, 0, n) for n in range(o)]
+            [[partial(mp.grad_jacobi, 0, 0, n) for n in range(o)]
                 for o in orders],
             orth_weight=1)
 
@@ -125,15 +123,15 @@ def get_inhomogeneous_tensor_prod_basis(shape, _):
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
 @pytest.mark.parametrize(("shape_cls", "basis_getter"), [
-    (shp.Simplex, md.basis_for_shape),
-    (shp.Simplex, md.orthonormal_basis_for_shape),
-    (shp.Simplex, md.monomial_basis_for_shape),
+    (mp.Simplex, mp.basis_for_space),
+    (mp.Simplex, mp.orthonormal_basis_for_space),
+    (mp.Simplex, mp.monomial_basis_for_space),
 
-    (shp.Hypercube, md.basis_for_shape),
-    (shp.Hypercube, md.orthonormal_basis_for_shape),
-    (shp.Hypercube, md.monomial_basis_for_shape),
+    (mp.Hypercube, mp.basis_for_space),
+    (mp.Hypercube, mp.orthonormal_basis_for_space),
+    (mp.Hypercube, mp.monomial_basis_for_space),
 
-    (shp.Hypercube, get_inhomogeneous_tensor_prod_basis),
+    (mp.Hypercube, get_inhomogeneous_tensor_prod_basis),
     ])
 def test_basis_grad(dim, shape_cls, order, basis_getter):
     """Do a simplistic FD-style check on the gradients of the basis."""
@@ -142,7 +140,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
     shape = shape_cls(dim)
     rng = np.random.Generator(np.random.PCG64(17))
-    basis = basis_getter(shape, order)
+    basis = basis_getter(mp.space_for_shape(shape, order))
 
     from pytools.convergence import EOCRecorder
     from pytools import wandering_element
@@ -152,7 +150,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
                 )):
         eoc_rec = EOCRecorder()
         for h in [1e-2, 1e-3]:
-            r = nd.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
+            r = mp.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
 
             gradbf_v = np.array(gradbf(r))
             gradbf_v_num = np.array([
@@ -188,22 +186,22 @@ class MyEvaluationMapper(EvaluationMapper):
 
 
 @pytest.mark.parametrize("shape", [
-    shp.Simplex(1),
-    shp.Simplex(2),
-    shp.Simplex(3),
-    shp.Hypercube(1),
-    shp.Hypercube(2),
-    shp.Hypercube(3),
+    mp.Simplex(1),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(1),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
     ])
 @pytest.mark.parametrize("order", [5, 8])
 @pytest.mark.parametrize("basis_getter", [
-    (md.basis_for_shape),
-    (md.orthonormal_basis_for_shape),
-    (md.monomial_basis_for_shape),
+    (mp.basis_for_space),
+    (mp.orthonormal_basis_for_space),
+    (mp.monomial_basis_for_space),
     ])
 def test_symbolic_basis(shape, order, basis_getter):
-    basis = basis_getter(shape, order)
-    sym_basis = [md.symbolicize_function(f, shape.dim) for f in basis.functions]
+    basis = basis_getter(mp.space_for_shape(shape, order))
+    sym_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.functions]
 
     # {{{ test symbolic against direct eval
 
@@ -212,7 +210,7 @@ def test_symbolic_basis(shape, order, basis_getter):
     print(75*"#")
 
     rng = np.random.Generator(np.random.PCG64(17))
-    r = nd.random_nodes_for_shape(shape, 10000, rng=rng)
+    r = mp.random_nodes_for_shape(shape, 10000, rng=rng)
 
     for func, sym_func in zip(basis.functions, sym_basis):
         strmap = MyStringifyMapper()
@@ -240,7 +238,7 @@ def test_symbolic_basis(shape, order, basis_getter):
     print("GRADIENTS")
     print(75*"#")
 
-    sym_grad_basis = [md.symbolicize_function(f, shape.dim) for f in basis.gradients]
+    sym_grad_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.gradients]
 
     for grad, sym_grad in zip(basis.gradients, sym_grad_basis):
         strmap = MyStringifyMapper()

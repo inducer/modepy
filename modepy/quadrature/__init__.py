@@ -3,7 +3,16 @@
 
 .. autoclass:: Quadrature
 
-.. autoclass:: quadrature_for_shape
+.. autoclass:: quadrature_for_space
+
+Redirections to Canonical Names
+-------------------------------
+
+.. currentmodule:: modepy.quadrature
+
+.. class:: Quadrature
+
+    See :class:`modepy.Quadrature`.
 """
 
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
@@ -32,7 +41,7 @@ THE SOFTWARE.
 from functools import singledispatch
 
 import numpy as np
-from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.spaces import FunctionSpace, PN, QN
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -124,36 +133,39 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
                 dims, LegendreGaussQuadrature(N, backend=backend))
 
 
-# {{{ quadrature_for_shape
+# {{{ quadrature_for_space
 
 @singledispatch
-def quadrature_for_shape(shape: Shape, order: int) -> Quadrature:
+def quadrature_for_space(space: FunctionSpace) -> Quadrature:
     """
-    :returns: a :class:`~modepy.Quadrature` that is exact up to *order*
-        (as passed to the functions in :mod:`modepy.modes`) :math:`2 N + 1`.
+    :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
+        in *space*.
     """
-    raise NotImplementedError(type(shape).__name__)
+    raise NotImplementedError(type(space).__name__)
 
 
-@quadrature_for_shape.register(Simplex)
-def _(shape: Simplex, order: int):
+@quadrature_for_space.register(PN)
+def _(space: PN):
     import modepy as mp
     try:
-        quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dim)
-    except (mp.QuadratureRuleUnavailable, ValueError):
-        quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dim)
+        quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
+    except mp.QuadratureRuleUnavailable:
+        quad = mp.GrundmannMoellerSimplexQuadrature(
+                space.order//2, space.spatial_dim)
+
+    assert quad.exact_to >= space.order
 
     return quad
 
 
-@quadrature_for_shape.register(Hypercube)
-def _(shape: Hypercube, order: int):
+@quadrature_for_space.register(QN)
+def _(space: QN):
     import modepy as mp
-    if shape.dim == 0:
+    if space.spatial_dim == 0:
         quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
     else:
         from modepy.quadrature import LegendreGaussTensorProductQuadrature
-        quad = LegendreGaussTensorProductQuadrature(order, shape.dim)
+        quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
     return quad
 # }}}

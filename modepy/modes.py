@@ -29,7 +29,7 @@ from functools import singledispatch, partial
 
 import numpy as np
 
-from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.spaces import FunctionSpace, PN, QN
 
 
 __doc__ = """This functionality provides sets of basis functions for the
@@ -37,15 +37,15 @@ reference elements in :mod:`modepy.shapes`.
 
 .. currentmodule:: modepy
 
-Generic Basis Retrieval based on :mod:`~modepy.shapes`
-------------------------------------------------------
+Basis Retrieval
+---------------
 
 .. autoexception:: BasisNotOrthonormal
 .. autoclass:: Basis
 
-.. autofunction:: basis_for_shape
-.. autofunction:: orthonormal_basis_for_shape
-.. autofunction:: monomial_basis_for_shape
+.. autofunction:: basis_for_space
+.. autofunction:: orthonormal_basis_for_space
+.. autofunction:: monomial_basis_for_space
 
 Jacobi polynomials
 ------------------
@@ -54,6 +54,15 @@ Jacobi polynomials
 
 .. autofunction:: jacobi(alpha, beta, n, x)
 .. autofunction:: grad_jacobi(alpha, beta, n, x)
+
+Conversion to Symbolic
+----------------------
+.. autofunction:: symbolicize_function
+
+Tensor product adapter
+----------------------
+
+.. autoclass:: TensorProductBasis
 
 PKDO basis functions
 --------------------
@@ -84,15 +93,6 @@ Monomials
 
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
-
-Tensor product adapter
-----------------------
-
-.. autoclass:: TensorProductBasis
-
-Conversion to Symbolic
-----------------------
-.. autofunction:: symbolicize_function
 
 Redirections to Canonical Names
 -------------------------------
@@ -478,7 +478,7 @@ def simplex_onb_with_mode_ids(dims, n):
     .. versionadded:: 2018.1
     """
     warn("simplex_onb_with_mode_ids is deprecated. "
-            "Use orthonormal_basis_for_shape instead. "
+            "Use orthonormal_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -511,7 +511,7 @@ def simplex_onb(dims, n):
         Made return value a tuple, to make bases hashable.
     """
     warn("simplex_onb is deprecated. "
-            "Use orthonormal_basis_for_shape instead. "
+            "Use orthonormal_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -540,7 +540,7 @@ def grad_simplex_onb(dims, n):
         Made return value a tuple, to make bases hashable.
     """
     warn("grad_simplex_onb is deprecated. "
-            "Use orthonormal_basis_for_shape instead. "
+            "Use orthonormal_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -572,12 +572,12 @@ def simplex_monomial_basis_with_mode_ids(dims, n):
     .. versionadded:: 2018.1
     """
     warn("simplex_monomial_basis_with_mode_ids is deprecated. "
-            "Use monomial_basis_for_shape instead. "
+            "Use monomial_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from modepy.nodes import node_tuples_for_shape
-    mode_ids = node_tuples_for_shape(Simplex(dims), n)
+    from modepy.nodes import node_tuples_for_space
+    mode_ids = node_tuples_for_space(PN(dims, n))
 
     return mode_ids, tuple(partial(monomial, order) for order in mode_ids)
 
@@ -613,7 +613,7 @@ def grad_simplex_monomial_basis(dims, n):
     """
 
     warn("grad_simplex_monomial_basis_with_mode_ids is deprecated. "
-            "Use monomial_basis_for_shape instead. "
+            "Use monomial_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -624,20 +624,20 @@ def grad_simplex_monomial_basis(dims, n):
 
 def simplex_best_available_basis(dims, n):
     warn("simplex_best_available_basis is deprecated. "
-            "Use basis_for_shape instead. "
+            "Use basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    return basis_for_shape(Simplex(dims), n).functions
+    return basis_for_space(PN(dims, n)).functions
 
 
 def grad_simplex_best_available_basis(dims, n):
     warn("grad_simplex_best_available_basis is deprecated. "
-            "Use basis_for_shape instead. "
+            "Use basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    return basis_for_shape(Simplex(dims), n).gradients
+    return basis_for_space(PN(dims, n)).gradients
 
 # }}}
 
@@ -692,8 +692,8 @@ def tensor_product_basis(dims, basis_1d):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from modepy.nodes import node_tuples_for_shape
-    mode_ids = node_tuples_for_shape(Hypercube(dims), len(basis_1d))
+    from modepy.nodes import node_tuples_for_space
+    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d)))
 
     return tuple(
             _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
@@ -715,8 +715,8 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
             DeprecationWarning, stacklevel=2)
 
     from pytools import wandering_element
-    from modepy.nodes import node_tuples_for_shape
-    mode_ids = node_tuples_for_shape(Hypercube(dims), len(basis_1d))
+    from modepy.nodes import node_tuples_for_space
+    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d)))
 
     func = (basis_1d, grad_basis_1d)
     return tuple(
@@ -729,7 +729,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
 def legendre_tensor_product_basis(dims, order):
     warn("legendre_tensor_product_basis is deprecated. "
-            "Use orthonormal_basis_for_shape instead. "
+            "Use orthonormal_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -739,7 +739,7 @@ def legendre_tensor_product_basis(dims, order):
 
 def grad_legendre_tensor_product_basis(dims, order):
     warn("grad_legendre_tensor_product_basis is deprecated. "
-            "Use orthonormal_basis_for_shape instead. "
+            "Use orthonormal_basis_for_space instead. "
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
@@ -830,21 +830,21 @@ class Basis:
 # }}}
 
 
-# {{{ shape-based basis retrieval
+# {{{ space-based basis retrieval
 
 @singledispatch
-def basis_for_shape(shape: Shape, order: int) -> Basis:
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def orthonormal_basis_for_shape(shape: Shape, order: int) -> Basis:
-    raise NotImplementedError(type(shape).__name__)
+def basis_for_space(space: FunctionSpace) -> Basis:
+    raise NotImplementedError(type(space).__name__)
 
 
 @singledispatch
-def monomial_basis_for_shape(shape: Shape, order: int) -> Basis:
-    raise NotImplementedError(type(shape).__name__)
+def orthonormal_basis_for_space(space: FunctionSpace) -> Basis:
+    raise NotImplementedError(type(space).__name__)
+
+
+@singledispatch
+def monomial_basis_for_space(space: FunctionSpace) -> Basis:
+    raise NotImplementedError(type(space).__name__)
 
 # }}}
 
@@ -855,7 +855,7 @@ def zerod_basis(x):
     return 1 + x_sub
 
 
-# {{{ shape: simplex
+# {{{ PN bases
 
 def _pkdo_1d(order, r):
     i, = order
@@ -873,6 +873,9 @@ class _SimplexBasis(Basis):
     def __init__(self, dim, order):
         self._dim = dim
         self._order = order
+
+        assert isinstance(dim, int)
+        assert isinstance(order, int)
 
     @property
     def mode_ids(self):
@@ -898,7 +901,7 @@ class _SimplexONB(_SimplexBasis):
         elif self._dim == 3:
             return tuple(partial(pkdo_3d, mid) for mid in self.mode_ids)
         else:
-            raise NotImplementedError("basis in {self._dim} dimensions")
+            raise NotImplementedError(f"basis in {self._dim} dimensions")
 
     @property
     def gradients(self):
@@ -909,7 +912,7 @@ class _SimplexONB(_SimplexBasis):
         elif self._dim == 3:
             return tuple(partial(grad_pkdo_3d, mid) for mid in self.mode_ids)
         else:
-            raise NotImplementedError("gradient in {self._dim} dimensions")
+            raise NotImplementedError(f"gradient in {self._dim} dimensions")
 
 
 class _SimplexMonomialBasis(_SimplexBasis):
@@ -925,27 +928,27 @@ class _SimplexMonomialBasis(_SimplexBasis):
         return tuple(partial(grad_monomial, mid) for mid in self.mode_ids)
 
 
-@basis_for_shape.register(Simplex)
-def _(shape: Simplex, order: int):
-    if shape.dim <= 3:
-        return _SimplexONB(shape.dim, order)
+@basis_for_space.register(PN)
+def _(space: PN):
+    if space.spatial_dim <= 3:
+        return _SimplexONB(space.spatial_dim, space.order)
     else:
-        return _SimplexMonomialBasis(shape.dim, order)
+        return _SimplexMonomialBasis(space.spatial_dim, space.order)
 
 
-@orthonormal_basis_for_shape.register(Simplex)
-def _(shape: Simplex, order: int):
-    return _SimplexONB(shape.dim, order)
+@orthonormal_basis_for_space.register(PN)
+def _(space: PN):
+    return _SimplexONB(space.spatial_dim, space.order)
 
 
-@monomial_basis_for_shape.register(Simplex)
-def _(shape: Simplex, order: int):
-    return _SimplexMonomialBasis(shape.dim, order)
+@monomial_basis_for_space.register(PN)
+def _(space: PN):
+    return _SimplexMonomialBasis(space.spatial_dim, space.order)
 
 # }}}
 
 
-# {{{ shape: hypercube
+# {{{ QN bases
 
 class TensorProductBasis(Basis):
     """Adapts multiple one-dimensional bases into a tensor product basis.
@@ -1011,17 +1014,19 @@ class TensorProductBasis(Basis):
                 for mid in self.mode_ids)
 
 
-@orthonormal_basis_for_shape.register(Hypercube)
-def _(shape: Hypercube, order: int):
+@orthonormal_basis_for_space.register(QN)
+def _(space: QN):
+    order = space.order
+    dim = space.spatial_dim
     return TensorProductBasis(
-            [[partial(jacobi, 0, 0, n) for n in range(order + 1)]] * shape.dim,
-            [[partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]] * shape.dim,
+            [[partial(jacobi, 0, 0, n) for n in range(order + 1)]] * dim,
+            [[partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]] * dim,
             orth_weight=1)
 
 
-@basis_for_shape.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    return orthonormal_basis_for_shape(shape, order)
+@basis_for_space.register(QN)
+def _(space: QN):
+    return orthonormal_basis_for_space(space)
 
 
 def _monomial_1d(order, r):
@@ -1035,11 +1040,13 @@ def _grad_monomial_1d(order, r):
         return order*r**(order-1)
 
 
-@monomial_basis_for_shape.register(Hypercube)
-def _(shape: Hypercube, order: int):
+@monomial_basis_for_space.register(QN)
+def _(space: QN):
+    order = space.order
+    dim = space.spatial_dim
     return TensorProductBasis(
-            [[partial(_monomial_1d, n) for n in range(order + 1)]] * shape.dim,
-            [[partial(_grad_monomial_1d, n) for n in range(order + 1)]] * shape.dim,
+            [[partial(_monomial_1d, n) for n in range(order + 1)]] * dim,
+            [[partial(_grad_monomial_1d, n) for n in range(order + 1)]] * dim,
             orth_weight=None)
 
 # }}}

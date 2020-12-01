@@ -25,7 +25,9 @@ from warnings import warn
 import numpy as np
 import numpy.linalg as la
 
-import modepy.shapes as shp
+from modepy.shapes import Face
+from modepy.spaces import PN
+from modepy.quadrature import Quadrature
 
 
 __doc__ = r"""
@@ -110,7 +112,7 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
 
     :arg basis: A sequence of basis functions accepting
         arrays of shape *(dims, npts)*, like those returned by
-        :func:`modepy.orthonormal_basis_for_shape`.
+        :func:`modepy.orthonormal_basis_for_space`.
     :arg new_nodes: An array of shape *(dims, n_new_nodes)*
     :arg old_nodes: An array of shape *(dims, n_old_nodes)*
     :arg least_squares_ok: If *False*, then nodal values at *old_nodes*
@@ -243,29 +245,26 @@ def mass_matrix(basis, nodes):
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_mass_matrix_for_face(face, trial_functions, test_functions, order):
+def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
+        trial_functions, test_functions):
     """
     .. versionadded:: 2020.3
     """
 
-    from modepy.quadrature import quadrature_for_shape
-    quad = quadrature_for_shape(face, order)
-
-    assert quad.exact_to > order*2
-    mapped_nodes = face.map_to_volume(quad.nodes)
+    mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     result = np.empty((len(test_functions), len(trial_functions)))
 
     for i, test_f in enumerate(test_functions):
         test_vals = test_f(mapped_nodes)
         for j, trial_f in enumerate(trial_functions):
-            result[i, j] = (test_vals*trial_f(quad.nodes)).dot(quad.weights)
+            result[i, j] = (test_vals*trial_f(face_quad.nodes)) @ face_quad.weights
 
     return result
 
 
-def nodal_mass_matrix_for_face(face: shp.Face, trial_functions, test_functions,
-        volume_nodes, face_nodes, order):
+def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
+        trial_functions, test_functions, volume_nodes, face_nodes):
     """
     .. versionadded :: 2020.3
     """
@@ -273,7 +272,7 @@ def nodal_mass_matrix_for_face(face: shp.Face, trial_functions, test_functions,
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
     modal_fmm = modal_mass_matrix_for_face(
-            face, trial_functions, test_functions, order)
+            face, face_quad, trial_functions, test_functions)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
 
 
@@ -296,12 +295,11 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
         test_basis = trial_basis
 
     vol_dims = face_vertices.shape[0]
-    face_shape = shp.Simplex(vol_dims - 1)
 
-    from modepy.quadrature import quadrature_for_shape
-    quad = quadrature_for_shape(face_shape, order)
+    from modepy.quadrature import quadrature_for_space
+    quad = quadrature_for_space(PN(vol_dims - 1, order*2))
 
-    assert quad.exact_to > order*2
+    assert quad.exact_to >= order*2
 
     from modepy.shapes import _simplex_face_to_vol_map
     mapped_nodes = _simplex_face_to_vol_map(face_vertices, quad.nodes)
