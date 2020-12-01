@@ -189,30 +189,21 @@ def equilateral_to_unit(equi):
 
 
 def unit_vertices(dim):
-    result = np.empty((dim+1, dim), np.float64)
-    result.fill(-1)
+    from warnings import warn
+    warn("unit_vertices is deprecated. "
+            "Use modepy.biunit_vertices_for_shape instead. "
+            "unit_vertices will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
 
-    for i in range(dim):
-        result[i+1, i] = 1
-
-    return result
-
-
-# this should go away
-UNIT_VERTICES = {
-        0: unit_vertices(0),
-        1: unit_vertices(1),
-        2: unit_vertices(2),
-        3: unit_vertices(3),
-        }
+    return shp.biunit_vertices_for_shape(shp.Simplex(dim)).T
 
 
 def barycentric_to_unit(bary):
     """
-    :arg bary: shaped ``(dims+1,npoints)``
+    :arg bary: shaped ``(dims+1, npoints)``
     """
     dims = len(bary)-1
-    return np.dot(unit_vertices(dims).T, bary)
+    return np.dot(shp.biunit_vertices_for_shape(shp.Simplex(dims)), bary)
 
 
 def unit_to_barycentric(unit):

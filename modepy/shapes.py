@@ -305,8 +305,13 @@ class _SimplexFace(Simplex, Face):
 
 @biunit_vertices_for_shape.register(Simplex)
 def _(shape: Simplex):
-    from modepy.tools import unit_vertices
-    return unit_vertices(shape.dim).T.copy()
+    result = np.empty((shape.dim, shape.dim+1), np.float64)
+    result.fill(-1)
+
+    for i in range(shape.dim):
+        result[i, i+1] = 1
+
+    return result
 
 
 def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
