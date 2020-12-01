@@ -47,7 +47,7 @@ from modepy.nodes import (
         tensor_product_nodes, legendre_gauss_lobatto_tensor_product_nodes,
 
         node_tuples_for_space,
-        equispaced_nodes, edge_clustered_nodes,
+        equispaced_nodes_for_space, edge_clustered_nodes_for_space,
         random_nodes_for_shape)
 from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
@@ -58,7 +58,7 @@ from modepy.matrices import (vandermonde,
 from modepy.quadrature import (
         Quadrature, QuadratureRuleUnavailable,
         TensorProductQuadrature, LegendreGaussTensorProductQuadrature,
-        quadrature)
+        quadrature_for_space)
 from modepy.quadrature.jacobi_gauss import (
         JacobiGaussQuadrature, LegendreGaussQuadrature, ChebyshevGaussQuadrature,
         GaussGegenbauerQuadrature,
@@ -98,7 +98,7 @@ __all__ = [
         "equidistant_nodes", "warp_and_blend_nodes",
         "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
         "node_tuples_for_space",
-        "edge_clustered_nodes", "equispaced_nodes",
+        "edge_clustered_nodes_for_space", "equispaced_nodes_for_space",
         "random_nodes_for_shape",
 
         "vandermonde", "resampling_matrix", "differentiation_matrices",
@@ -109,7 +109,7 @@ __all__ = [
 
         "Quadrature", "QuadratureRuleUnavailable",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",
-        "quadrature",
+        "quadrature_for_space",
 
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
         "GaussLegendreQuadrature", "ChebyshevGaussQuadrature",

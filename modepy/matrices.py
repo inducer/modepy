@@ -294,8 +294,8 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
 
     vol_dims = face_vertices.shape[0]
 
-    from modepy.quadrature import quadrature
-    quad = quadrature(PN(vol_dims - 1, order*2), Simplex(vol_dims-1))
+    from modepy.quadrature import quadrature_for_space
+    quad = quadrature_for_space(PN(vol_dims - 1, order*2), Simplex(vol_dims-1))
 
     assert quad.exact_to >= order*2
 

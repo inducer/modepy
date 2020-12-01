@@ -3,7 +3,7 @@
 
 .. autoclass:: Quadrature
 
-.. autoclass:: quadrature
+.. autofunction:: quadrature_for_space
 
 Redirections to Canonical Names
 -------------------------------
@@ -137,7 +137,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
 # {{{ quadrature
 
 @singledispatch
-def quadrature(space: FunctionSpace, shape: Shape) -> Quadrature:
+def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
     """
     :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
         in *space*.
@@ -145,7 +145,7 @@ def quadrature(space: FunctionSpace, shape: Shape) -> Quadrature:
     raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
-@quadrature.register(PN)
+@quadrature_for_space.register(PN)
 def _(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
@@ -164,7 +164,7 @@ def _(space: PN, shape: Simplex):
     return quad
 
 
-@quadrature.register(QN)
+@quadrature_for_space.register(QN)
 def _(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))

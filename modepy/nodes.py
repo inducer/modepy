@@ -7,8 +7,8 @@ Generic Shape-Based Interface
 .. currentmodule:: modepy
 
 .. autofunction:: node_tuples_for_space
-.. autofunction:: equispaced_nodes
-.. autofunction:: edge_clustered_nodes
+.. autofunction:: equispaced_nodes_for_space
+.. autofunction:: edge_clustered_nodes_for_space
 .. autofunction:: random_nodes_for_shape
 
 Simplices
@@ -362,12 +362,12 @@ def node_tuples_for_space(space: FunctionSpace) -> List[Tuple[int]]:
 
 
 @singledispatch
-def equispaced_nodes(space: FunctionSpace, shape: Shape):
+def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape):
     raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
 @singledispatch
-def edge_clustered_nodes(space: FunctionSpace, shape: Shape):
+def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape):
     raise NotImplementedError((type(space).__name__, type(shape).__name))
 
 
@@ -392,7 +392,7 @@ def _(space: PN):
     return tuple(gnitsam(space.order, space.spatial_dim))
 
 
-@equispaced_nodes.register(PN)
+@equispaced_nodes_for_space.register(PN)
 def _(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
@@ -403,7 +403,7 @@ def _(space: PN, shape: Simplex):
             / space.order*2 - 1).T
 
 
-@edge_clustered_nodes.register(PN)
+@edge_clustered_nodes_for_space.register(PN)
 def _(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
@@ -442,7 +442,7 @@ def _(space: QN):
     return tuple(gnitb(space.order, space.spatial_dim))
 
 
-@equispaced_nodes.register(QN)
+@equispaced_nodes_for_space.register(QN)
 def _(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
@@ -453,7 +453,7 @@ def _(space: QN, shape: Hypercube):
             / space.order*2 - 1).T
 
 
-@edge_clustered_nodes.register(QN)
+@edge_clustered_nodes_for_space.register(QN)
 def _(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))

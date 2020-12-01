@@ -87,7 +87,7 @@ def test_orthogonality(shape, order, ebound):
     """Test orthogonality of ONBs using cubature."""
 
     qspace = mp.space_for_shape(shape, 2*order)
-    cub = mp.quadrature(qspace, shape)
+    cub = mp.quadrature_for_space(qspace, shape)
     basis = mp.orthonormal_basis_for_space(mp.space_for_shape(shape, order))
 
     maxerr = 0
