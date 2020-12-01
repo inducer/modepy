@@ -9,10 +9,6 @@ All of these expect and return arrays of shape *(dims, npts)*.
 .. autofunction:: unit_to_barycentric
 .. autofunction:: barycentric_to_equilateral
 
-Submeshes
----------
-.. autofunction:: submesh_for_shape
-
 Interpolation quality
 ---------------------
 
@@ -42,7 +38,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from functools import reduce, singledispatch
+from functools import reduce
 
 import numpy as np
 import numpy.linalg as la
@@ -258,132 +254,6 @@ def barycentric_to_equilateral(bary):
 
 # {{{ submeshes
 
-@singledispatch
-def submesh_for_shape(shape: shp.Shape, node_tuples):
-    """Return a list of tuples of indices into the node list that
-    generate a tesselation of the reference element.
-
-    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
-        indicating node positions inside the unit element. The
-        returned list references indices in this list.
-
-        :func:`modepy.node_tuples_for_space` may be used to generate *node_tuples*.
-
-    .. versionadded:: 2020.3
-    """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@submesh_for_shape.register(shp.Simplex)
-def _(shape: shp.Simplex, node_tuples):
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
-
-    node_dict = {
-            ituple: idx
-            for idx, ituple in enumerate(node_tuples)}
-
-    if dims == 1:
-        result = []
-
-        def try_add_line(d1, d2):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    ))
-            except KeyError:
-                pass
-
-        for current in node_tuples:
-            try_add_line((0,), (1,),)
-
-        return result
-    elif dims == 2:
-        # {{{ triangle sub-mesh
-        result = []
-
-        def try_add_tri(d1, d2, d3):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    node_dict[add_tuples(current, d3)],
-                    ))
-            except KeyError:
-                pass
-
-        for current in node_tuples:
-            # this is a tesselation of a square into two triangles.
-            # subtriangles that fall outside of the master triangle are
-            # simply not added.
-
-            # positively oriented
-            try_add_tri((0, 0), (1, 0), (0, 1))
-            try_add_tri((1, 0), (1, 1), (0, 1))
-
-        return result
-
-        # }}}
-    elif dims == 3:
-        # {{{ tet sub-mesh
-
-        def try_add_tet(d1, d2, d3, d4):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    node_dict[add_tuples(current, d3)],
-                    node_dict[add_tuples(current, d4)],
-                    ))
-            except KeyError:
-                pass
-
-        result = []
-        for current in node_tuples:
-            # this is a tesselation of a cube into six tets.
-            # subtets that fall outside of the master tet are simply not added.
-
-            # positively oriented
-            try_add_tet((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1))
-            try_add_tet((1, 0, 1), (1, 0, 0), (0, 0, 1), (0, 1, 0))
-            try_add_tet((1, 0, 1), (0, 1, 1), (0, 1, 0), (0, 0, 1))
-
-            try_add_tet((1, 0, 0), (0, 1, 0), (1, 0, 1), (1, 1, 0))
-            try_add_tet((0, 1, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1))
-            try_add_tet((0, 1, 1), (1, 1, 1), (1, 0, 1), (1, 1, 0))
-
-        return result
-
-        # }}}
-    else:
-        raise NotImplementedError("%d-dimensional sub-meshes" % dims)
-
-
-@submesh_for_shape.register(shp.Hypercube)
-def _(shape: shp.Hypercube, node_tuples):
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
-
-    node_dict = {
-            ituple: idx
-            for idx, ituple in enumerate(node_tuples)}
-
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
-
-    result = []
-    for current in node_tuples:
-        try:
-            result.append(tuple(
-                    node_dict[add_tuples(current, offset)]
-                    for offset in gnitb(2, dims)))
-
-        except KeyError:
-            pass
-
-    return result
-
-
 def simplex_submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
@@ -395,7 +265,7 @@ def simplex_submesh(node_tuples):
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
         may be used to generate *node_tuples*.
     """
-    return submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
+    return shp.submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
 
 
 submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
@@ -422,7 +292,7 @@ def hypercube_submesh(node_tuples):
             "hypercube_submesh will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    return submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
+    return shp.submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
 
 # }}}
 
@@ -537,7 +407,7 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
 
     if shape.dim == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
-        triangles = submesh_for_shape(shape, equi_node_tuples)
+        triangles = shp.submesh_for_shape(shape, equi_node_tuples)
 
         try:
             import mayavi.mlab as mlab

@@ -409,7 +409,6 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
 
 @pytest.mark.parametrize("dims", [2, 3, 4])
 def test_hypercube_submesh(dims):
-    from modepy.tools import submesh_for_shape
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     shape = mp.Hypercube(dims)
 
@@ -420,7 +419,7 @@ def test_hypercube_submesh(dims):
 
     assert len(node_tuples) == 3**dims
 
-    elements = submesh_for_shape(shape, node_tuples)
+    elements = mp.submesh_for_shape(shape, node_tuples)
 
     for e in elements:
         logger.info("element: %s", e)
