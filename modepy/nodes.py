@@ -439,11 +439,7 @@ def _(shape: Simplex, nnodes: int, rng=None):
 def _(space: QN):
     from pytools import \
             generate_nonnegative_integer_tuples_below as gnitb
-    # FIXME: Why?
-    if space.spatial_dim == 0:
-        return ((0,),)
-    else:
-        return tuple(gnitb(space.order, space.spatial_dim))
+    return tuple(gnitb(space.order, space.spatial_dim))
 
 
 @equispaced_nodes.register(QN)
