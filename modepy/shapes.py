@@ -8,7 +8,7 @@ r"""
 
 .. autoclass:: Shape
 .. autoclass:: Face
-.. autofunction:: biunit_vertices_for_shape
+.. autofunction:: unit_vertices_for_shape
 .. autofunction:: faces_for_shape
 
 Simplices
@@ -239,7 +239,7 @@ class Shape:
 
 
 @singledispatch
-def biunit_vertices_for_shape(shape: Shape):
+def unit_vertices_for_shape(shape: Shape):
     """
     :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
@@ -262,7 +262,7 @@ class Face:
     .. attribute:: volume_vertex_indices
 
         A tuple of indices into the vertices returned by
-        :func:`biunit_vertices_for_shape` for the :attr:`volume_shape`.
+        :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
 
     .. attribute:: map_to_volume
 
@@ -303,7 +303,7 @@ class _SimplexFace(Simplex, Face):
     pass
 
 
-@biunit_vertices_for_shape.register(Simplex)
+@unit_vertices_for_shape.register(Simplex)
 def _(shape: Simplex):
     result = np.empty((shape.dim, shape.dim+1), np.float64)
     result.fill(-1)
@@ -334,7 +334,7 @@ def _(shape: Simplex):
             3: ((0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3))
             }[shape.dim]
 
-    vertices = biunit_vertices_for_shape(shape)
+    vertices = unit_vertices_for_shape(shape)
     return [
             _SimplexFace(
                 dim=shape.dim-1,
@@ -363,7 +363,7 @@ class _HypercubeFace(Hypercube, Face):
     pass
 
 
-@biunit_vertices_for_shape.register(Hypercube)
+@unit_vertices_for_shape.register(Hypercube)
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
@@ -402,7 +402,7 @@ def _(shape: Hypercube):
             )
         }[shape.dim]
 
-    vertices = biunit_vertices_for_shape(shape)
+    vertices = unit_vertices_for_shape(shape)
     return [
             _HypercubeFace(
                 dim=shape.dim-1,

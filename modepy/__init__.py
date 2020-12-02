@@ -25,7 +25,7 @@ THE SOFTWARE.
 from modepy.shapes import (
         Shape, Face, Simplex, Hypercube,
 
-        biunit_vertices_for_shape, faces_for_shape,
+        unit_vertices_for_shape, faces_for_shape,
         submesh_for_shape,
         )
 from modepy.spaces import (
@@ -78,7 +78,7 @@ __all__ = [
         "__version__",
 
         "Shape", "Face", "Simplex", "Hypercube",
-        "biunit_vertices_for_shape", "faces_for_shape",
+        "unit_vertices_for_shape", "faces_for_shape",
         "submesh_for_shape",
 
         "FunctionSpace", "PN", "QN", "space_for_shape",

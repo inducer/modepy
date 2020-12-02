@@ -229,7 +229,7 @@ def test_deprecated_modal_face_mass_matrix(dims, order=3):
     shape = mp.Simplex(dims)
     space = mp.space_for_shape(shape, order)
 
-    vertices = mp.biunit_vertices_for_shape(shape)
+    vertices = mp.unit_vertices_for_shape(shape)
     basis = mp.basis_for_space(space, shape)
 
     from modepy.matrices import modal_face_mass_matrix
@@ -257,7 +257,7 @@ def test_deprecated_nodal_face_mass_matrix(dims, order=3):
     vol_shape = mp.Simplex(dims)
     vol_space = mp.space_for_shape(vol_shape, order)
 
-    vertices = mp.biunit_vertices_for_shape(vol_shape)
+    vertices = mp.unit_vertices_for_shape(vol_shape)
     volume_nodes = mp.edge_clustered_nodes_for_space(vol_space, vol_shape)
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
