@@ -693,7 +693,7 @@ def tensor_product_basis(dims, basis_1d):
             DeprecationWarning, stacklevel=2)
 
     from modepy.nodes import node_tuples_for_space
-    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d)))
+    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d) - 1))
 
     return tuple(
             _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
@@ -716,7 +716,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
 
     from pytools import wandering_element
     from modepy.nodes import node_tuples_for_space
-    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d)))
+    mode_ids = node_tuples_for_space(QN(dims, len(basis_1d) - 1))
 
     func = (basis_1d, grad_basis_1d)
     return tuple(
