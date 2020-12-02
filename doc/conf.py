@@ -29,6 +29,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     # "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -95,24 +96,10 @@ pygments_style = "sphinx"
 
 # -- Options for HTML output ---------------------------------------------------
 
-html_theme = "alabaster"
+html_theme = "furo"
 
 html_theme_options = {
-        "extra_nav_links": {
-            "🚀 Github": "https://github.com/inducer/modepy",
-            "💾 Download Releases": "https://pypi.python.org/pypi/modepy",
-            }
         }
-
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-    ]
-}
-
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -231,8 +218,8 @@ latex_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-        "https://docs.python.org/": None,
-        "https://docs.scipy.org/doc/numpy/": None,
+        "https://docs.python.org/3/": None,
+        "https://numpy.org/doc/stable/": None,
         "https://documen.tician.de/pytools": None,
         "https://documen.tician.de/pymbolic": None,
         }
