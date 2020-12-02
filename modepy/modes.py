@@ -30,7 +30,7 @@ from functools import singledispatch, partial
 import numpy as np
 
 from modepy.spaces import FunctionSpace, PN, QN
-
+from modepy.shapes import Shape, Simplex, Hypercube
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
@@ -628,7 +628,7 @@ def simplex_best_available_basis(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    return basis_for_space(PN(dims, n)).functions
+    return basis_for_space(PN(dims, n), Simplex(dims)).functions
 
 
 def grad_simplex_best_available_basis(dims, n):
@@ -637,7 +637,7 @@ def grad_simplex_best_available_basis(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    return basis_for_space(PN(dims, n)).gradients
+    return basis_for_space(PN(dims, n), Simplex(dims)).gradients
 
 # }}}
 
@@ -833,17 +833,17 @@ class Basis:
 # {{{ space-based basis retrieval
 
 @singledispatch
-def basis_for_space(space: FunctionSpace) -> Basis:
+def basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
     raise NotImplementedError(type(space).__name__)
 
 
 @singledispatch
-def orthonormal_basis_for_space(space: FunctionSpace) -> Basis:
+def orthonormal_basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
     raise NotImplementedError(type(space).__name__)
 
 
 @singledispatch
-def monomial_basis_for_space(space: FunctionSpace) -> Basis:
+def monomial_basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
     raise NotImplementedError(type(space).__name__)
 
 # }}}
@@ -929,7 +929,10 @@ class _SimplexMonomialBasis(_SimplexBasis):
 
 
 @basis_for_space.register(PN)
-def _(space: PN):
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     if space.spatial_dim <= 3:
         return _SimplexONB(space.spatial_dim, space.order)
     else:
@@ -937,12 +940,18 @@ def _(space: PN):
 
 
 @orthonormal_basis_for_space.register(PN)
-def _(space: PN):
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     return _SimplexONB(space.spatial_dim, space.order)
 
 
 @monomial_basis_for_space.register(PN)
-def _(space: PN):
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     return _SimplexMonomialBasis(space.spatial_dim, space.order)
 
 # }}}
@@ -1015,7 +1024,10 @@ class TensorProductBasis(Basis):
 
 
 @orthonormal_basis_for_space.register(QN)
-def _(space: QN):
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     order = space.order
     dim = space.spatial_dim
     return TensorProductBasis(
@@ -1025,8 +1037,11 @@ def _(space: QN):
 
 
 @basis_for_space.register(QN)
-def _(space: QN):
-    return orthonormal_basis_for_space(space)
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    return orthonormal_basis_for_space(space, shape)
 
 
 def _monomial_1d(order, r):
@@ -1041,7 +1056,10 @@ def _grad_monomial_1d(order, r):
 
 
 @monomial_basis_for_space.register(QN)
-def _(space: QN):
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     order = space.order
     dim = space.spatial_dim
     return TensorProductBasis(

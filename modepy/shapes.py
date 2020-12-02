@@ -528,13 +528,15 @@ def _(shape: Hypercube, node_tuples):
             for idx, ituple in enumerate(node_tuples)}
 
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
+    vertex_node_tuples = [nt[::-1] for nt in gnitb(2, dims)]
 
     result = []
     for current in node_tuples:
         try:
             result.append(tuple(
                     node_dict[add_tuples(current, offset)]
-                    for offset in gnitb(2, dims)))
+                    for offset in vertex_node_tuples
+                    ))
 
         except KeyError:
             pass

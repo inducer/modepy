@@ -88,7 +88,7 @@ def test_orthogonality(shape, order, ebound):
 
     qspace = mp.space_for_shape(shape, 2*order)
     cub = mp.quadrature_for_space(qspace, shape)
-    basis = mp.orthonormal_basis_for_space(mp.space_for_shape(shape, order))
+    basis = mp.orthonormal_basis_for_space(mp.space_for_shape(shape, order), shape)
 
     maxerr = 0
     for i, f in enumerate(basis.functions):
@@ -107,7 +107,10 @@ def test_orthogonality(shape, order, ebound):
     # print(order, maxerr)
 
 
-def get_inhomogeneous_tensor_prod_basis(space):
+def get_inhomogeneous_tensor_prod_basis(space, shape):
+    if not isinstance(shape, mp.Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     # FIXME: Yuck. A total lie. Not a basis for the space at all.
     assert isinstance(space, mp.QN)
     orders = (3, 5, 7)[:space.spatial_dim]
@@ -140,7 +143,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
     shape = shape_cls(dim)
     rng = np.random.Generator(np.random.PCG64(17))
-    basis = basis_getter(mp.space_for_shape(shape, order))
+    basis = basis_getter(mp.space_for_shape(shape, order), shape)
 
     from pytools.convergence import EOCRecorder
     from pytools import wandering_element
@@ -200,7 +203,7 @@ class MyEvaluationMapper(EvaluationMapper):
     (mp.monomial_basis_for_space),
     ])
 def test_symbolic_basis(shape, order, basis_getter):
-    basis = basis_getter(mp.space_for_shape(shape, order))
+    basis = basis_getter(mp.space_for_shape(shape, order), shape)
     sym_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.functions]
 
     # {{{ test symbolic against direct eval

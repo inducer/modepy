@@ -339,7 +339,7 @@ def _evaluate_lebesgue_function(n, nodes, shape):
     space = space_for_shape(shape, n)
     huge_space = space_for_shape(shape, huge_n)
 
-    basis = basis_for_space(space)
+    basis = basis_for_space(space, shape)
     equi_node_tuples = node_tuples_for_space(huge_space)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
 

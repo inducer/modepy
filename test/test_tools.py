@@ -90,7 +90,7 @@ def constant(x):
 def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     space = mp.PN(dims, n)
     nodes = mp.warp_and_blend_nodes(dims, n)
-    basis = mp.orthonormal_basis_for_space(space)
+    basis = mp.orthonormal_basis_for_space(space, mp.Simplex(dims))
     vdm = mp.vandermonde(basis.functions, nodes)
 
     f = test_func(nodes[0])
@@ -121,7 +121,8 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
 def test_residual_estimation(case_name, test_func, dims, n):
     def estimate_resid(inner_n):
         nodes = mp.warp_and_blend_nodes(dims, inner_n)
-        basis = mp.orthonormal_basis_for_space(mp.PN(dims, inner_n))
+        basis = mp.orthonormal_basis_for_space(
+                mp.PN(dims, inner_n), mp.Simplex(dims))
         vdm = mp.vandermonde(basis.functions, nodes)
 
         f = test_func(nodes[0])
@@ -150,10 +151,10 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
     fine_space = mp.space_for_shape(shape, nfine)
 
     coarse_nodes = mp.edge_clustered_nodes_for_space(coarse_space, shape)
-    coarse_basis = mp.basis_for_space(coarse_space)
+    coarse_basis = mp.basis_for_space(coarse_space, shape)
 
     fine_nodes = mp.edge_clustered_nodes_for_space(fine_space, shape)
-    fine_basis = mp.basis_for_space(fine_space)
+    fine_basis = mp.basis_for_space(fine_space, shape)
 
     my_eye = np.dot(
             mp.resampling_matrix(fine_basis.functions, coarse_nodes, fine_nodes),
@@ -180,7 +181,7 @@ def test_diff_matrix(dims, shape_cls, order=5):
     shape = shape_cls(dims)
     space = mp.space_for_shape(shape, order)
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
-    basis = mp.basis_for_space(space)
+    basis = mp.basis_for_space(space, shape)
 
     diff_mat = mp.differentiation_matrices(basis.functions, basis.gradients, nodes)
     if isinstance(diff_mat, tuple):
@@ -205,7 +206,7 @@ def test_diff_matrix_permutation(dims):
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
     node_tuples = list(gnitstam(order, dims))
 
-    simplex_onb = mp.orthonormal_basis_for_space(space)
+    simplex_onb = mp.orthonormal_basis_for_space(space, mp.Simplex(dims))
     nodes = np.array(mp.warp_and_blend_nodes(dims, order, node_tuples=node_tuples))
     diff_matrices = mp.differentiation_matrices(
             simplex_onb.functions, simplex_onb.gradients, nodes)
@@ -229,7 +230,7 @@ def test_deprecated_modal_face_mass_matrix(dims, order=3):
     space = mp.space_for_shape(shape, order)
 
     vertices = mp.biunit_vertices_for_shape(shape)
-    basis = mp.basis_for_space(space)
+    basis = mp.basis_for_space(space, shape)
 
     from modepy.matrices import modal_face_mass_matrix
     for face in mp.faces_for_shape(shape):
@@ -258,7 +259,7 @@ def test_deprecated_nodal_face_mass_matrix(dims, order=3):
 
     vertices = mp.biunit_vertices_for_shape(vol_shape)
     volume_nodes = mp.edge_clustered_nodes_for_space(vol_space, vol_shape)
-    volume_basis = mp.basis_for_space(vol_space)
+    volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import nodal_face_mass_matrix
     for face in mp.faces_for_shape(vol_shape):
@@ -283,7 +284,7 @@ def test_deprecated_nodal_face_mass_matrix(dims, order=3):
         logger.info("fmm: nnz %d\n%s", nnz, fmm)
 
         logger.info("mass matrix:\n%s", mp.mass_matrix(
-            mp.basis_for_space(face_space).functions,
+            mp.basis_for_space(face_space, face).functions,
             mp.edge_clustered_nodes_for_space(face_space, face)))
 
 # }}}
@@ -296,12 +297,12 @@ def test_deprecated_nodal_face_mass_matrix(dims, order=3):
 def test_modal_mass_matrix_for_face(dims, shape_cls, order=3):
     vol_shape = shape_cls(dims)
     vol_space = mp.space_for_shape(vol_shape, order)
-    vol_basis = mp.basis_for_space(vol_space)
+    vol_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import modal_mass_matrix_for_face
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
-        face_basis = mp.basis_for_space(face_space)
+        face_basis = mp.basis_for_space(face_space, face)
         face_quad = mp.quadrature_for_space(mp.space_for_shape(face, 2*order), face)
         face_quad2 = mp.quadrature_for_space(
                 mp.space_for_shape(face, 2*order+2), face)
@@ -327,12 +328,12 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     vol_space = mp.space_for_shape(vol_shape, order)
 
     volume_nodes = mp.edge_clustered_nodes_for_space(vol_space, vol_shape)
-    volume_basis = mp.basis_for_space(vol_space)
+    volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import nodal_mass_matrix_for_face
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
-        face_basis = mp.basis_for_space(face_space)
+        face_basis = mp.basis_for_space(face_space, face)
         face_nodes = mp.edge_clustered_nodes_for_space(face_space, face)
         face_quad = mp.quadrature_for_space(mp.space_for_shape(face, 2*order), face)
         face_quad2 = mp.quadrature_for_space(
