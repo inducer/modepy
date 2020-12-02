@@ -47,6 +47,8 @@ Contents
     quadrature
     tools
     misc
+    🚀 Github <https://github.com/inducer/modepy>
+    💾 Download Releases <https://pypi.org/project/modepy>
 
 * :ref:`genindex`
 * :ref:`modindex`
