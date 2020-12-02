@@ -84,6 +84,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
     .. automethod:: __call__
     """
 
+    # FIXME: most other functionality in modepy uses 'dims, order' as the
+    # argument order convention.
     def __init__(self, order, dimension):
         """
         :arg order: A parameter correlated with the total degree of polynomials

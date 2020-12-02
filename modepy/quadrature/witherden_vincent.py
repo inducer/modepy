@@ -42,6 +42,8 @@ class WitherdenVincentQuadrature(Quadrature):
     .. automethod:: __call__
     """
 
+    # FIXME: most other functionality in modepy uses 'dims, order' as the
+    # argument order convention.
     def __init__(self, order, dims):
         if dims == 2:
             from modepy.quadrature.witherden_vincent_quad_data import \

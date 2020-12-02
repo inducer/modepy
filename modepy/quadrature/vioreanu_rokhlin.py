@@ -71,6 +71,8 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
     .. automethod:: __call__
     """
 
+    # FIXME: most other functionality in modepy uses 'dims, order' as the
+    # argument order convention.
     def __init__(self, order, dims):
         """
         :arg order: The total degree to which the quadrature rule is exact
