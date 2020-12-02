@@ -155,7 +155,7 @@ def _(space: PN, shape: Simplex):
     import modepy as mp
     try:
         quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
-    except mp.QuadratureRuleUnavailable:
+    except QuadratureRuleUnavailable:
         quad = mp.GrundmannMoellerSimplexQuadrature(
                 space.order//2, space.spatial_dim)
 
@@ -171,9 +171,8 @@ def _(space: QN, shape: Hypercube):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    import modepy as mp
     if space.spatial_dim == 0:
-        quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
+        quad = Quadrature(np.empty((0, 1)), np.empty((0, 1)))
     else:
         from modepy.quadrature import LegendreGaussTensorProductQuadrature
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)

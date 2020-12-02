@@ -7,7 +7,7 @@ Function Spaces
 .. autoclass:: FunctionSpace
 .. autoclass:: PN
 .. autoclass:: QN
-.. autoclass:: space_for_shape
+.. autofunction:: space_for_shape
 
 Redirections to Canonical Names
 -------------------------------
