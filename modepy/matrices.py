@@ -21,8 +21,13 @@ THE SOFTWARE.
 """
 
 
+from warnings import warn
 import numpy as np
 import numpy.linalg as la
+
+from modepy.shapes import Face, Simplex
+from modepy.spaces import PN
+from modepy.quadrature import Quadrature
 
 
 __doc__ = r"""
@@ -48,12 +53,9 @@ point interpolants:
 where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 
 .. autofunction:: inverse_mass_matrix
-
 .. autofunction:: mass_matrix
-
-.. autofunction:: modal_face_mass_matrix
-
-.. autofunction:: nodal_face_mass_matrix
+.. autofunction:: modal_mass_matrix_for_face
+.. autofunction:: nodal_mass_matrix_for_face
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
@@ -75,7 +77,7 @@ def vandermonde(functions, nodes):
 
     *functions* are allowed to return :class:`tuple` instances.
     In this case, a tuple of matrices is returned--i.e. this function
-    works directly on :func:`modepy.grad_simplex_onb` and returns
+    works directly on :func:`modepy.Basis.gradients` and returns
     a tuple of matrices.
     """
 
@@ -110,7 +112,7 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
 
     :arg basis: A sequence of basis functions accepting
         arrays of shape *(dims, npts)*, like those returned by
-        :func:`modepy.simplex_onb`.
+        :func:`modepy.orthonormal_basis_for_space`.
     :arg new_nodes: An array of shape *(dims, n_new_nodes)*
     :arg old_nodes: An array of shape *(dims, n_old_nodes)*
     :arg least_squares_ok: If *False*, then nodal values at *old_nodes*
@@ -148,8 +150,9 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
                     np.dot(resample_vdm_new, la.pinv(vdm_old)),
                     order="C")
         else:
-            raise RuntimeError("number of input nodes and number "
-                    "of basis functions "
+            raise RuntimeError(
+                    f"number of input nodes ({old_nodes.shape[1]}) "
+                    f"and number of basis functions ({len(basis)}) "
                     "do not agree--perhaps use least_squares_ok")
 
 
@@ -160,10 +163,10 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
 
     :arg basis: A sequence of basis functions accepting arrays
         of shape *(dims, npts)*,
-        like those returned by :func:`modepy.simplex_onb`.
+        like those returned by :func:`modepy.Basis.functions`.
     :arg grad_basis: A sequence of functions returning the
         gradients of *basis*,
-        like those returned by :func:`modepy.grad_simplex_onb`.
+        like those in :attr:`modepy.Basis.gradients`.
     :arg nodes: An array of shape *(dims, n_nodes)*
     :arg from_nodes:  An array of shape *(dims, n_from_nodes)*.
         If *None*, assumed to be the same as *nodes*.
@@ -242,34 +245,62 @@ def mass_matrix(basis, nodes):
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_face_mass_matrix(trial_basis, order, face_vertices,
-        test_basis=None, shape=None):
+def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
+        trial_functions, test_functions):
+    """
+    .. versionadded:: 2020.3
+    """
+
+    mapped_nodes = face.map_to_volume(face_quad.nodes)
+
+    result = np.empty((len(test_functions), len(trial_functions)))
+
+    for i, test_f in enumerate(test_functions):
+        test_vals = test_f(mapped_nodes)
+        for j, trial_f in enumerate(trial_functions):
+            result[i, j] = (test_vals*trial_f(face_quad.nodes)) @ face_quad.weights
+
+    return result
+
+
+def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
+        trial_functions, test_functions, volume_nodes, face_nodes):
+    """
+    .. versionadded :: 2020.3
+    """
+    face_vdm = vandermonde(trial_functions, face_nodes)
+    vol_vdm = vandermonde(test_functions, volume_nodes)
+
+    modal_fmm = modal_mass_matrix_for_face(
+            face, face_quad, trial_functions, test_functions)
+    return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
+
+
+# {{{ deprecated junk
+
+def modal_face_mass_matrix(trial_basis, order, face_vertices, test_basis=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
-    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
-        reference face element.
 
     .. versionadded :: 2016.1
-
-    .. versionchanged:: 2020.3
-
-        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
+
+    warn("modal_face_mass_matrix is deprecated and will go away in 2022. "
+            "Use modal_mass_matrix_for_face instead.",
+            DeprecationWarning, stacklevel=2)
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if shape is None:
-        from modepy.shapes import Simplex
-        shape = Simplex(face_vertices.shape[0])
+    vol_dims = face_vertices.shape[0]
 
-    from modepy.shapes import get_face_map, get_quadrature
-    face = type(shape)(shape.dims - 1)
-    fmap = get_face_map(shape, face_vertices)
-    quad = get_quadrature(face, order)
+    from modepy.quadrature import quadrature_for_space
+    quad = quadrature_for_space(PN(vol_dims - 1, order*2), Simplex(vol_dims-1))
 
-    assert quad.exact_to > order*2
-    mapped_nodes = fmap(quad.nodes)
+    assert quad.exact_to >= order*2
+
+    from modepy.shapes import _simplex_face_to_vol_map
+    mapped_nodes = _simplex_face_to_vol_map(face_vertices, quad.nodes)
 
     nrows = len(test_basis)
     ncols = len(trial_basis)
@@ -278,43 +309,36 @@ def modal_face_mass_matrix(trial_basis, order, face_vertices,
     for i, test_f in enumerate(test_basis):
         test_vals = test_f(mapped_nodes)
         for j, trial_f in enumerate(trial_basis):
-            trial_vals = trial_f(mapped_nodes)
-
-            result[i, j] = (test_vals*trial_vals).dot(quad.weights)
+            result[i, j] = (test_vals*trial_f(mapped_nodes)).dot(quad.weights)
 
     return result
 
 
 def nodal_face_mass_matrix(trial_basis, volume_nodes, face_nodes, order,
-        face_vertices, test_basis=None, shape=None):
+        face_vertices, test_basis=None):
     """
     :arg face_vertices: an array of shape ``(dims, nvertices)``.
-    :arg shape: a :class:`~modepy.shapes.Shape` that identifies the
-        reference face element.
 
     .. versionadded :: 2016.1
-
-    .. versionchanged:: 2020.3
-
-        Added *shape* parameter and support for :math:`[-1, 1]^d` domains.
     """
+
+    warn("nodal_face_mass_matrix is deprecated and will go away in 2022. "
+            "Use nodal_mass_matrix_for_face instead.",
+            DeprecationWarning, stacklevel=2)
 
     if test_basis is None:
         test_basis = trial_basis
 
-    if shape is None:
-        from modepy.shapes import Simplex
-        shape = Simplex(face_vertices.shape[0])
-
-    from modepy.shapes import get_face_map
-    fmap = get_face_map(shape, face_vertices)
-    face_vdm = vandermonde(trial_basis, fmap(face_nodes))  # /!\ non-square
+    from modepy.shapes import _simplex_face_to_vol_map
+    face_vdm = vandermonde(
+            trial_basis,
+            _simplex_face_to_vol_map(face_vertices, face_nodes))
     vol_vdm = vandermonde(test_basis, volume_nodes)
 
     modal_fmm = modal_face_mass_matrix(
-            trial_basis, order, face_vertices,
-            test_basis=test_basis, shape=shape)
+            trial_basis, order, face_vertices, test_basis=test_basis)
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(la.pinv(face_vdm))
 
+# }}}
 
 # vim: foldmethod=marker

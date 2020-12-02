@@ -24,11 +24,6 @@ Modal decay/residual
 
 .. automodule:: modepy.modal_decay
 
-Interpolation quality
----------------------
-
-.. currentmodule:: modepy.tools
-
-.. autofunction:: estimate_lebesgue_constant
+.. automodule:: modepy.tools
 
 .. vim: sw=4

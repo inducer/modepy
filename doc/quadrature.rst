@@ -6,10 +6,6 @@ Base classes
 
 .. automodule:: modepy.quadrature
 
-.. currentmodule:: modepy
-
-.. autoclass:: Quadrature
-
 Jacobi-Gauss quadrature in one dimension
 ----------------------------------------
 

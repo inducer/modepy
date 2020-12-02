@@ -1,11 +1,15 @@
+# {{{ docstring
+
 r"""
 :mod:`modepy.shapes` provides a generic description of the supported shapes
 (i.e. reference elements).
 
+.. currentmodule:: modepy
+
 .. autoclass:: Shape
-.. autofunction:: get_unit_vertices
-.. autofunction:: get_face_vertex_indices
-.. autofunction:: get_face_map
+.. autoclass:: Face
+.. autofunction:: biunit_vertices_for_shape
+.. autofunction:: faces_for_shape
 
 Simplices
 ^^^^^^^^^
@@ -17,7 +21,7 @@ Simplices
 Coordinates on the triangle
 ---------------------------
 
-Unit coordinates :math:`(r, s)`::
+Bi-unit coordinates :math:`(r, s)` (also called 'unit' coordinates)::
 
     ^ s
     |
@@ -29,7 +33,7 @@ Unit coordinates :math:`(r, s)`::
     |    \
     A-----B--> r
 
-Vertices in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0)
     A = (-1, -1)
@@ -58,7 +62,7 @@ Vertices in equilateral coordinates::
 Coordinates on the tetrahedron
 ------------------------------
 
-Unit coordinates :math:`(r, s, t)`::
+Bi-unit coordinates :math:`(r, s, t)` (also called 'unit' coordinates)::
 
                ^ s
                |
@@ -75,7 +79,7 @@ Unit coordinates :math:`(r, s, t)`::
 
 (squint, and it might start making sense...)
 
-Vertices in unit coordinates :math:`(r, s, t)`::
+Vertices in bi-unit coordinates :math:`(r, s, t)`::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
@@ -101,7 +105,7 @@ Hypercubes
 Coordinates on the square
 -------------------------
 
-Unit coordinates on :math:`(r, s)`::
+Bi-unit coordinates on :math:`(r, s)` (also called 'unit' coordinates)::
 
      ^ s
      |
@@ -114,7 +118,7 @@ Unit coordinates on :math:`(r, s)`::
      A---------B --> r
 
 
-Vertices in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0)
     A = (-1, -1)
@@ -127,12 +131,12 @@ Vertices in unit coordinates::
 Coordinates on the cube
 -----------------------
 
-Unit coordinates on :math:`(r, s, t)`::
+Bi-unit coordinates on :math:`(r, s, t)` (also called 'unit' coordinates)::
 
     t
     ^
     |
-    B----------D
+    E----------G
     |\         |\
     | \        | \
     |  \       |  \
@@ -142,26 +146,53 @@ Unit coordinates on :math:`(r, s, t)`::
      \  |       \  |
       \ |        \ |
        \|         \|
-        E----------G
+        B----------D
          \
           v r
 
-Verties in unit coordinates::
+Vertices in bi-unit coordinates::
 
     O = ( 0,  0,  0)
     A = (-1, -1, -1)
-    B = (-1, -1,  1)
+    B = ( 1, -1, -1)
     C = (-1,  1, -1)
-    D = (-1,  1,  1)
-    E = ( 1, -1, -1)
+    D = ( 1,  1, -1)
+    E = (-1, -1,  1)
     F = ( 1, -1,  1)
-    G = ( 1,  1, -1)
+    G = (-1,  1,  1)
     H = ( 1,  1,  1)
 
 The order of the vertices in the hypercubes follows binary counting
-in ``rst``. For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
+in ``tsr`` (i.e. in reverse axis order).
+For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
+
+Submeshes
+---------
+.. autofunction:: submesh_for_shape
+
+Redirections to Canonical Names
+-------------------------------
+
+.. currentmodule:: modepy.shapes
+
+.. class:: Shape
+
+    See :class:`modepy.Shape`.
+
+.. class:: Face
+
+    See :class:`modepy.Face`.
+
+.. class:: Simplex
+
+    See :class:`modepy.Simplex`.
+
+.. class:: Hypercube
+
+    See :class:`modepy.Hypercube`.
 """
 
+# }}}
 
 __copyright__ = """
 Copyright (c) 2013 Andreas Kloeckner
@@ -189,8 +220,9 @@ THE SOFTWARE.
 """
 
 import numpy as np
+from typing import Tuple, Callable
 
-from functools import singledispatch
+from functools import singledispatch, partial
 from dataclasses import dataclass
 
 
@@ -199,76 +231,56 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Shape:
     """
-    .. attribute :: dims
+    .. attribute :: dim
     .. attribute :: nfaces
     .. attribute :: nvertices
     """
-    dims: int
+    dim: int
 
 
 @singledispatch
-def get_unit_vertices(shape: Shape):
+def biunit_vertices_for_shape(shape: Shape):
     """
-    :returns: an :class:`~numpy.ndarray` of shape `(nvertices, dims)`.
-    """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_face_vertex_indices(shape: Shape):
-    """
-    :results: a tuple of the length :attr:`Shape.nfaces`, where each entry
-        is a tuple of indices into the vertices returned by
-        :func:`get_unit_vertices`.
+    :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
     raise NotImplementedError(type(shape).__name__)
 
 
-@singledispatch
-def get_face_map(shape: Shape, face_vertices: np.ndarray):
+@dataclass(frozen=True)
+class Face:
+    """Mix-in to be used with a concrete :class:`Shape` subclass to represent
+    geometry information about a face of a shape.
+
+    .. attribute:: volume_shape
+
+        The volume :class:`Shape` from which this face descends.
+
+    .. attribute:: face_index
+
+        The face index in :attr:`volume_shape` of this face.
+
+    .. attribute:: volume_vertex_indices
+
+        A tuple of indices into the vertices returned by
+        :func:`biunit_vertices_for_shape` for the :attr:`volume_shape`.
+
+    .. attribute:: map_to_volume
+
+        A :class:`~collections.abc.Callable` that takes an array of
+        size `(dim, nnodes)` of unit nodes on the face represented by
+        *face_vertices* and maps them to the :attr:`volume_shape`.
     """
-    :returns: a :class:`~collections.abc.Callable` that takes an array of
-        size `(dims, nnodes)` of unit nodes on the face represented by
-        *face_vertices* and maps them to the volume.
+    volume_shape: Shape
+    face_index: int
+    volume_vertex_indices: Tuple[int]
+    map_to_volume: Callable[[np.ndarray], np.ndarray]
+
+
+@singledispatch
+def faces_for_shape(shape: Shape):
     """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_quadrature(shape: Shape, order: int):
+    :results: a tuple of :class:`Face` representing the faces of *shape*.
     """
-    :returns: a :class:`~modepy.Quadrature` that is exact up to :math:`2 N + 1`.
-    """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_node_count(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_node_tuples(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_unit_nodes(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_basis(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_grad_basis(shape: Shape, order: int):
-    raise NotImplementedError(type(shape).__name__)
-
-
-@singledispatch
-def get_basis_with_mode_ids(shape: Shape, order: int):
     raise NotImplementedError(type(shape).__name__)
 
 # }}}
@@ -279,51 +291,57 @@ def get_basis_with_mode_ids(shape: Shape, order: int):
 class Simplex(Shape):
     @property
     def nfaces(self):
-        return self.dims + 1
+        return self.dim + 1
 
     @property
     def nvertices(self):
         return self.dim + 1
 
 
-@get_unit_vertices.register(Simplex)
+@dataclass(frozen=True)
+class _SimplexFace(Simplex, Face):
+    pass
+
+
+@biunit_vertices_for_shape.register(Simplex)
 def _(shape: Simplex):
-    from modepy.tools import unit_vertices
-    return unit_vertices(shape.dims)
+    result = np.empty((shape.dim, shape.dim+1), np.float64)
+    result.fill(-1)
+
+    for i in range(shape.dim):
+        result[i, i+1] = 1
+
+    return result
 
 
-@get_face_vertex_indices.register(Simplex)
-def _(shape: Simplex):
-    fvi = np.empty((shape.dims + 1, shape.dims), dtype=np.int)
-    indices = np.arange(shape.dims + 1)
-
-    for iface in range(shape.nfaces):
-        fvi[iface, :] = np.hstack([indices[:iface], indices[iface + 1:]])
-
-    return fvi
-
-
-@get_face_map.register(Simplex)
-def _(shape: Simplex, face_vertices: np.ndarray):
-    dims, npoints = face_vertices.shape
-    if npoints != dims:
+def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
+    dim, npoints = face_vertices.shape
+    if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
 
     origin = face_vertices[:, 0].reshape(-1, 1)
     face_basis = face_vertices[:, 1:] - origin
 
-    return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@get_quadrature.register(Simplex)
-def _(shape: Simplex, order: int):
-    import modepy as mp
-    try:
-        quad = mp.XiaoGimbutasSimplexQuadrature(2*order + 1, shape.dims)
-    except (mp.QuadratureRuleUnavailable, ValueError):
-        quad = mp.GrundmannMoellerSimplexQuadrature(order, shape.dims)
+@faces_for_shape.register(Simplex)
+def _(shape: Simplex):
+    face_vertex_indices = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
+    indices = np.arange(shape.dim + 1)
 
-    return quad
+    for iface in range(shape.nfaces):
+        face_vertex_indices[iface, :] = \
+                np.hstack([indices[:iface], indices[iface + 1:]])
+
+    vertices = biunit_vertices_for_shape(shape)
+    return [
+            _SimplexFace(
+                dim=shape.dim-1,
+                volume_shape=shape, face_index=iface,
+                volume_vertex_indices=tuple(fvi),
+                map_to_volume=partial(_simplex_face_to_vol_map, vertices[:, fvi]))
+            for iface, fvi in enumerate(face_vertex_indices)]
 
 # }}}
 
@@ -333,23 +351,43 @@ def _(shape: Simplex, order: int):
 class Hypercube(Shape):
     @property
     def nfaces(self):
-        return 2 * self.dims
+        return 2 * self.dim
 
     @property
     def nvertices(self):
-        return 2**self.dims
+        return 2**self.dim
 
 
-@get_unit_vertices.register(Hypercube)
+@dataclass(frozen=True)
+class _HypercubeFace(Hypercube, Face):
+    pass
+
+
+@biunit_vertices_for_shape.register(Hypercube)
 def _(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes(shape.dims, np.array([-1.0, 1.0])).T
+    return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
 
 
-@get_face_vertex_indices.register(Hypercube)
+def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
+    dim, npoints = face_vertices.shape
+    if npoints != 2**(dim - 1):
+        raise ValueError("'face_vertices' has wrong shape")
+
+    origin = face_vertices[:, 0].reshape(-1, 1)
+
+    # works up to (and including) 3D:
+    # - no-op for 1D, 2D
+    # - For square faces, eliminate middle node
+    face_basis = face_vertices[:, 1:3] - origin
+
+    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+
+
+@faces_for_shape.register(Hypercube)
 def _(shape: Hypercube):
     # FIXME: replace by nicer n-dimensional formula
-    return {
+    face_vertex_indices = {
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
         3: (
@@ -362,32 +400,148 @@ def _(shape: Hypercube):
             (0b000, 0b001, 0b100, 0b101,),
             (0b010, 0b011, 0b110, 0b111,),
             )
-        }[shape.dims]
+        }[shape.dim]
 
-
-@get_face_map.register(Hypercube)
-def _(shape: Hypercube, face_vertices: np.ndarray):
-    dims, npoints = face_vertices.shape
-    if npoints != 2**(dims - 1):
-        raise ValueError("'face_vertices' has wrong shape")
-
-    origin = face_vertices[:, 0].reshape(-1, 1)
-    face_basis = face_vertices[:, -2:0:-1] - origin
-
-    return lambda p: origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
-
-
-@get_quadrature.register(Hypercube)
-def _(shape: Hypercube, order: int):
-    import modepy as mp
-    if shape.dims == 0:
-        quad = mp.Quadrature(np.empty((0, 1)), np.empty((0, 1)))
-    else:
-        from modepy.quadrature import LegendreGaussTensorProductQuadrature
-        quad = LegendreGaussTensorProductQuadrature(order, shape.dims)
-
-    return quad
+    vertices = biunit_vertices_for_shape(shape)
+    return [
+            _HypercubeFace(
+                dim=shape.dim-1,
+                volume_shape=shape, face_index=iface,
+                volume_vertex_indices=fvi,
+                map_to_volume=partial(_hypercube_face_to_vol_map, vertices[:, fvi]))
+            for iface, fvi in enumerate(face_vertex_indices)]
 
 # }}}
+
+
+# {{{ submeshes
+
+@singledispatch
+def submesh_for_shape(shape: Shape, node_tuples):
+    """Return a list of tuples of indices into the node list that
+    generate a tesselation of the reference element.
+
+    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
+        indicating node positions inside the unit element. The
+        returned list references indices in this list.
+
+        :func:`modepy.node_tuples_for_space` may be used to generate *node_tuples*.
+
+    .. versionadded:: 2020.3
+    """
+    raise NotImplementedError(type(shape).__name__)
+
+
+@submesh_for_shape.register(Simplex)
+def _(shape: Simplex, node_tuples):
+    from pytools import single_valued, add_tuples
+    dims = single_valued(len(nt) for nt in node_tuples)
+
+    node_dict = {
+            ituple: idx
+            for idx, ituple in enumerate(node_tuples)}
+
+    if dims == 1:
+        result = []
+
+        def try_add_line(d1, d2):
+            try:
+                result.append((
+                    node_dict[add_tuples(current, d1)],
+                    node_dict[add_tuples(current, d2)],
+                    ))
+            except KeyError:
+                pass
+
+        for current in node_tuples:
+            try_add_line((0,), (1,),)
+
+        return result
+    elif dims == 2:
+        # {{{ triangle sub-mesh
+        result = []
+
+        def try_add_tri(d1, d2, d3):
+            try:
+                result.append((
+                    node_dict[add_tuples(current, d1)],
+                    node_dict[add_tuples(current, d2)],
+                    node_dict[add_tuples(current, d3)],
+                    ))
+            except KeyError:
+                pass
+
+        for current in node_tuples:
+            # this is a tesselation of a square into two triangles.
+            # subtriangles that fall outside of the master triangle are
+            # simply not added.
+
+            # positively oriented
+            try_add_tri((0, 0), (1, 0), (0, 1))
+            try_add_tri((1, 0), (1, 1), (0, 1))
+
+        return result
+
+        # }}}
+    elif dims == 3:
+        # {{{ tet sub-mesh
+
+        def try_add_tet(d1, d2, d3, d4):
+            try:
+                result.append((
+                    node_dict[add_tuples(current, d1)],
+                    node_dict[add_tuples(current, d2)],
+                    node_dict[add_tuples(current, d3)],
+                    node_dict[add_tuples(current, d4)],
+                    ))
+            except KeyError:
+                pass
+
+        result = []
+        for current in node_tuples:
+            # this is a tesselation of a cube into six tets.
+            # subtets that fall outside of the master tet are simply not added.
+
+            # positively oriented
+            try_add_tet((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1))
+            try_add_tet((1, 0, 1), (1, 0, 0), (0, 0, 1), (0, 1, 0))
+            try_add_tet((1, 0, 1), (0, 1, 1), (0, 1, 0), (0, 0, 1))
+
+            try_add_tet((1, 0, 0), (0, 1, 0), (1, 0, 1), (1, 1, 0))
+            try_add_tet((0, 1, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1))
+            try_add_tet((0, 1, 1), (1, 1, 1), (1, 0, 1), (1, 1, 0))
+
+        return result
+
+        # }}}
+    else:
+        raise NotImplementedError("%d-dimensional sub-meshes" % dims)
+
+
+@submesh_for_shape.register(Hypercube)
+def _(shape: Hypercube, node_tuples):
+    from pytools import single_valued, add_tuples
+    dims = single_valued(len(nt) for nt in node_tuples)
+
+    node_dict = {
+            ituple: idx
+            for idx, ituple in enumerate(node_tuples)}
+
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+
+    result = []
+    for current in node_tuples:
+        try:
+            result.append(tuple(
+                    node_dict[add_tuples(current, offset)]
+                    for offset in gnitb(2, dims)))
+
+        except KeyError:
+            pass
+
+    return result
+
+# }}}
+
 
 # vim: foldmethod=marker

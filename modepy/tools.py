@@ -1,3 +1,21 @@
+"""
+Transformations between coordinate systems on the simplex
+---------------------------------------------------------
+
+All of these expect and return arrays of shape *(dims, npts)*.
+
+.. autofunction:: equilateral_to_unit
+.. autofunction:: barycentric_to_unit
+.. autofunction:: unit_to_barycentric
+.. autofunction:: barycentric_to_equilateral
+
+Interpolation quality
+---------------------
+
+.. autofunction:: estimate_lebesgue_constant
+
+"""
+
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
 __license__ = """
@@ -26,6 +44,7 @@ import numpy as np
 import numpy.linalg as la
 from math import sqrt
 from pytools import memoize_method, MovedFunctionDeprecationWrapper
+import modepy.shapes as shp
 
 
 try:
@@ -170,30 +189,21 @@ def equilateral_to_unit(equi):
 
 
 def unit_vertices(dim):
-    result = np.empty((dim+1, dim), np.float64)
-    result.fill(-1)
+    from warnings import warn
+    warn("unit_vertices is deprecated. "
+            "Use modepy.biunit_vertices_for_shape instead. "
+            "unit_vertices will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
 
-    for i in range(dim):
-        result[i+1, i] = 1
-
-    return result
-
-
-# this should go away
-UNIT_VERTICES = {
-        0: unit_vertices(0),
-        1: unit_vertices(1),
-        2: unit_vertices(2),
-        3: unit_vertices(3),
-        }
+    return shp.biunit_vertices_for_shape(shp.Simplex(dim)).T
 
 
 def barycentric_to_unit(bary):
     """
-    :arg bary: shaped ``(dims+1,npoints)``
+    :arg bary: shaped ``(dims+1, npoints)``
     """
     dims = len(bary)-1
-    return np.dot(unit_vertices(dims).T, bary)
+    return np.dot(shp.biunit_vertices_for_shape(shp.Simplex(dims)), bary)
 
 
 def unit_to_barycentric(unit):
@@ -233,23 +243,7 @@ def barycentric_to_equilateral(bary):
 # }}}
 
 
-def pick_random_simplex_unit_coordinate(rng, dims):
-    offset = 0.05
-    base = -1 + offset
-    remaining = 2 - dims*offset
-    r = np.zeros(dims, np.float64)
-    for j in range(dims):
-        rn = rng.uniform(0, remaining)
-        r[j] = base + rn
-        remaining -= rn
-    return r
-
-
-def pick_random_hypercube_unit_coordinate(rng, dims):
-    return np.array([rng.uniform(-1.0, 1.0) for _ in range(dims)])
-
-
-# {{{ submeshes, plotting helpers
+# {{{ submeshes
 
 def simplex_submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
@@ -262,88 +256,7 @@ def simplex_submesh(node_tuples):
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
         may be used to generate *node_tuples*.
     """
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
-
-    node_dict = {
-            ituple: idx
-            for idx, ituple in enumerate(node_tuples)}
-
-    if dims == 1:
-        result = []
-
-        def try_add_line(d1, d2):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    ))
-            except KeyError:
-                pass
-
-        for current in node_tuples:
-            try_add_line((0,), (1,),)
-
-        return result
-    elif dims == 2:
-        # {{{ triangle sub-mesh
-        result = []
-
-        def try_add_tri(d1, d2, d3):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    node_dict[add_tuples(current, d3)],
-                    ))
-            except KeyError:
-                pass
-
-        for current in node_tuples:
-            # this is a tesselation of a square into two triangles.
-            # subtriangles that fall outside of the master triangle are
-            # simply not added.
-
-            # positively oriented
-            try_add_tri((0, 0), (1, 0), (0, 1))
-            try_add_tri((1, 0), (1, 1), (0, 1))
-
-        return result
-
-        # }}}
-    elif dims == 3:
-        # {{{ tet sub-mesh
-
-        def try_add_tet(d1, d2, d3, d4):
-            try:
-                result.append((
-                    node_dict[add_tuples(current, d1)],
-                    node_dict[add_tuples(current, d2)],
-                    node_dict[add_tuples(current, d3)],
-                    node_dict[add_tuples(current, d4)],
-                    ))
-            except KeyError:
-                pass
-
-        result = []
-        for current in node_tuples:
-            # this is a tesselation of a cube into six tets.
-            # subtets that fall outside of the master tet are simply not added.
-
-            # positively oriented
-            try_add_tet((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1))
-            try_add_tet((1, 0, 1), (1, 0, 0), (0, 0, 1), (0, 1, 0))
-            try_add_tet((1, 0, 1), (0, 1, 1), (0, 1, 0), (0, 0, 1))
-
-            try_add_tet((1, 0, 0), (0, 1, 0), (1, 0, 1), (1, 1, 0))
-            try_add_tet((0, 1, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1))
-            try_add_tet((0, 1, 1), (1, 1, 1), (1, 0, 1), (1, 1, 0))
-
-        return result
-
-        # }}}
-    else:
-        raise NotImplementedError("%d-dimensional sub-meshes" % dims)
+    return shp.submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
 
 
 submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
@@ -364,29 +277,18 @@ def hypercube_submesh(node_tuples):
 
     .. versionadded:: 2020.2
     """
+    from warnings import warn
+    warn("hypercube_submesh is deprecated. "
+            "Use submesh_for_shape instead. "
+            "hypercube_submesh will go away in 2022.",
+            DeprecationWarning, stacklevel=2)
 
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
+    return shp.submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
 
-    node_dict = {
-            ituple: idx
-            for idx, ituple in enumerate(node_tuples)}
-
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
-
-    result = []
-    for current in node_tuples:
-        try:
-            result.append(tuple(
-                    node_dict[add_tuples(current, offset)]
-                    for offset in gnitb(2, dims)))
-
-        except KeyError:
-            pass
-
-    return result
+# }}}
 
 
+# {{{ plotting helpers
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
     dims = len(nodes)
@@ -431,15 +333,20 @@ def plot_element_values(n, nodes, values, resample_n=None,
 def _evaluate_lebesgue_function(n, nodes, shape):
     huge_n = 30*n
 
-    from modepy.shapes import get_basis, get_node_tuples
-    basis = get_basis(shape, n)
-    equi_node_tuples = get_node_tuples(shape, huge_n)
+    from modepy.spaces import space_for_shape
+    from modepy.modes import basis_for_space
+    from modepy.nodes import node_tuples_for_space
+    space = space_for_shape(shape, n)
+    huge_space = space_for_shape(shape, huge_n)
+
+    basis = basis_for_space(space)
+    equi_node_tuples = node_tuples_for_space(huge_space)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
 
     from modepy.matrices import vandermonde
-    vdm = vandermonde(basis, nodes)
+    vdm = vandermonde(basis.functions, nodes)
 
-    eq_vdm = vandermonde(basis, equi_nodes)
+    eq_vdm = vandermonde(basis.functions, equi_nodes)
     eq_to_out = la.solve(vdm.T, eq_vdm.T).T
 
     lebesgue_worst = np.sum(np.abs(eq_to_out), axis=1)
@@ -453,7 +360,7 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
     of the *nodes* at polynomial order *n*.
 
-    :arg nodes: an array of shape *(dims, nnodes)* as returned by
+    :arg nodes: an array of shape *(dim, nnodes)* as returned by
         :func:`modepy.warp_and_blend_nodes`.
     :arg shape: a :class:`~modepy.shapes.Shape`.
     :arg visualize: visualize the function that gives rise to the
@@ -471,13 +378,16 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
 
         Renamed *domain* to *shape*.
     """
-    dims = len(nodes)
+    dim = len(nodes)
     if shape is None:
+        from warnings import warn
+        warn("Not passing shape is deprecated and will stop working "
+                "in 2022.", DeprecationWarning, stacklevel=2)
         from modepy.shapes import Simplex
-        shape = Simplex(dims)
+        shape = Simplex(dim)
     else:
-        if shape.dims != dims:
-            raise ValueError(f"expected {shape.dims}-dimensional nodes")
+        if shape.dim != dim:
+            raise ValueError(f"expected {shape.dim}-dimensional nodes")
 
     lebesgue_worst, equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(n, nodes, shape)
@@ -486,16 +396,9 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     if not visualize:
         return lebesgue_constant
 
-    if shape.dims == 2:
+    if shape.dim == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
-
-        from modepy.shapes import Simplex, Hypercube
-        if isinstance(shape, Simplex):
-            triangles = simplex_submesh(equi_node_tuples)
-        elif isinstance(shape, Hypercube):
-            triangles = hypercube_submesh(equi_node_tuples)
-        else:
-            triangles = None
+        triangles = shp.submesh_for_shape(shape, equi_node_tuples)
 
         try:
             import mayavi.mlab as mlab
@@ -530,7 +433,7 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
             ax.set_aspect("equal")
             plt.show()
     else:
-        raise ValueError(f"visualization is not supported in {shape.dims}D")
+        raise ValueError(f"visualization is not supported in {shape.dim}D")
 
     return lebesgue_constant
 
