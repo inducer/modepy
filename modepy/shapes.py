@@ -327,19 +327,19 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
 
 @faces_for_shape.register(Simplex)
 def _(shape: Simplex):
-    face_vertex_indices = np.empty((shape.dim + 1, shape.dim), dtype=np.int)
-    indices = np.arange(shape.dim + 1)
-
-    for iface in range(shape.nfaces):
-        face_vertex_indices[iface, :] = \
-                np.hstack([indices[:iface], indices[iface + 1:]])
+    # NOTE: order is chosen to maintain a positive orientation
+    face_vertex_indices = {
+            1: ((0,), (1,)),
+            2: ((0, 1), (2, 0), (1, 2)),
+            3: ((0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3))
+            }[shape.dim]
 
     vertices = biunit_vertices_for_shape(shape)
     return [
             _SimplexFace(
                 dim=shape.dim-1,
                 volume_shape=shape, face_index=iface,
-                volume_vertex_indices=tuple(fvi),
+                volume_vertex_indices=fvi,
                 map_to_volume=partial(_simplex_face_to_vol_map, vertices[:, fvi]))
             for iface, fvi in enumerate(face_vertex_indices)]
 
@@ -386,19 +386,19 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
 
 @faces_for_shape.register(Hypercube)
 def _(shape: Hypercube):
-    # FIXME: replace by nicer n-dimensional formula
+    # NOTE: order is chosen to maintain a positive orientation
     face_vertex_indices = {
         1: ((0b0,), (0b1,)),
-        2: ((0b00, 0b01), (0b10, 0b11), (0b00, 0b10), (0b01, 0b11)),
+        2: ((0b00, 0b01), (0b11, 0b10), (0b10, 0b00), (0b01, 0b11)),
         3: (
-            (0b000, 0b001, 0b010, 0b011,),
+            (0b000, 0b010, 0b001, 0b011,),
             (0b100, 0b101, 0b110, 0b111,),
 
-            (0b000, 0b010, 0b100, 0b110,),
+            (0b000, 0b100, 0b010, 0b110,),
             (0b001, 0b011, 0b101, 0b111,),
 
             (0b000, 0b001, 0b100, 0b101,),
-            (0b010, 0b011, 0b110, 0b111,),
+            (0b010, 0b110, 0b011, 0b111,),
             )
         }[shape.dim]
 
