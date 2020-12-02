@@ -410,7 +410,10 @@ def _(space: PN, shape: Simplex):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    return warp_and_blend_nodes(space.spatial_dim, space.order)
+    if space.spatial_dim <= 3:
+        return warp_and_blend_nodes(space.spatial_dim, space.order)
+    else:
+        return equidistant_nodes(space.spatial_dim, space.order)
 
 
 @random_nodes_for_shape.register(Simplex)
