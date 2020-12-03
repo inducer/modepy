@@ -329,7 +329,7 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
 # {{{ tensor product nodes
 
-def tensor_product_nodes(dims, nodes_1d):
+def tensor_product_nodes(dims_or_nodes, nodes_1d=None):
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -338,11 +338,22 @@ def tensor_product_nodes(dims, nodes_1d):
     .. versionchanged:: 2020.3
 
         The node ordering has changed and is no longer documented.
+
     """
-    nnodes_1d = len(nodes_1d)
-    result = np.empty((dims,) + (nnodes_1d,) * dims)
+    from numbers import Number
+    if isinstance(dims_or_nodes, Number):
+        nodes = [nodes_1d] * dims_or_nodes
+        dims = dims_or_nodes
+    else:
+        assert nodes_1d is None
+        nodes = dims_or_nodes
+        dims = len(nodes)
+
+    nnodes = tuple(len(n) for n in nodes)
+    result = np.empty((dims,) + nnodes)
+
     for d in range(dims):
-        result[d] = nodes_1d.reshape(*((-1,) + (1,)*d))
+        result[d] = nodes[dims-1-d].reshape((-1,) + (1,)*d)
 
     return result.reshape(dims, -1)
 

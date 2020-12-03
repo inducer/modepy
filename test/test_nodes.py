@@ -136,9 +136,23 @@ def test_tensor_product_nodes(dim):
     nnodes = 10
     nodes_1d = np.arange(nnodes)
     nodes = nd.tensor_product_nodes(dim, nodes_1d)
+
     assert np.allclose(
             nodes[0],
             np.array(nodes_1d.tolist() * nnodes**(dim - 1)))
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3, 4])
+def test_nonhomogeneous_tensor_product_nodes(dim):
+    nnodes = (3, 7, 5, 4)[:dim]
+    nodes = nd.tensor_product_nodes([
+        np.arange(n) for n in nnodes
+        ])
+
+    assert np.allclose(
+            nodes[0],
+            list(range(nnodes[-1])) * int(np.prod(nnodes[:-1]))
+            )
 
 
 # You can test individual routines by typing

@@ -523,14 +523,12 @@ def _(shape: Hypercube, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 
-    node_dict = {
-            ituple: idx
-            for idx, ituple in enumerate(node_tuples)}
-
+    # NOTE: nodes use "first coordinate varies faster" (see node_tuples_for_space)
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     vertex_node_tuples = [nt[::-1] for nt in gnitb(2, dims)]
 
     result = []
+    node_dict = {ituple: idx for idx, ituple in enumerate(node_tuples)}
     for current in node_tuples:
         try:
             result.append(tuple(
