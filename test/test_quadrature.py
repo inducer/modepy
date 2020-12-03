@@ -145,11 +145,12 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
             break
 
 
-@pytest.mark.parametrize("quad_class", [
-    mp.WitherdenVincentQuadrature
-    ])
 @pytest.mark.parametrize("dim", [2, 3])
-def test_hypercube_quadrature(quad_class, dim):
+@pytest.mark.parametrize(("quad_class", "max_order"), [
+    (mp.WitherdenVincentQuadrature, np.inf),
+    (mp.LegendreGaussTensorProductQuadrature, 6),
+    ])
+def test_hypercube_quadrature(dim, quad_class, max_order):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
     from modepy.tools import Monomial
@@ -166,7 +167,7 @@ def test_hypercube_quadrature(quad_class, dim):
         return error
 
     order = 1
-    while True:
+    while order < max_order:
         try:
             quad = quad_class(order, dim)
         except mp.QuadratureRuleUnavailable:
