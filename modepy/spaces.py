@@ -49,7 +49,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
 from functools import singledispatch
 from modepy.shapes import Shape, Simplex, Hypercube
 
@@ -69,6 +68,11 @@ class FunctionSpace:
 
         The number of dimensions of the function space.
     """
+
+    def __repr__(self):
+        return (f"{type(self).__name__}("
+            f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}"
+            ")")
 
 
 class PN(FunctionSpace):
@@ -99,6 +103,11 @@ class PN(FunctionSpace):
             return reduce(mul, range(order + 1, order + spdim + 1), 1) \
                     // reduce(mul, range(1, spdim + 1), 1)
 
+    def __repr__(self):
+        return (f"{type(self).__name__}("
+            f"spatial_dim={self.spatial_dim}, order={self.order}"
+            ")")
+
 
 class QN(FunctionSpace):
     r"""The function space of polynomials with maximum degree
@@ -120,6 +129,11 @@ class QN(FunctionSpace):
     @property
     def space_dim(self):
         return (self.order + 1)**self.spatial_dim
+
+    def __repr__(self):
+        return (f"{type(self).__name__}("
+            f"spatial_dim={self.spatial_dim}, order={self.order}"
+            ")")
 
 
 @singledispatch
