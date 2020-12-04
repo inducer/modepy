@@ -66,7 +66,9 @@ class Quadrature:
 
     .. attribute :: exact_to
 
-        Total polynomial degree up to which the quadrature is exact.
+        Summed polynomial degree up to which the quadrature is exact.
+        In higher-dimensions, the quadrature is supposed to be exact on (at least)
+        :math:`P^N`, where :math:`N` = :attr:`exact_to`.
 
     .. automethod:: __call__
     """
