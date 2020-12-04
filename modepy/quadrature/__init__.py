@@ -106,6 +106,10 @@ class Transformed1DQuadrature(Quadrature):
 
 class TensorProductQuadrature(Quadrature):
     """
+    .. attribute:: exact_to
+
+        The tensor product quadrature is exact up to this summed polynomial degree.
+
     .. automethod:: __init__
     """
 
