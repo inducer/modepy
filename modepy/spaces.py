@@ -76,14 +76,16 @@ class FunctionSpace:
 
 
 class PN(FunctionSpace):
-    r"""The function space of polynomials with total degree :math:`N`=:attr:`order`.
+    r"""The function space of polynomials with total degree
+    :math:`N` = :attr:`order`.
 
     .. math::
 
         P^N:=\operatorname{span}\left\{\prod_{i=1}^d x_i^{n_i}:\sum n_i\le N\right\}.
 
-    .. automethod:: __init__
     .. attribute:: order
+
+    .. automethod:: __init__
     """
     def __init__(self, spatial_dim, order):
         super().__init__()
@@ -111,15 +113,16 @@ class PN(FunctionSpace):
 
 class QN(FunctionSpace):
     r"""The function space of polynomials with maximum degree
-    :math:`N`=:attr:`order`:
+    :math:`N` = :attr:`order`:
 
     .. math::
 
         Q^N:=\operatorname{span}
         \left \{\prod_{i=1}^d x_i^{n_i}:\max n_i\le N\right\}.
 
-    .. automethod:: __init__
     .. attribute:: order
+
+    .. automethod:: __init__
     """
     def __init__(self, spatial_dim, order):
         super().__init__()

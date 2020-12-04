@@ -44,7 +44,8 @@ class JacobiGaussQuadrature(Quadrature):
     .. automethod:: __init__
     """
 
-    def __init__(self, alpha, beta, N, backend=None):  # noqa: N803
+    def __init__(self, alpha, beta, N,                  # noqa: N803
+            backend=None, force_dim_axis=False):
         r"""
         :arg backend: Either ``"builtin"`` or ``"scipy"``. When the
             ``"builtin"`` backend is in use, there is an additional
@@ -52,6 +53,13 @@ class JacobiGaussQuadrature(Quadrature):
             of the Chebyshev quadrature :math:`\alpha = \beta = -1/2`. The
             ``"scipy"`` backend has no such restriction.
         """
+        if not force_dim_axis:
+            from warnings import warn
+            warn("setting 'force_dim_axis' to 'False' is deprecated and "
+                    "makes 1d rules inconsistent with higher dimensions. "
+                    "This option will go away in 2022",
+                    DeprecationWarning, stacklevel=2)
+
         if backend is None:
             backend = "builtin"
 
@@ -62,6 +70,9 @@ class JacobiGaussQuadrature(Quadrature):
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
             raise NotImplementedError("Unsupported backend: %s" % backend)
+
+        if force_dim_axis:
+            x = x.reshape(1, -1)
 
         self.exact_to = 2*N + 1
         Quadrature.__init__(self, x, w)
@@ -147,8 +158,9 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
     :math:`\alpha = \beta = 0`.
     """
 
-    def __init__(self, N, backend=None):  # noqa: N803
-        JacobiGaussQuadrature.__init__(self, 0, 0, N, backend)
+    def __init__(self, N, backend=None, force_dim_axis=False):  # noqa: N803
+        super().__init__(0, 0, N,
+                backend=backend, force_dim_axis=force_dim_axis)
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
@@ -162,12 +174,16 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, N, kind=1, backend=None):  # noqa: N803
+    def __init__(self, N, kind=1, backend=None, force_dim_axis=False):  # noqa: N803
         if kind == 1:
-            # FIXME: division by zero using built-in backend
-            JacobiGaussQuadrature.__init__(self, -0.5, -0.5, N, backend="scipy")
+            alpha = beta = -0.5
         elif kind == 2:
-            JacobiGaussQuadrature.__init__(self, 0.5, 0.5, N, backend=backend)
+            alpha = beta = +0.5
+        else:
+            raise ValueError(f"unsupported kind: '{kind}'")
+
+        super().__init__(alpha, beta, N,
+                backend=backend, force_dim_axis=force_dim_axis)
 
 
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
@@ -177,11 +193,13 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     .. versionadded:: 2019.1
     """
 
-    def __init__(self, alpha, N, backend=None):  # noqa: N803
-        JacobiGaussQuadrature.__init__(self, alpha, alpha, N, backend)
+    def __init__(self, alpha, N, backend=None, force_dim_axis=False):  # noqa: N803
+        super().__init__(self, alpha, alpha, N,
+                backend=backend, force_dim_axis=force_dim_axis)
 
 
-def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa: N803
+def jacobi_gauss_lobatto_nodes(alpha, beta, N,          # noqa: N803
+        backend=None, force_dim_axis=False):
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters.
@@ -193,18 +211,22 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N, backend=None):  # noqa: N803
     x[0] = -1
     x[-1] = 1
 
-    if N == 1:
-        return x
+    if N > 1:
+        quad = JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2,
+                backend=backend, force_dim_axis=True)
+        x[1:-1] = quad.nodes[0].real
 
-    x[1:-1] = np.array(
-            JacobiGaussQuadrature(alpha + 1, beta + 1, N - 2, backend).nodes
-            ).real
+    if force_dim_axis:
+        x = x.reshape(1, -1)
+
     return x
 
 
-def legendre_gauss_lobatto_nodes(N, backend=None):  # noqa: N803
+def legendre_gauss_lobatto_nodes(N,                     # noqa: N803
+        backend=None, force_dim_axis=False):
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
 
     Exact to degree :math:`2N - 1`.
     """
-    return jacobi_gauss_lobatto_nodes(0, 0, N, backend)
+    return jacobi_gauss_lobatto_nodes(0, 0, N,
+            backend=backend, force_dim_axis=force_dim_axis)
