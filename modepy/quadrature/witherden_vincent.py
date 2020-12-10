@@ -52,7 +52,7 @@ class WitherdenVincentQuadrature(Quadrature):
             from modepy.quadrature.witherden_vincent_quad_data import \
                     hex_data as table
         else:
-            raise ValueError(f"unsupported domension: {dims}")
+            raise QuadratureRuleUnavailable(f"invalid domension: '{dims}'")
 
         try:
             rule = table[order]

@@ -66,7 +66,8 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
         elif dims == 3:
             from modepy.quadrature.xg_quad_data import tetrahedron_table as table
         else:
-            raise QuadratureRuleUnavailable("invalid dimensionality")
+            raise QuadratureRuleUnavailable(f"invalid dimension: '{dims}'")
+
         try:
             order_table = table[order]
         except KeyError:

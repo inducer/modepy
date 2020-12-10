@@ -123,7 +123,14 @@ class TensorProductQuadrature(Quadrature):
         assert w.size == x.shape[1]
 
         super().__init__(x, w)
-        self.exact_to = min(quad.exact_to for quad in quads)
+
+        try:
+            exact_to = min(quad.exact_to for quad in quads)
+        except AttributeError:
+            # e.g. FejerQuadrature does not have any 'exact_to'
+            pass
+        else:
+            self.exact_to = exact_to
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
