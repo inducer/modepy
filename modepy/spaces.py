@@ -57,7 +57,7 @@ from modepy.shapes import Shape, Simplex, Hypercube
 
 class FunctionSpace:
     r"""An opaque object representing a finite-dimensional function space
-    of functions :math:`\mathbb R^n \to :math:`\mathbb R`.
+    of functions :math:`\mathbb R^n \to \mathbb R`.
 
     .. attribute:: spatial_dim
 
