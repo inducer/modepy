@@ -52,6 +52,8 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
     .. automethod:: __call__
     """
 
+    # FIXME: most other functionality in modepy uses 'dims, order' as the
+    # argument order convention.
     def __init__(self, order, dims):
         """
         :arg order: The total degree to which the quadrature rule is exact.
@@ -64,7 +66,8 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
         elif dims == 3:
             from modepy.quadrature.xg_quad_data import tetrahedron_table as table
         else:
-            raise ValueError("invalid dimensionality")
+            raise QuadratureRuleUnavailable(f"invalid dimension: '{dims}'")
+
         try:
             order_table = table[order]
         except KeyError:

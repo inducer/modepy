@@ -21,10 +21,11 @@ THE SOFTWARE.
 """
 
 
+from functools import partial
 import numpy as np
 import numpy.linalg as la
 import pytest
-import modepy.modes as m
+import modepy as mp
 from pymbolic.mapper.stringifier import (
         CSESplittingStringifyMapperMixin, StringifyMapper)
 from pymbolic.mapper.evaluator import EvaluationMapper
@@ -51,7 +52,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     quad = JacobiGaussQuadrature(alpha, beta, 4*max_n)
 
     from functools import partial
-    jac_f = [partial(m.jacobi, alpha, beta, n) for n in range(max_n)]
+    jac_f = [partial(mp.jacobi, alpha, beta, n) for n in range(max_n)]
     maxerr = 0
 
     for i, fi in enumerate(jac_f):
@@ -76,19 +77,22 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     # (7, 3e-14),
     # (9, 2e-13),
     ])
-@pytest.mark.parametrize("dims", [2, 3])
-def test_pkdo_orthogonality(dims, order, ebound):
-    """Test orthogonality of simplicial bases using Grundmann-Moeller cubature."""
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
+    ])
+def test_orthogonality(shape, order, ebound):
+    """Test orthogonality of ONBs using cubature."""
 
-    from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadrature
-    from modepy.modes import simplex_onb
-
-    cub = GrundmannMoellerSimplexQuadrature(order, dims)
-    basis = simplex_onb(dims, order)
+    qspace = mp.space_for_shape(shape, 2*order)
+    cub = mp.quadrature_for_space(qspace, shape)
+    basis = mp.orthonormal_basis_for_space(mp.space_for_shape(shape, order), shape)
 
     maxerr = 0
-    for i, f in enumerate(basis):
-        for j, g in enumerate(basis):
+    for i, f in enumerate(basis.functions):
+        for j, g in enumerate(basis.functions):
             if i == j:
                 true_result = 1
             else:
@@ -103,52 +107,73 @@ def test_pkdo_orthogonality(dims, order, ebound):
     # print(order, maxerr)
 
 
-@pytest.mark.parametrize("dims", [1, 2, 3])
+def get_inhomogeneous_tensor_prod_basis(space, shape):
+    if not isinstance(shape, mp.Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    # FIXME: Yuck. A total lie. Not a basis for the space at all.
+    assert isinstance(space, mp.QN)
+    orders = (3, 5, 7)[:space.spatial_dim]
+
+    return mp.TensorProductBasis(
+            [[partial(mp.jacobi, 0, 0, n) for n in range(o)]
+                for o in orders],
+            [[partial(mp.grad_jacobi, 0, 0, n) for n in range(o)]
+                for o in orders],
+            orth_weight=1)
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("order", [5, 8])
-@pytest.mark.parametrize(("eltype", "basis_getter", "grad_basis_getter"), [
-    ("simplex", m.simplex_onb, m.grad_simplex_onb),
-    ("simplex", m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
-    ("tensor", m.legendre_tensor_product_basis, m.grad_legendre_tensor_product_basis)
+@pytest.mark.parametrize(("shape_cls", "basis_getter"), [
+    (mp.Simplex, mp.basis_for_space),
+    (mp.Simplex, mp.orthonormal_basis_for_space),
+    (mp.Simplex, mp.monomial_basis_for_space),
+
+    (mp.Hypercube, mp.basis_for_space),
+    (mp.Hypercube, mp.orthonormal_basis_for_space),
+    (mp.Hypercube, mp.monomial_basis_for_space),
+
+    (mp.Hypercube, get_inhomogeneous_tensor_prod_basis),
     ])
-def test_basis_grad(dims, order, eltype, basis_getter, grad_basis_getter):
+def test_basis_grad(dim, shape_cls, order, basis_getter):
     """Do a simplistic FD-style check on the gradients of the basis."""
 
     h = 1.0e-4
-    if eltype == "simplex" and order == 8 and dims == 3:
-        factor = 3.0
-    else:
-        factor = 1.0
 
-    if eltype == "simplex":
-        from modepy.tools import \
-                pick_random_simplex_unit_coordinate as pick_random_unit_coordinate
-    elif eltype == "tensor":
-        from modepy.tools import \
-                pick_random_hypercube_unit_coordinate as pick_random_unit_coordinate
-    else:
-        raise ValueError(f"unknown element type: {eltype}")
+    shape = shape_cls(dim)
+    rng = np.random.Generator(np.random.PCG64(17))
+    basis = basis_getter(mp.space_for_shape(shape, order), shape)
 
-    from random import Random
-    rng = Random(17)
-
+    from pytools.convergence import EOCRecorder
     from pytools import wandering_element
     for i_bf, (bf, gradbf) in enumerate(zip(
-                basis_getter(dims, order),
-                grad_basis_getter(dims, order),
+                basis.functions,
+                basis.gradients,
                 )):
-        for i in range(10):
-            r = pick_random_unit_coordinate(rng, dims)
+        eoc_rec = EOCRecorder()
+        for h in [1e-2, 1e-3]:
+            r = mp.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
 
             gradbf_v = np.array(gradbf(r))
             gradbf_v_num = np.array([
                 (bf(r+h*unit) - bf(r-h*unit))/(2*h)
-                for unit_tuple in wandering_element(dims)
-                for unit in (np.array(unit_tuple),)
+                for unit_tuple in wandering_element(shape.dim)
+                for unit in (np.array(unit_tuple).reshape(-1, 1),)
                 ])
 
-            err = la.norm(gradbf_v_num - gradbf_v)
+            ref_norm = la.norm((gradbf_v).reshape(-1), np.inf)
+            err = la.norm((gradbf_v_num - gradbf_v).reshape(-1), np.inf)
+            if ref_norm > 1e-13:
+                err = err/ref_norm
+
             logger.info("error: %.5", err)
-            assert err < factor * h, (err, i_bf)
+            eoc_rec.add_data_point(h, err)
+
+        tol = 1e-8
+        if eoc_rec.max_error() >= tol:
+            print(eoc_rec)
+        assert (eoc_rec.max_error() < tol or eoc_rec.order_estimate() >= 1.5)
 
 
 # {{{ test symbolic modes
@@ -163,20 +188,23 @@ class MyEvaluationMapper(EvaluationMapper):
                 self.rec(expr.then), self.rec(expr.else_))
 
 
-@pytest.mark.parametrize(("domain", "get_basis", "get_grad_basis"), [
-    ("simplex", m.simplex_onb, m.grad_simplex_onb),
-    ("simplex", m.simplex_monomial_basis, m.grad_simplex_monomial_basis),
-    ("hypercube", m.legendre_tensor_product_basis,
-        m.grad_legendre_tensor_product_basis),
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(1),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(1),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
     ])
-@pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("n", [5, 10])
-def test_symbolic_basis(domain, dims, n,
-        get_basis,
-        get_grad_basis):
-
-    basis = get_basis(dims, n)
-    sym_basis = [m.symbolicize_function(f, dims) for f in basis]
+@pytest.mark.parametrize("order", [5, 8])
+@pytest.mark.parametrize("basis_getter", [
+    (mp.basis_for_space),
+    (mp.orthonormal_basis_for_space),
+    (mp.monomial_basis_for_space),
+    ])
+def test_symbolic_basis(shape, order, basis_getter):
+    basis = basis_getter(mp.space_for_shape(shape, order), shape)
+    sym_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.functions]
 
     # {{{ test symbolic against direct eval
 
@@ -184,15 +212,10 @@ def test_symbolic_basis(domain, dims, n,
     print("VALUES")
     print(75*"#")
 
-    r = np.random.rand(dims, 10000)*2 - 1
-    if domain == "simplex":
-        r = r[:, r.sum(axis=0) < 0]
-    elif domain == "hypercube":
-        pass
-    else:
-        raise ValueError(f"unexpected domain: {domain}")
+    rng = np.random.Generator(np.random.PCG64(17))
+    r = mp.random_nodes_for_shape(shape, 10000, rng=rng)
 
-    for func, sym_func in zip(basis, sym_basis):
+    for func, sym_func in zip(basis.functions, sym_basis):
         strmap = MyStringifyMapper()
         s = strmap(sym_func)
         for name, val in strmap.cse_name_list:
@@ -218,10 +241,9 @@ def test_symbolic_basis(domain, dims, n,
     print("GRADIENTS")
     print(75*"#")
 
-    grad_basis = get_grad_basis(dims, n)
-    sym_grad_basis = [m.symbolicize_function(f, dims) for f in grad_basis]
+    sym_grad_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.gradients]
 
-    for grad, sym_grad in zip(grad_basis, sym_grad_basis):
+    for grad, sym_grad in zip(basis.gradients, sym_grad_basis):
         strmap = MyStringifyMapper()
         s = strmap(sym_grad)
         for name, val in strmap.cse_name_list:

@@ -71,6 +71,8 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
     .. automethod:: __call__
     """
 
+    # FIXME: most other functionality in modepy uses 'dims, order' as the
+    # argument order convention.
     def __init__(self, order, dims):
         """
         :arg order: The total degree to which the quadrature rule is exact
@@ -86,7 +88,7 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
             from modepy.quadrature.vr_quad_data_tet import tetrahedron_data as table
             ref_volume = 4/3
         else:
-            raise ValueError("invalid dimensionality")
+            raise QuadratureRuleUnavailable(f"invalid domension: '{dims}'")
 
         from modepy.tools import EQUILATERAL_TO_UNIT_MAP
         e2u = EQUILATERAL_TO_UNIT_MAP[dims]

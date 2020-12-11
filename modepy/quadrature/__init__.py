@@ -1,3 +1,20 @@
+"""
+.. currentmodule:: modepy
+
+.. autoclass:: Quadrature
+
+.. autofunction:: quadrature_for_space
+
+Redirections to Canonical Names
+-------------------------------
+
+.. currentmodule:: modepy.quadrature
+
+.. class:: Quadrature
+
+    See :class:`modepy.Quadrature`.
+"""
+
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
         "Jan Hesthaven, Xueyu Zhu")
 
@@ -21,8 +38,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from functools import singledispatch
 
 import numpy as np
+from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.spaces import FunctionSpace, PN, QN
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -46,7 +66,9 @@ class Quadrature:
 
     .. attribute :: exact_to
 
-        Total polynomial degree up to which the quadrature is exact.
+        Summed polynomial degree up to which the quadrature is exact.
+        In higher-dimensions, the quadrature is supposed to be exact on (at least)
+        :math:`P^N`, where :math:`N` = :attr:`exact_to`.
 
     .. automethod:: __call__
     """
@@ -82,3 +104,86 @@ class Transformed1DQuadrature(Quadrature):
         Quadrature.__init__(self,
                 left + (quad.nodes+1) / 2 * length,
                 quad.weights * half_length)
+
+
+class TensorProductQuadrature(Quadrature):
+    """
+    .. automethod:: __init__
+    """
+
+    def __init__(self, quads):
+        """
+        :arg quad: a :class:`tuple` of :class:`Quadrature` for one-dimensional
+            intervals, one for each dimension of the tensor product.
+        """
+
+        from modepy.nodes import tensor_product_nodes
+        x = tensor_product_nodes([quad.nodes for quad in quads])
+        w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
+        assert w.size == x.shape[1]
+
+        super().__init__(x, w)
+
+        try:
+            exact_to = min(quad.exact_to for quad in quads)
+        except AttributeError:
+            # e.g. FejerQuadrature does not have any 'exact_to'
+            pass
+        else:
+            self.exact_to = exact_to
+
+
+class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
+    def __init__(self, N, dims, backend=None):      # noqa: N803
+        from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
+        super().__init__([LegendreGaussQuadrature(N, backend=backend)] * dims)
+
+
+# {{{ quadrature
+
+@singledispatch
+def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
+    """
+    :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
+        in *space* over *shape*.
+    """
+    raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+
+@quadrature_for_space.register(PN)
+def _(space: PN, shape: Simplex):
+    if not isinstance(shape, Simplex):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    import modepy as mp
+    try:
+        quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
+    except QuadratureRuleUnavailable:
+        quad = mp.GrundmannMoellerSimplexQuadrature(
+                space.order//2, space.spatial_dim)
+
+    assert quad.exact_to >= space.order
+
+    return quad
+
+
+@quadrature_for_space.register(QN)
+def _(space: QN, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    if space.spatial_dim == 0:
+        quad = Quadrature(np.empty((0, 1)), np.empty((0, 1)))
+    else:
+        from modepy.quadrature import LegendreGaussTensorProductQuadrature
+        quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
+
+    return quad
+
+# }}}
+
+# vim: foldmethod=marker

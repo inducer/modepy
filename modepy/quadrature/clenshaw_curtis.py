@@ -112,8 +112,19 @@ class ClenshawCurtisQuadrature(Quadrature):
     Gauss-Legendre quadrature which is exact for polynomials of degree up
     to :math:`2N + 1`.
     """
-    def __init__(self, N):  # noqa
+    def __init__(self, N, force_dim_axis=False):  # noqa: N803
+        if not force_dim_axis:
+            from warnings import warn
+            warn("setting 'force_dim_axis' to 'False' is deprecated and "
+                    "makes 1d rules inconsistent with higher dimensions. "
+                    "This option will go away in 2022",
+                    DeprecationWarning, stacklevel=2)
+
         x, w = _fejer(N, "cc")
+
+        if force_dim_axis:
+            x = x.reshape(1, -1)
+
         self.exact_to = N
         Quadrature.__init__(self, x, w)
 
@@ -135,7 +146,14 @@ class FejerQuadrature(Quadrature):
 
     Integrates on the interval :math:`(-1, 1)`.
     """
-    def __init__(self, N, kind=1):  # noqa
+    def __init__(self, N, kind=1, force_dim_axis=False):  # noqa
+        if not force_dim_axis:
+            from warnings import warn
+            warn("setting 'force_dim_axis' to 'False' is deprecated and "
+                    "makes 1d rules inconsistent with higher dimensions. "
+                    "This option will go away in 2022",
+                    DeprecationWarning, stacklevel=2)
+
         if kind == 1:
             x, w = _fejer(N, "f1")
         elif kind == 2:
@@ -143,9 +161,12 @@ class FejerQuadrature(Quadrature):
         else:
             raise ValueError("kind must be either 1 or 2")
 
+        if force_dim_axis:
+            x = x.reshape(1, -1)
+
         super().__init__(x, w)
 
     @property
     def exact_to(self):
-        raise ValueError("%s has no known exact_to information"
+        raise AttributeError("%s has no known exact_to information"
                          % type(self).__name__)

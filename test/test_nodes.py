@@ -24,24 +24,21 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 import pytest
+import modepy.shapes as shp
+import modepy.nodes as nd
 
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 def test_barycentric_coordinate_map(dims):
-    from random import Random
-    rng = Random(17)
-
-    n = 5
-    unit = np.empty((dims, n))
+    n = 100
     from modepy.tools import (
-            pick_random_simplex_unit_coordinate,
             unit_to_barycentric,
             barycentric_to_unit,
             barycentric_to_equilateral,
             equilateral_to_unit,)
 
-    for i in range(n):
-        unit[:, i] = pick_random_simplex_unit_coordinate(rng, dims)
+    rng = np.random.Generator(np.random.PCG64(17))
+    unit = nd.random_nodes_for_shape(shp.Simplex(dims), n, rng=rng)
 
     bary = unit_to_barycentric(unit)
     assert (np.abs(np.sum(bary, axis=0) - 1) < 1e-15).all()
@@ -57,11 +54,10 @@ def test_barycentric_coordinate_map(dims):
 def test_warp():
     """Check some assumptions on the node warp factor calculator"""
     n = 17
-    from modepy.nodes import warp_factor
     from functools import partial
 
     def wfc(x):
-        return warp_factor(n, np.array([x]), scaled=False)[0]
+        return nd.warp_factor(n, np.array([x]), scaled=False)[0]
 
     assert abs(wfc(-1)) < 1e-12
     assert abs(wfc(1)) < 1e-12
@@ -69,7 +65,7 @@ def test_warp():
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     lgq = LegendreGaussQuadrature(n)
-    assert abs(lgq(partial(warp_factor, n, scaled=False))) < 6e-14
+    assert abs(lgq(partial(nd.warp_factor, n, scaled=False))) < 6e-14
 
 
 def test_tri_face_node_distribution():
@@ -85,8 +81,7 @@ def test_tri_face_node_distribution():
             as gnitstam
     node_tuples = list(gnitstam(n, 2))
 
-    from modepy.nodes import warp_and_blend_nodes
-    unodes = warp_and_blend_nodes(2, n, node_tuples)
+    unodes = nd.warp_and_blend_nodes(2, n, node_tuples)
 
     faces = [
             [i for i, nt in enumerate(node_tuples) if nt[0] == 0],
@@ -116,8 +111,7 @@ def test_simp_nodes(dims, n):
 
     eps = 1e-10
 
-    from modepy.nodes import warp_and_blend_nodes
-    unodes = warp_and_blend_nodes(dims, n)
+    unodes = nd.warp_and_blend_nodes(dims, n)
     assert (unodes >= -1-eps).all()
     assert (np.sum(unodes) <= eps).all()
 
@@ -139,13 +133,26 @@ def test_affine_map():
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
 def test_tensor_product_nodes(dim):
-    from modepy.nodes import tensor_product_nodes
     nnodes = 10
     nodes_1d = np.arange(nnodes)
-    nodes = tensor_product_nodes(dim, nodes_1d)
+    nodes = nd.tensor_product_nodes(dim, nodes_1d)
+
     assert np.allclose(
-            nodes[-1],
+            nodes[0],
             np.array(nodes_1d.tolist() * nnodes**(dim - 1)))
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3, 4])
+def test_nonhomogeneous_tensor_product_nodes(dim):
+    nnodes = (3, 7, 5, 4)[:dim]
+    nodes = nd.tensor_product_nodes([
+        np.arange(n) for n in nnodes
+        ])
+
+    assert np.allclose(
+            nodes[0],
+            list(range(nnodes[-1])) * int(np.prod(nnodes[:-1]))
+            )
 
 
 # You can test individual routines by typing

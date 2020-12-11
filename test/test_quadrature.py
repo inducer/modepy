@@ -23,6 +23,7 @@ THE SOFTWARE.
 
 import numpy as np
 import pytest
+
 import modepy as mp
 
 import logging
@@ -144,11 +145,12 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
             break
 
 
-@pytest.mark.parametrize("cls", [
-    mp.WitherdenVincentQuadrature
-    ])
 @pytest.mark.parametrize("dim", [2, 3])
-def test_hypercube_quadrature(cls, dim):
+@pytest.mark.parametrize(("quad_class", "max_order"), [
+    (mp.WitherdenVincentQuadrature, np.inf),
+    (mp.LegendreGaussTensorProductQuadrature, 6),
+    ])
+def test_hypercube_quadrature(dim, quad_class, max_order):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
     from modepy.tools import Monomial
@@ -165,16 +167,17 @@ def test_hypercube_quadrature(cls, dim):
         return error
 
     order = 1
-    while True:
+    while order < max_order:
         try:
-            quad = cls(order, dim)
+            quad = quad_class(order, dim)
         except mp.QuadratureRuleUnavailable:
             logger.info("UNAVAILABLE at order %d", order)
             break
 
         assert np.all(quad.weights > 0)
 
-        logger.info("quadrature: %s %d %d", cls, order, quad.exact_to)
+        logger.info("quadrature: %s %d %d",
+                quad_class.__name__.lower(), order, quad.exact_to)
         for comb in gnitstam(quad.exact_to, dim):
             assert _check_monomial(quad, comb) < 5.0e-15
 

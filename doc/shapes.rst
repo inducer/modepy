@@ -1,0 +1,4 @@
+Shapes
+======
+
+.. automodule:: modepy.shapes

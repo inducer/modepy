@@ -6,10 +6,6 @@ Base classes
 
 .. automodule:: modepy.quadrature
 
-.. currentmodule:: modepy
-
-.. autoclass:: Quadrature
-
 Jacobi-Gauss quadrature in one dimension
 ----------------------------------------
 
@@ -54,5 +50,16 @@ Quadratures on the simplex
 .. autoclass:: XiaoGimbutasSimplexQuadrature
 
 .. autoclass:: VioreanuRokhlinSimplexQuadrature
+
+
+Quadratures on the hypercube
+----------------------------
+
+.. currentmodule:: modepy
+
+.. autoclass:: WitherdenVincentQuadrature
+
+.. autoclass:: TensorProductQuadrature
+.. autoclass:: LegendreGaussTensorProductQuadrature
 
 .. vim: sw=4
