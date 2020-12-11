@@ -376,10 +376,13 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
 
     origin = face_vertices[:, 0].reshape(-1, 1)
 
-    # works up to (and including) 3D:
-    # - no-op for 1D, 2D
-    # - For square faces, eliminate middle node
-    face_basis = face_vertices[:, 1:3] - origin
+    if dim <= 3:
+        # works up to (and including) 3D:
+        # - no-op for 1D, 2D
+        # - For square faces, eliminate node opposite origin
+        face_basis = face_vertices[:, 1:3] - origin
+    else:
+        raise NotImplementedError(f"_hypercube_face_to_vol_map in {dim} dimensions")
 
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
