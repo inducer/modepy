@@ -145,7 +145,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
 def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
     """
     :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
-        in *space*.
+        in *space* over *shape*.
     """
     raise NotImplementedError((type(space).__name__, type(shape).__name))
 
