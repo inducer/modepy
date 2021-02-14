@@ -75,7 +75,7 @@ jobs:
                 cd "$DOWNSTREAM_PROJECT"
                 echo "*** $DOWNSTREAM_PROJECT version: $(git rev-parse --short HEAD)"
 
-                sed -i "/egg=loopy/ c git+file://$(readlink -f ..)#egg=loopy" requirements.txt
+                sed -i "/egg=modepy/ c git+file://$(readlink -f ..)#egg=modepy" requirements.txt
 
                 export CONDA_ENVIRONMENT=.test-conda-env-py3.yml
 
