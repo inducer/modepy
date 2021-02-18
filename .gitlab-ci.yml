@@ -12,6 +12,17 @@ Python 3:
     reports:
       junit: test/pytest.xml
 
+Examples:
+  script: |
+    EXTRA_INSTALL="numpy pymbolic"
+    curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/ci-support.sh
+    . ./ci-support.sh
+    build_py_project_in_venv
+    rm -f examples/plot*.py
+    run_examples --no-require-main
+  tags:
+  - python3
+
 Documentation:
   script:
   - EXTRA_INSTALL="numpy scipy"

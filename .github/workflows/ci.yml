@@ -59,6 +59,24 @@ jobs:
                 build_py_project_in_venv
                 build_docs
 
+    examples:
+        name: Examples Py3
+        runs-on: ubuntu-latest
+        steps:
+        -   uses: actions/checkout@v2
+        -
+            uses: actions/setup-python@v1
+            with:
+                python-version: '3.x'
+        -   name: "Main Script"
+            run: |
+                EXTRA_INSTALL="numpy pymbolic"
+                curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/ci-support.sh
+                . ./ci-support.sh
+                build_py_project_in_venv
+                rm -f examples/plot*.py
+                run_examples --no-require-main
+
     downstream_tests:
         strategy:
             matrix:
