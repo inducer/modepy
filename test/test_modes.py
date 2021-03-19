@@ -271,6 +271,27 @@ def test_symbolic_basis(shape, order, basis_getter):
 # }}}
 
 
+@pytest.mark.parametrize("dim", [2, 3])
+def test_modal_coeffs_by_projection(dim):
+    shape = mp.Simplex(dim)
+    space = mp.space_for_shape(shape, order=5)
+    basis = mp.orthonormal_basis_for_space(space, shape)
+
+    quad = mp.XiaoGimbutasSimplexQuadrature(10, dim)
+    assert quad.exact_to >= 2*space.order
+
+    modal_coeffs = np.random.randn(space.space_dim)
+    vdm = mp.vandermonde(basis.functions, quad.nodes)
+
+    evaluated = vdm @ modal_coeffs
+
+    modal_coeffs_2 = vdm.T @ (evaluated*quad.weights)
+
+    diff = modal_coeffs - modal_coeffs_2
+
+    assert la.norm(diff, 2) < 1e-13
+
+
 # You can test individual routines by typing
 # $ python test_modes.py 'test_routine()'
 
