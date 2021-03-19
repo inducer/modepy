@@ -289,7 +289,7 @@ def test_modal_coeffs_by_projection(dim):
 
     diff = modal_coeffs - modal_coeffs_2
 
-    assert la.norm(diff, 2) < 1e-13
+    assert la.norm(diff, 2) < 3e-13
 
 
 # You can test individual routines by typing
