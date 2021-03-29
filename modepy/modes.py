@@ -793,13 +793,13 @@ class BasisNotOrthonormal(Exception):
 
 class Basis:
     """
-    .. automethod:: orthonormality_weight(r)
+    .. automethod:: orthonormality_weight
     .. autoattribute:: mode_ids
     .. autoattribute:: functions
     .. autoattribute:: gradients
     """
 
-    def orthonormality_weight(self, rvec):
+    def orthonormality_weight(self):
         raise NotImplementedError
 
     @property
@@ -887,7 +887,7 @@ class _SimplexBasis(Basis):
 class _SimplexONB(_SimplexBasis):
     is_orthonormal = True
 
-    def orthonormality_weight(self, rvec):
+    def orthonormality_weight(self):
         return 1
 
     @property
@@ -916,7 +916,7 @@ class _SimplexONB(_SimplexBasis):
 
 
 class _SimplexMonomialBasis(_SimplexBasis):
-    def orthonormality_weight(self, rvec):
+    def orthonormality_weight(self):
         raise BasisNotOrthonormal
 
     @property
