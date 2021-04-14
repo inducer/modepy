@@ -2,6 +2,7 @@
 .. currentmodule:: modepy
 
 .. autoclass:: Quadrature
+.. autoclass:: ZeroDimensionalQuadrature
 
 .. autofunction:: quadrature_for_space
 
@@ -87,6 +88,18 @@ class Quadrature:
         return np.dot(self.weights, f(self.nodes))
 
 
+class ZeroDimensionalQuadrature(Quadrature):
+    """A quadrature rule that should be used for 0d domains (i.e. points).
+
+    Inherits from :class:`Quadrature`.
+    """
+
+    def __init__(self):
+        self.nodes = np.empty((0, 1), dtype=np.float64)
+        self.weights = np.ones((1,), dtype=np.float64)
+        self.exact_to = np.inf
+
+
 class Transformed1DQuadrature(Quadrature):
     """A quadrature rule on an arbitrary interval :math:`(a, b)`."""
 
@@ -158,14 +171,16 @@ def _(space: PN, shape: Simplex):
         raise ValueError("spatial dimensions of shape and space must match")
 
     import modepy as mp
-    try:
-        quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
-    except QuadratureRuleUnavailable:
-        quad = mp.GrundmannMoellerSimplexQuadrature(
-                space.order//2, space.spatial_dim)
+    if space.spatial_dim == 0:
+        quad = ZeroDimensionalQuadrature()
+    else:
+        try:
+            quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
+        except QuadratureRuleUnavailable:
+            quad = mp.GrundmannMoellerSimplexQuadrature(
+                    space.order//2, space.spatial_dim)
 
     assert quad.exact_to >= space.order
-
     return quad
 
 
@@ -177,11 +192,11 @@ def _(space: QN, shape: Hypercube):
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
-        quad = Quadrature(np.empty((0, 1)), np.empty((0, 1)))
+        quad = ZeroDimensionalQuadrature()
     else:
-        from modepy.quadrature import LegendreGaussTensorProductQuadrature
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
+    assert quad.exact_to >= space.order
     return quad
 
 # }}}
