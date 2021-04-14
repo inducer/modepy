@@ -94,9 +94,18 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
-Frequently Asked Questions
-==========================
+Acknowledgments
+===============
 
-The FAQ is maintained collaboratively on the
-`Wiki FAQ page <http://wiki.tiker.net/ModePy/FrequentlyAskedQuestions>`_.
+Work on modepy was supported in part by
 
+* the Department of Energy, National Nuclear Security Administration,
+  under Award Number DE-NA0003963,
+* the US Navy ONR, under grant number N00014-14-1-0117, and
+* the US National Science Foundation under grant numbers DMS-1418961, CCF-1524433,
+  DMS-1654756, SHF-1911019, and OAC-1931577.
+
+AK also gratefully acknowledges a hardware gift from Nvidia Corporation.
+
+The views and opinions expressed herein do not necessarily reflect those of the
+funding agencies.
