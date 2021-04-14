@@ -54,7 +54,8 @@ from modepy.matrices import (vandermonde,
         diff_matrix_permutation,
         inverse_mass_matrix, mass_matrix,
         modal_face_mass_matrix, nodal_face_mass_matrix,
-        modal_mass_matrix_for_face, nodal_mass_matrix_for_face)
+        modal_mass_matrix_for_face, nodal_mass_matrix_for_face,
+        nodal_quad_mass_matrix_for_face)
 from modepy.quadrature import (
         Quadrature, QuadratureRuleUnavailable,
         TensorProductQuadrature, LegendreGaussTensorProductQuadrature,
@@ -106,6 +107,7 @@ __all__ = [
         "inverse_mass_matrix", "mass_matrix",
         "modal_face_mass_matrix", "nodal_face_mass_matrix",
         "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
+        "nodal_quad_mass_matrix_for_face",
 
         "Quadrature", "QuadratureRuleUnavailable",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",

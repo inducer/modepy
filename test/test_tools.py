@@ -330,7 +330,8 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     volume_nodes = mp.edge_clustered_nodes_for_space(vol_space, vol_shape)
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
-    from modepy.matrices import nodal_mass_matrix_for_face
+    from modepy.matrices import (nodal_mass_matrix_for_face,
+        nodal_quad_mass_matrix_for_face)
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
         face_basis = mp.basis_for_space(face_space, face)
@@ -341,13 +342,15 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
         fmm = nodal_mass_matrix_for_face(
                 face, face_quad, face_basis.functions, volume_basis.functions,
                 volume_nodes, face_nodes)
-        fmm2 = nodal_mass_matrix_for_face(
-                face, face_quad2, face_basis.functions, volume_basis.functions,
-                volume_nodes, face_nodes)
+        fmm2 = nodal_quad_mass_matrix_for_face(
+                face, face_quad2, volume_basis.functions, volume_nodes)
 
-        error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
-        logger.info("fmm error: %.5e", error)
-        assert error < 5e-11, f"error {error:.5e} on face {face.face_index}"
+        for f_face in face_basis.functions:
+            fval_nodal = f_face(face_nodes)
+            fval_quad = f_face(face_quad2.nodes)
+            assert (
+                    la.norm(fmm@fval_nodal - fmm2@fval_quad, np.inf)
+                    / la.norm(fval_quad)) < 3e-15
 
         fmm[np.abs(fmm) < 1e-13] = 0
         nnz = np.sum(fmm > 0)
