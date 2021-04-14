@@ -2,6 +2,7 @@
 .. currentmodule:: modepy
 
 .. autoclass:: Quadrature
+.. autoclass:: PointQuadrature
 
 .. autofunction:: quadrature_for_space
 
@@ -85,6 +86,18 @@ class Quadrature:
         or of shape *(npts,)* for 1D quadrature.
         """
         return np.dot(self.weights, f(self.nodes))
+
+
+class PointQuadrature(Quadrature):
+    """A quadrature rule that should be used for 0d domains (i.e. points).
+
+    Inherits from :class:`Quadrature`.
+    """
+
+    def __init__(self):
+        self.nodes = np.empty((0, 1), dtype=np.float64)
+        self.weights = np.ones((1,), dtype=np.float64)
+        self.exact_to = np.inf
 
 
 class Transformed1DQuadrature(Quadrature):
