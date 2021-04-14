@@ -79,7 +79,7 @@ class Quadrature:
     .. automethod:: __call__
     """
 
-    def __init__(self, nodes, weights, exact_to = None):
+    def __init__(self, nodes, weights, exact_to=None):
         """
         :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
             of the qudrature rule.
