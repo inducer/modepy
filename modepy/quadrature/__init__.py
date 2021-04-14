@@ -87,6 +87,14 @@ class Quadrature:
         return np.dot(self.weights, f(self.nodes))
 
 
+class ZeroDimensionalQuadrature(Quadrature):
+    """A quadrature rule defined at a single point."""
+
+    def __init__(self):
+        super().__init__(np.empty((0, 1)), np.ones((1,)))
+        self.exact_to = np.inf
+
+
 class Transformed1DQuadrature(Quadrature):
     """A quadrature rule on an arbitrary interval :math:`(a, b)`."""
 

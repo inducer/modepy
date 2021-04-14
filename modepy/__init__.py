@@ -58,6 +58,7 @@ from modepy.matrices import (vandermonde,
         nodal_quad_mass_matrix_for_face)
 from modepy.quadrature import (
         Quadrature, QuadratureRuleUnavailable,
+        ZeroDimensionalQuadrature,
         TensorProductQuadrature, LegendreGaussTensorProductQuadrature,
         quadrature_for_space)
 from modepy.quadrature.jacobi_gauss import (
@@ -110,6 +111,7 @@ __all__ = [
         "nodal_quad_mass_matrix_for_face",
 
         "Quadrature", "QuadratureRuleUnavailable",
+        "ZeroDimensionalQuadrature",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",
         "quadrature_for_space",
 
