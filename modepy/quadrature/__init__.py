@@ -90,8 +90,8 @@ class Quadrature:
         """
         self.nodes = nodes
         self.weights = weights
-        # FIXME: This is not a sustainable solution. Will be addressed
-        # later; see https://github.com/inducer/modepy/issues/31
+        # TODO: May be revamped/addressed later;
+        # see https://github.com/inducer/modepy/issues/31
         if exact_to:
             self.exact_to = exact_to
 
