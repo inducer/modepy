@@ -2,7 +2,7 @@
 .. currentmodule:: modepy
 
 .. autoclass:: Quadrature
-.. autoclass:: PointQuadrature
+.. autoclass:: ZeroDimensionalQuadrature
 
 .. autofunction:: quadrature_for_space
 
@@ -88,7 +88,7 @@ class Quadrature:
         return np.dot(self.weights, f(self.nodes))
 
 
-class PointQuadrature(Quadrature):
+class ZeroDimensionalQuadrature(Quadrature):
     """A quadrature rule that should be used for 0d domains (i.e. points).
 
     Inherits from :class:`Quadrature`.
@@ -172,7 +172,7 @@ def _(space: PN, shape: Simplex):
 
     import modepy as mp
     if space.spatial_dim == 0:
-        quad = PointQuadrature()
+        quad = ZeroDimensionalQuadrature()
     else:
         try:
             quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
@@ -192,7 +192,7 @@ def _(space: QN, shape: Hypercube):
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
-        quad = PointQuadrature()
+        quad = ZeroDimensionalQuadrature()
     else:
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
