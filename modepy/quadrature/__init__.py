@@ -69,14 +69,31 @@ class Quadrature:
 
         Summed polynomial degree up to which the quadrature is exact.
         In higher-dimensions, the quadrature is supposed to be exact on (at least)
-        :math:`P^N`, where :math:`N` = :attr:`exact_to`.
+        :math:`P^N`, where :math:`N` = :attr:`exact_to`. If the quadrature
+        accuracy is not known, attr:`exact_to` will *not* be set, and
+        an `AttributeError` will be raised when attempting to access this
+        information.
+
+    .. automethod:: __init__
 
     .. automethod:: __call__
     """
 
-    def __init__(self, nodes, weights):
+    def __init__(self, nodes, weights, exact_to = None):
+        """
+        :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
+            of the qudrature rule.
+        :arg weights: an array of length *nnodes*.
+        :arg exact_to: an optional argument denoting the symmed polynomial
+            degree to which the quadrature is exact. By default, `exact_to`
+            is `None` and will *not* be set as an attribute.
+        """
         self.nodes = nodes
         self.weights = weights
+        # FIXME: This is not a sustainable solution. Will be addressed
+        # later; see https://github.com/inducer/modepy/issues/31
+        if exact_to:
+            self.exact_to = exact_to
 
     def __call__(self, f):
         """Evaluate the callable *f* at the quadrature nodes and return its
