@@ -41,6 +41,7 @@ def main():
               "numpy",
               "pytools>=2013.1",
               "pytest>=2.3",
+              "pymbolic",
 
               "dataclasses; python_version<='3.6'",
               ])

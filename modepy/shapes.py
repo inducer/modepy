@@ -10,6 +10,7 @@ r"""
 .. autoclass:: Face
 .. autofunction:: unit_vertices_for_shape
 .. autofunction:: faces_for_shape
+.. autofunction:: face_normal
 
 Simplices
 ^^^^^^^^^
@@ -274,6 +275,34 @@ class Face:
     face_index: int
     volume_vertex_indices: Tuple[int]
     map_to_volume: Callable[[np.ndarray], np.ndarray]
+
+
+def face_normal(face: Face, normalize=True) -> np.ndarray:
+    """
+    .. versionadded :: 2021.2.1
+    """
+    volume_vertices = unit_vertices_for_shape(face.volume_shape)
+    face_vertices = volume_vertices[:, face.volume_vertex_indices]
+
+    if face.dim == 0:
+        # FIXME Grrrr. Hardcoded special case. Got a better idea?
+        (fv,), = face_vertices
+        return np.array([np.sign(fv)])
+
+    # Compute the outer product of the vectors spanning the surface, obtaining
+    # the surface pseudoscalar.
+    from pymbolic.geometric_algebra import MultiVector
+    from operator import xor as outerprod
+    from functools import reduce
+    surface_ps = reduce(outerprod, [
+        MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
+        for i in range(face.dim)])
+
+    if normalize:
+        surface_ps = surface_ps / np.sqrt(surface_ps.norm_squared())
+
+    # Compute the normal as the dual of the surface pseudoscalar.
+    return surface_ps.dual().as_vector()
 
 
 @singledispatch
