@@ -2,6 +2,7 @@
 .. currentmodule:: modepy
 
 .. autoclass:: Quadrature
+.. autoclass:: ZeroDimensionalQuadrature
 
 .. autofunction:: quadrature_for_space
 
@@ -68,14 +69,31 @@ class Quadrature:
 
         Summed polynomial degree up to which the quadrature is exact.
         In higher-dimensions, the quadrature is supposed to be exact on (at least)
-        :math:`P^N`, where :math:`N` = :attr:`exact_to`.
+        :math:`P^N`, where :math:`N` = :attr:`exact_to`. If the quadrature
+        accuracy is not known, attr:`exact_to` will *not* be set, and
+        an `AttributeError` will be raised when attempting to access this
+        information.
+
+    .. automethod:: __init__
 
     .. automethod:: __call__
     """
 
-    def __init__(self, nodes, weights):
+    def __init__(self, nodes, weights, exact_to=None):
+        """
+        :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
+            of the qudrature rule.
+        :arg weights: an array of length *nnodes*.
+        :arg exact_to: an optional argument denoting the symmed polynomial
+            degree to which the quadrature is exact. By default, `exact_to`
+            is `None` and will *not* be set as an attribute.
+        """
         self.nodes = nodes
         self.weights = weights
+        # TODO: May be revamped/addressed later;
+        # see https://github.com/inducer/modepy/issues/31
+        if exact_to is not None:
+            self.exact_to = exact_to
 
     def __call__(self, f):
         """Evaluate the callable *f* at the quadrature nodes and return its
@@ -85,6 +103,18 @@ class Quadrature:
         or of shape *(npts,)* for 1D quadrature.
         """
         return np.dot(self.weights, f(self.nodes))
+
+
+class ZeroDimensionalQuadrature(Quadrature):
+    """A quadrature rule that should be used for 0d domains (i.e. points).
+
+    Inherits from :class:`Quadrature`.
+    """
+
+    def __init__(self):
+        super().__init__(np.empty((0, 1), dtype=np.float64),
+                         np.ones((1,), dtype=np.float64),
+                         exact_to=np.inf)
 
 
 class Transformed1DQuadrature(Quadrature):
@@ -122,15 +152,13 @@ class TensorProductQuadrature(Quadrature):
         w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
         assert w.size == x.shape[1]
 
-        super().__init__(x, w)
-
         try:
             exact_to = min(quad.exact_to for quad in quads)
         except AttributeError:
             # e.g. FejerQuadrature does not have any 'exact_to'
-            pass
-        else:
-            self.exact_to = exact_to
+            exact_to = None
+
+        super().__init__(x, w, exact_to=exact_to)
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
@@ -158,14 +186,16 @@ def _(space: PN, shape: Simplex):
         raise ValueError("spatial dimensions of shape and space must match")
 
     import modepy as mp
-    try:
-        quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
-    except QuadratureRuleUnavailable:
-        quad = mp.GrundmannMoellerSimplexQuadrature(
-                space.order//2, space.spatial_dim)
+    if space.spatial_dim == 0:
+        quad = ZeroDimensionalQuadrature()
+    else:
+        try:
+            quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
+        except QuadratureRuleUnavailable:
+            quad = mp.GrundmannMoellerSimplexQuadrature(
+                    space.order//2, space.spatial_dim)
 
     assert quad.exact_to >= space.order
-
     return quad
 
 
@@ -177,11 +207,11 @@ def _(space: QN, shape: Hypercube):
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
-        quad = Quadrature(np.empty((0, 1)), np.empty((0, 1)))
+        quad = ZeroDimensionalQuadrature()
     else:
-        from modepy.quadrature import LegendreGaussTensorProductQuadrature
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
+    assert quad.exact_to >= space.order
     return quad
 
 # }}}

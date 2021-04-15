@@ -102,6 +102,4 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
         wts = order_table["weights"]
         wts = wts * (ref_volume/np.sum(wts))
 
-        Quadrature.__init__(self, nodes, wts)
-
-        self.exact_to = order_table["quad_degree"]
+        super().__init__(nodes, wts, exact_to=order_table["quad_degree"])
