@@ -92,7 +92,7 @@ class Quadrature:
         self.weights = weights
         # TODO: May be revamped/addressed later;
         # see https://github.com/inducer/modepy/issues/31
-        if exact_to:
+        if exact_to is not None:
             self.exact_to = exact_to
 
     def __call__(self, f):
