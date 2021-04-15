@@ -301,8 +301,7 @@ def face_normal(face: Face, normalize=True) -> np.ndarray:
             surface_ps = span_vec
 
     if normalize:
-        area_element = np.sqrt(surface_ps.norm_squared())
-        surface_ps = surface_ps / area_element
+        surface_ps = surface_ps / np.sqrt(surface_ps.norm_squared())
 
     # Compute the normal as the dual of the surface pseudoscalar.
     return surface_ps.dual().as_vector()
