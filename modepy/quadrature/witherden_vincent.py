@@ -59,5 +59,5 @@ class WitherdenVincentQuadrature(Quadrature):
         except KeyError:
             raise QuadratureRuleUnavailable
 
-        super().__init__(rule["points"], rule["weights"])
-        self.exact_to = rule["quad_degree"]
+        super().__init__(rule["points"], rule["weights"],
+                         exact_to=rule["quad_degree"])

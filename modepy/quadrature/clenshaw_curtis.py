@@ -125,8 +125,7 @@ class ClenshawCurtisQuadrature(Quadrature):
         if force_dim_axis:
             x = x.reshape(1, -1)
 
-        self.exact_to = N
-        Quadrature.__init__(self, x, w)
+        super().__init__(x, w, exact_to=N)
 
 
 class FejerQuadrature(Quadrature):

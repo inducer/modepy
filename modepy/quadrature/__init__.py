@@ -112,9 +112,9 @@ class ZeroDimensionalQuadrature(Quadrature):
     """
 
     def __init__(self):
-        self.nodes = np.empty((0, 1), dtype=np.float64)
-        self.weights = np.ones((1,), dtype=np.float64)
-        self.exact_to = np.inf
+        super().__init__(np.empty((0, 1), dtype=np.float64),
+                         np.ones((1,), dtype=np.float64),
+                         exact_to=np.inf)
 
 
 class Transformed1DQuadrature(Quadrature):
@@ -152,15 +152,13 @@ class TensorProductQuadrature(Quadrature):
         w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
         assert w.size == x.shape[1]
 
-        super().__init__(x, w)
-
         try:
             exact_to = min(quad.exact_to for quad in quads)
         except AttributeError:
             # e.g. FejerQuadrature does not have any 'exact_to'
-            pass
-        else:
-            self.exact_to = exact_to
+            exact_to = None
+
+        super().__init__(x, w, exact_to=exact_to)
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
