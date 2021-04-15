@@ -23,7 +23,6 @@ THE SOFTWARE.
 
 
 from warnings import warn
-import sys
 from math import sqrt
 from functools import singledispatch, partial
 
