@@ -455,6 +455,10 @@ def test_normals(shape):
 
         assert normal @ (face_centroid-vol_centroid) > 0
 
+        for i in range(len(face_vertices)-1):
+            assert abs(
+                (face_vertices[:, i+1] - face_vertices[:, 0]) @ normal) < 1e-13
+
         assert abs(la.norm(normal, 2) - 1) < 1e-13
 
 # }}}
