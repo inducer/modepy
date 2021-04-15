@@ -74,8 +74,8 @@ class JacobiGaussQuadrature(Quadrature):
         if force_dim_axis:
             x = x.reshape(1, -1)
 
-        self.exact_to = 2*N + 1
-        Quadrature.__init__(self, x, w)
+        exact_to = 2*N + 1
+        super().__init__(x, w, exact_to=exact_to)
 
     @staticmethod
     def compute_weights_and_nodes(N, alpha, beta):  # noqa: N803
