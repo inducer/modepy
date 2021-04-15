@@ -10,6 +10,7 @@ r"""
 .. autoclass:: Face
 .. autofunction:: unit_vertices_for_shape
 .. autofunction:: faces_for_shape
+.. autofunction:: face_normal
 
 Simplices
 ^^^^^^^^^
@@ -274,6 +275,31 @@ class Face:
     face_index: int
     volume_vertex_indices: Tuple[int]
     map_to_volume: Callable[[np.ndarray], np.ndarray]
+
+
+def face_normal(face: Face, normalize=True) -> np.ndarray:
+    """
+    .. versionadded :: 2021.2.1
+    """
+    volume_vertices = unit_vertices_for_shape(face.volume_shape)
+    face_vertices = volume_vertices[:, face.volume_vertex_indices]
+    from pymbolic.geometric_algebra import MultiVector
+
+    span_multivec = None
+    for i in range(face.dim):
+        span_vec = MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
+        if span_multivec is not None:
+            span_multivec = span_multivec * span_vec
+        else:
+            span_multivec = span_vec
+
+    span_multivec = span_multivec.project_max_grade()
+
+    if normalize:
+        area_element = np.sqrt(span_multivec.norm_squared())
+        span_multivec = span_multivec / area_element
+
+    return (span_multivec << span_multivec.I.inv()).as_vector()
 
 
 @singledispatch

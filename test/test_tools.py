@@ -434,6 +434,32 @@ def test_hypercube_submesh(dims, order=3):
 # }}}
 
 
+# {{{{ test_normals
+
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(1),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(1),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
+    ])
+def test_normals(shape):
+    vol_vertices = mp.unit_vertices_for_shape(shape)
+    vol_centroid = np.mean(vol_vertices, axis=1)
+
+    for face in mp.faces_for_shape(shape):
+        face_vertices = vol_vertices[:, face.volume_vertex_indices]
+        face_centroid = np.mean(face_vertices, axis=1)
+        normal = mp.face_normal(face)
+
+        assert normal @ (face_centroid-vol_centroid) > 0
+
+# }}}
+
+
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 

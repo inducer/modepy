@@ -108,21 +108,19 @@ Redirections to Canonical Names
 # {{{ helpers for symbolic evaluation
 
 def _cse(expr, prefix):
-    if "pymbolic" in sys.modules:
-        from pymbolic.primitives import CommonSubexpression, Expression
-        if isinstance(expr, Expression):
-            return CommonSubexpression(expr, prefix)
-        else:
-            return expr
+    from pymbolic.primitives import CommonSubexpression, Expression
+    if isinstance(expr, Expression):
+        return CommonSubexpression(expr, prefix)
+    else:
+        return expr
 
     return expr
 
 
 def _where(op_a, comp, op_b, then, else_):
-    if "pymbolic" in sys.modules:
-        from pymbolic.primitives import If, Comparison, Expression
-        if isinstance(op_a, Expression) or isinstance(op_b, Expression):
-            return If(Comparison(op_a, comp, op_b), then, else_)
+    from pymbolic.primitives import If, Comparison, Expression
+    if isinstance(op_a, Expression) or isinstance(op_b, Expression):
+        return If(Comparison(op_a, comp, op_b), then, else_)
 
     import operator
     comp_op = getattr(operator, comp)
