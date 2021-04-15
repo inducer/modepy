@@ -455,9 +455,9 @@ def test_normals(shape):
 
         assert normal @ (face_centroid-vol_centroid) > 0
 
+        assert abs(la.norm(normal, 2) - 1) < 1e-13
+
 # }}}
-
-
 
 
 # You can test individual routines by typing
