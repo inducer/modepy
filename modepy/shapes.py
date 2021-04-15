@@ -289,22 +289,23 @@ def face_normal(face: Face, normalize=True) -> np.ndarray:
         (fv,), = face_vertices
         return np.array([np.sign(fv)])
 
+    # Compute the outer product of the vectors spanning the surface, obtaining
+    # the surface pseudoscalar.
     from pymbolic.geometric_algebra import MultiVector
-    span_multivec = None
+    surface_ps = None
     for i in range(face.dim):
         span_vec = MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
-        if span_multivec is not None:
-            span_multivec = span_multivec * span_vec
+        if surface_ps is not None:
+            surface_ps = surface_ps ^ span_vec
         else:
-            span_multivec = span_vec
-
-    span_multivec = span_multivec.project_max_grade()
+            surface_ps = span_vec
 
     if normalize:
-        area_element = np.sqrt(span_multivec.norm_squared())
-        span_multivec = span_multivec / area_element
+        area_element = np.sqrt(surface_ps.norm_squared())
+        surface_ps = surface_ps / area_element
 
-    return (span_multivec << span_multivec.I.inv()).as_vector()
+    # Compute the normal as the dual of the surface pseudoscalar.
+    return surface_ps.dual().as_vector()
 
 
 @singledispatch
