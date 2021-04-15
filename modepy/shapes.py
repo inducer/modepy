@@ -283,8 +283,13 @@ def face_normal(face: Face, normalize=True) -> np.ndarray:
     """
     volume_vertices = unit_vertices_for_shape(face.volume_shape)
     face_vertices = volume_vertices[:, face.volume_vertex_indices]
-    from pymbolic.geometric_algebra import MultiVector
 
+    if face.dim == 0:
+        # FIXME Grrrr. Hardcoded special case. Got a better idea?
+        (fv,), = face_vertices
+        return np.array([np.sign(fv)])
+
+    from pymbolic.geometric_algebra import MultiVector
     span_multivec = None
     for i in range(face.dim):
         span_vec = MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
