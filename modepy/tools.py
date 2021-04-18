@@ -198,17 +198,6 @@ def unit_vertices(dim):
     return shp.unit_vertices_for_shape(shp.Simplex(dim)).T
 
 
-# FIXME This should go away, but as of 2020-12-02, it is still being used by
-# meshmode.  (The use is being removed in
-# https://github.com/inducer/meshmode/pull/70, around the same time.)
-UNIT_VERTICES = {
-        0: unit_vertices(0),
-        1: unit_vertices(1),
-        2: unit_vertices(2),
-        3: unit_vertices(3),
-        }
-
-
 def barycentric_to_unit(bary):
     """
     :arg bary: shaped ``(dims+1, npoints)``

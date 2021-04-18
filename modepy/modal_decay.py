@@ -78,7 +78,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
 def make_mode_number_vector(mode_order_tuples, ignored_modes):
     node_cnt = len(mode_order_tuples)
 
-    mode_number_vector = np.zeros(node_cnt-ignored_modes, dtype=np.int)
+    mode_number_vector = np.zeros(node_cnt-ignored_modes, dtype=np.int32)
     for i, mid in enumerate(mode_order_tuples):
         if i < ignored_modes:
             continue
