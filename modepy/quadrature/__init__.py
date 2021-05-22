@@ -170,7 +170,7 @@ def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
 
 
 @quadrature_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _quadrature_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:
@@ -191,7 +191,7 @@ def _(space: PN, shape: Simplex):
 
 
 @quadrature_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _quadrature_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:

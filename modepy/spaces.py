@@ -132,12 +132,12 @@ def space_for_shape(shape: Shape, order: int) -> FunctionSpace:
 
 
 @space_for_shape.register(Simplex)
-def _(shape: Simplex, order: int):
+def _space_for_simplex(shape: Simplex, order: int):
     return PN(shape.dim, order)
 
 
 @space_for_shape.register(Hypercube)
-def _(shape: Hypercube, order: int):
+def _space_for_hypercube(shape: Hypercube, order: int):
     return QN(shape.dim, order)
 
 # }}}

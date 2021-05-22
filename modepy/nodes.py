@@ -397,14 +397,14 @@ def random_nodes_for_shape(shape: Shape, nnodes: int, rng=None):
 # {{{ PN
 
 @node_tuples_for_space.register(PN)
-def _(space: PN):
+def _node_tuples_for_pn(space: PN):
     from pytools import \
             generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
     return tuple(gnitsam(space.order, space.spatial_dim))
 
 
 @equispaced_nodes_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _equispaced_nodes_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:
@@ -415,7 +415,7 @@ def _(space: PN, shape: Simplex):
 
 
 @edge_clustered_nodes_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _edge_clustered_nodes_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:
@@ -428,7 +428,7 @@ def _(space: PN, shape: Simplex):
 
 
 @random_nodes_for_shape.register(Simplex)
-def _(shape: Simplex, nnodes: int, rng=None):
+def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
     if rng is None:
         rng = np.random
 
@@ -450,7 +450,7 @@ def _(shape: Simplex, nnodes: int, rng=None):
 # {{{ QN
 
 @node_tuples_for_space.register(QN)
-def _(space: QN):
+def _node_tuples_for_qn(space: QN):
     from pytools import \
             generate_nonnegative_integer_tuples_below as gnitb
     return tuple([
@@ -459,7 +459,7 @@ def _(space: QN):
 
 
 @equispaced_nodes_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:
@@ -470,7 +470,7 @@ def _(space: QN, shape: Hypercube):
 
 
 @edge_clustered_nodes_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _edge_clustered_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
     if space.spatial_dim != shape.dim:
@@ -481,7 +481,7 @@ def _(space: QN, shape: Hypercube):
 
 
 @random_nodes_for_shape.register(Hypercube)
-def _(shape: Hypercube, nnodes: int, rng=None):
+def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
     if rng is None:
         rng = np.random
     return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
