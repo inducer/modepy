@@ -5,15 +5,6 @@
 .. autoclass:: ZeroDimensionalQuadrature
 
 .. autofunction:: quadrature_for_space
-
-Redirections to Canonical Names
--------------------------------
-
-.. currentmodule:: modepy.quadrature
-
-.. class:: Quadrature
-
-    See :class:`modepy.Quadrature`.
 """
 
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "

@@ -92,15 +92,6 @@ Monomials
 
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
-
-Redirections to Canonical Names
--------------------------------
-
-.. currentmodule:: modepy.modes
-
-.. class:: Basis
-
-    See :class:`modepy.Basis`.
 """
 
 

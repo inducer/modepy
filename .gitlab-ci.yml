@@ -24,10 +24,11 @@ Examples:
   - python3
 
 Documentation:
-  script:
-  - EXTRA_INSTALL="numpy scipy"
-  - curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/main/build-docs.sh
-  - ". ./build-docs.sh"
+  script: |
+    EXTRA_INSTALL="numpy scipy"
+    CI_SUPPORT_SPHINX_VERSION_SPECIFIER=">=4.0"
+    curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/main/build-docs.sh
+    . ./build-docs.sh
   tags:
   - python3
 
