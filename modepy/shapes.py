@@ -8,6 +8,7 @@ r"""
 
 .. autoclass:: Shape
 .. autoclass:: Face
+
 .. autofunction:: unit_vertices_for_shape
 .. autofunction:: faces_for_shape
 .. autofunction:: face_normal
@@ -170,27 +171,6 @@ For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 Submeshes
 ---------
 .. autofunction:: submesh_for_shape
-
-Redirections to Canonical Names
--------------------------------
-
-.. currentmodule:: modepy.shapes
-
-.. class:: Shape
-
-    See :class:`modepy.Shape`.
-
-.. class:: Face
-
-    See :class:`modepy.Face`.
-
-.. class:: Simplex
-
-    See :class:`modepy.Simplex`.
-
-.. class:: Hypercube
-
-    See :class:`modepy.Hypercube`.
 """
 
 # }}}

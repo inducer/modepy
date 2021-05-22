@@ -8,23 +8,6 @@ Function Spaces
 .. autoclass:: PN
 .. autoclass:: QN
 .. autofunction:: space_for_shape
-
-Redirections to Canonical Names
--------------------------------
-
-.. currentmodule:: modepy.spaces
-
-.. class:: FunctionSpace
-
-    See :class:`modepy.FunctionSpace`.
-
-.. class:: PN
-
-    See :class:`modepy.PN`.
-
-.. class:: QN
-
-    See :class:`modepy.QN`.
 """
 
 __copyright__ = "Copyright (C) 2020 Andreas Kloeckner"
