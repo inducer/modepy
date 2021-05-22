@@ -257,7 +257,7 @@ class Face:
     map_to_volume: Callable[[np.ndarray], np.ndarray]
 
 
-def face_normal(face: Face, normalize=True) -> np.ndarray:
+def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     """
     .. versionadded :: 2021.2.1
     """
@@ -313,7 +313,7 @@ class _SimplexFace(Simplex, Face):
 
 
 @unit_vertices_for_shape.register(Simplex)
-def _(shape: Simplex):
+def _unit_vertices_for_simplex(shape: Simplex):
     result = np.empty((shape.dim, shape.dim+1), np.float64)
     result.fill(-1)
 
@@ -335,7 +335,7 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
 
 
 @faces_for_shape.register(Simplex)
-def _(shape: Simplex):
+def _faces_for_simplex(shape: Simplex):
     # NOTE: order is chosen to maintain a positive orientation
     face_vertex_indices = {
             1: ((0,), (1,)),
@@ -373,7 +373,7 @@ class _HypercubeFace(Hypercube, Face):
 
 
 @unit_vertices_for_shape.register(Hypercube)
-def _(shape: Hypercube):
+def _unit_vertices_for_hypercube(shape: Hypercube):
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
 
@@ -397,7 +397,7 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
 
 
 @faces_for_shape.register(Hypercube)
-def _(shape: Hypercube):
+def _faces_for_hypercube(shape: Hypercube):
     # NOTE: order is chosen to maintain a positive orientation
     face_vertex_indices = {
         1: ((0b0,), (0b1,)),
@@ -445,7 +445,7 @@ def submesh_for_shape(shape: Shape, node_tuples):
 
 
 @submesh_for_shape.register(Simplex)
-def _(shape: Simplex, node_tuples):
+def _submesh_for_simplex(shape: Simplex, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 
@@ -531,7 +531,7 @@ def _(shape: Simplex, node_tuples):
 
 
 @submesh_for_shape.register(Hypercube)
-def _(shape: Hypercube, node_tuples):
+def _submes_for_hypercube(shape: Hypercube, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 

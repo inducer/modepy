@@ -917,7 +917,7 @@ class _SimplexMonomialBasis(_SimplexBasis):
 
 
 @basis_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
@@ -928,7 +928,7 @@ def _(space: PN, shape: Simplex):
 
 
 @orthonormal_basis_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _orthonormal_basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
@@ -936,7 +936,7 @@ def _(space: PN, shape: Simplex):
 
 
 @monomial_basis_for_space.register(PN)
-def _(space: PN, shape: Simplex):
+def _monomial_basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
@@ -1012,7 +1012,7 @@ class TensorProductBasis(Basis):
 
 
 @orthonormal_basis_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _orthonormal_basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
@@ -1025,7 +1025,7 @@ def _(space: QN, shape: Hypercube):
 
 
 @basis_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
@@ -1044,7 +1044,7 @@ def _grad_monomial_1d(order, r):
 
 
 @monomial_basis_for_space.register(QN)
-def _(space: QN, shape: Hypercube):
+def _monomial_basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
