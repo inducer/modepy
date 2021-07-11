@@ -121,7 +121,7 @@ def test_affine_map():
     from modepy.tools import AffineMap
     # for d in [3]:
     for d in range(1, 5):
-        for i in range(100):
+        for _i in range(100):
             a = np.random.randn(d, d)+10*np.eye(d)
             b = np.random.randn(d)
 
