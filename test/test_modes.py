@@ -147,10 +147,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
     from pytools.convergence import EOCRecorder
     from pytools import wandering_element
-    for i_bf, (bf, gradbf) in enumerate(zip(
-                basis.functions,
-                basis.gradients,
-                )):
+    for bf, gradbf in zip(basis.functions, basis.gradients):
         eoc_rec = EOCRecorder()
         for h in [1e-2, 1e-3]:
             r = mp.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
