@@ -62,7 +62,7 @@ import numpy.linalg as la
 from functools import singledispatch, partial
 
 from modepy.shapes import Shape, Simplex, Hypercube, unit_vertices_for_shape
-from modepy.spaces import FunctionSpace, PN, QN
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
 
 
 # {{{ equidistant nodes
@@ -488,6 +488,7 @@ def _node_tuples_for_qn(space: QN):
 def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name__))
+
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
@@ -502,6 +503,7 @@ def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
 def _edge_clustered_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
         raise NotImplementedError((type(space).__name__, type(shape).__name__))
+
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
@@ -514,6 +516,44 @@ def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
     if rng is None:
         rng = np.random
     return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
+
+# }}}
+
+
+# {{{ generic tensor product space
+
+@node_tuples_for_space.register(TensorProductSpace)
+def _node_tuples_for_tp(space: TensorProductSpace):
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
+    return tuple([
+        tp[::-1] for tp in gnitb([o + 1 for o in space.order])
+        ])
+
+
+@equispaced_nodes_for_space.register(TensorProductSpace)
+def _equispaced_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    return tensor_product_nodes([
+        equispaced_nodes_for_space(b, shape) for b in space.bases
+        ])
+
+
+@edge_clustered_nodes_for_space.register(TensorProductSpace)
+def _edge_clustered_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    return tensor_product_nodes([
+        edge_clustered_nodes_for_space(b, shape) for b in space.bases
+        ])
 
 # }}}
 

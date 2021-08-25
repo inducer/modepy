@@ -34,7 +34,7 @@ from functools import singledispatch
 
 import numpy as np
 from modepy.shapes import Shape, Simplex, Hypercube
-from modepy.spaces import FunctionSpace, PN, QN
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -203,6 +203,25 @@ def _quadrature_for_qn(space: QN, shape: Hypercube):
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 
     assert quad.exact_to >= space.order
+    return quad
+
+
+@quadrature_for_space.register(TensorProductSpace)
+def _quadrature_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    if space.spatial_dim == 0:
+        quad = ZeroDimensionalQuadrature()
+    else:
+        quad = TensorProductQuadrature([
+            quadrature_for_space(s, shape) for s in space.bases
+            ])
+
+    assert all(quad.exact_to >= o for o in space.order)
     return quad
 
 # }}}

@@ -8,6 +8,11 @@ Function Spaces
 .. autoclass:: PN
 .. autoclass:: QN
 .. autofunction:: space_for_shape
+
+.. autoclass:: TensorProductBaseSpace
+.. autoclass:: TensorProductSpace
+.. autoclass:: legendre_tensor_product_space
+.. autoclass:: legendre_gauss_lobatto_tensor_product_space
 """
 
 __copyright__ = "Copyright (C) 2020 Andreas Kloeckner"
@@ -33,6 +38,9 @@ THE SOFTWARE.
 """
 
 from functools import singledispatch
+from numbers import Number
+from typing import Union, Tuple
+
 from modepy.shapes import Shape, Simplex, Hypercube
 
 
@@ -142,12 +150,47 @@ class QN(FunctionSpace):
 
 
 @space_for_shape.register(Hypercube)
-def _space_for_hypercube(shape: Hypercube, order: int):
-    return QN(shape.dim, order)
+def _space_for_hypercube(shape: Hypercube, order: Union[int, Tuple[int, ...]]):
+    if isinstance(order, Number):
+        return QN(shape.dim, order)
+    else:
+        return TensorProductSpace([QN(1, n) for n in order])
 
 # }}}
 
-# }}}
 
+# # {{{ generic tensor product space
+
+class TensorProductSpace(FunctionSpace):
+    """
+    .. attribute:: bases
+
+        A :class:`tuple` of the base spaces that take part in the
+        tensor product.
+
+    .. attribute:: order
+
+        A :class:`tuple` of orders per spatial dimension.
+
+    .. automethod:: __init__
+    """
+
+    def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
+        self.bases = bases
+
+    @property
+    def order(self):
+        return tuple([space.order for space in self.bases])
+
+    @property
+    def spatial_dim(self) -> int:
+        return sum(space.spatial_dim for space in self.bases)
+
+    @property
+    def space_dim(self) -> int:
+        import math
+        return math.prod(space.space_dim for space in self.bases)
+
+# }}}
 
 # vim: foldmethod=marker

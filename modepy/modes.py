@@ -29,7 +29,7 @@ from typing import Callable, Optional, Sequence, TypeVar, Tuple, Union, TYPE_CHE
 
 import numpy as np
 
-from modepy.spaces import FunctionSpace, PN, QN
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
 
 if TYPE_CHECKING:
@@ -1092,6 +1092,51 @@ def _monomial_basis_for_qn(space: QN, shape: Hypercube):
     return TensorProductBasis(
             [[partial(_monomial_1d, n) for n in range(order + 1)]] * dim,
             [[partial(_grad_monomial_1d, n) for n in range(order + 1)]] * dim,
+            orth_weight=None)
+
+# }}}
+
+
+# {{{ generic tensor product space
+
+@orthonormal_basis_for_space.register(TensorProductSpace)
+def _orthonormal_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    bases = [orthonormal_basis_for_space(b, shape) for b in space.bases]
+    return TensorProductBasis(
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
+            orth_weight=np.prod([b.ortho_weight for b in bases]))
+
+
+@basis_for_space.register(TensorProductSpace)
+def _basis_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    bases = [basis_for_space(b, shape) for b in space.bases]
+    if not all(b.ortho_weight is not None for b in bases):
+        ortho_weight = None
+    else:
+        ortho_weight = np.prod([b.ortho_weight for b in bases])
+
+    return TensorProductBasis(
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
+            orth_weight=ortho_weight)
+
+
+@monomial_basis_for_space.register(TensorProductSpace)
+def _monomial_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
+    if not isinstance(shape, Hypercube):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
+    bases = [monomial_basis_for_space(b, shape) for b in space.bases]
+    return TensorProductBasis(
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
             orth_weight=None)
 
 # }}}
