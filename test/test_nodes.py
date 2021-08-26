@@ -204,6 +204,44 @@ def test_order0_nodes(dim, shape_cls):
 # }}}
 
 
+@pytest.mark.parametrize("shape", ["square", "cube", "squared_cube", "prism"])
+def test_tensor_product_shape_nodes(shape, visualize=False):
+    order = (5, 3, 4)
+
+    if shape == "square":
+        nodes = [nd.equidistant_nodes(1, n)[0] for n in order[:2]]
+    elif shape == "cube":
+        nodes = [nd.equidistant_nodes(1, n)[0] for n in order[:3]]
+    elif shape == "squared_cube":
+        square = nd.tensor_product_nodes([
+            nd.equidistant_nodes(1, n)[0] for n in order[:2]
+            ])
+        nodes = [square, nd.equidistant_nodes(1, order[2])[0]]
+    elif shape == "prism":
+        triangle = nd.warp_and_blend_nodes(2, order[0])
+        nodes = [triangle, nd.equidistant_nodes(1, order[1])[0]]
+    else:
+        raise ValueError(f"unknown shape name: '{shape}'")
+
+    nodes = nd.tensor_product_nodes(nodes)
+
+    if not visualize or nodes.shape[0] <= 2:
+        return
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    ax.scatter(*nodes)
+    for i in range(nodes.shape[1]):
+        ax.text(*nodes[:, i], f"{i}")
+
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_zlabel("$z$")
+    plt.show(block=True)
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 

@@ -357,21 +357,29 @@ def tensor_product_nodes(
     .. versionchanged:: 2020.3
 
         The node ordering has changed and is no longer documented.
+
+    .. versionchanged:: 2021.3
+
+        *dims_or_nodes* can contain nodes of general size ``(dims, nnodes)``,
+        not only one dimensional nodes.
     """
     if isinstance(dims_or_nodes, int):
         assert nodes_1d is not None
-        nodes: Sequence[np.ndarray] = [nodes_1d] * dims_or_nodes
+        nodes: Sequence[np.ndarray] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
         dims = dims_or_nodes
     else:
         assert nodes_1d is None
-        nodes = dims_or_nodes
-        dims = len(nodes)
+        nodes = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
+        dims = sum(n.shape[0] for n in nodes)
 
-    nnodes = tuple(len(n) for n in nodes)
-    result = np.empty((dims,) + nnodes)
+    nnodes = len(nodes)
+    result = np.empty((dims,) + tuple([n.shape[-1] for n in nodes]))
 
-    for d in range(dims):
-        result[d] = nodes[dims-1-d].reshape((-1,) + (1,)*d)
+    d = 0
+    for n in range(nnodes):
+        x = nodes[nnodes - 1 - n]
+        result[d:d + x.shape[0]] = x.reshape(x.shape + (1,)*n)
+        d += x.shape[0]
 
     return result.reshape(dims, -1)
 
@@ -477,8 +485,7 @@ def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
 
 @node_tuples_for_space.register(QN)
 def _node_tuples_for_qn(space: QN):
-    from pytools import \
-            generate_nonnegative_integer_tuples_below as gnitb
+    from pytools import generate_nonnegative_integer_tuples_below as gnitb
     return tuple([
         tp[::-1] for tp in gnitb(space.order + 1, space.spatial_dim)
         ])

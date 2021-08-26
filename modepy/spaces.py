@@ -7,12 +7,8 @@ Function Spaces
 .. autoclass:: FunctionSpace
 .. autoclass:: PN
 .. autoclass:: QN
-.. autofunction:: space_for_shape
-
-.. autoclass:: TensorProductBaseSpace
 .. autoclass:: TensorProductSpace
-.. autoclass:: legendre_tensor_product_space
-.. autoclass:: legendre_gauss_lobatto_tensor_product_space
+.. autofunction:: space_for_shape
 """
 
 __copyright__ = "Copyright (C) 2020 Andreas Kloeckner"
