@@ -532,8 +532,14 @@ def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
 @node_tuples_for_space.register(TensorProductSpace)
 def _node_tuples_for_tp(space: TensorProductSpace):
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
+    tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
+    tensor_product_tuples = tuple([
+        tp[::-1] for tp in gnitb([len(tp) for tp in tuples_for_space])
+        ])
+
     return tuple([
-        tp[::-1] for tp in gnitb([o + 1 for o in space.order])
+        sum([tuples_for_space[i] for i in tp], ())
+        for tp in tensor_product_tuples
         ])
 
 
@@ -545,8 +551,9 @@ def _equispaced_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
+    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
     return tensor_product_nodes([
-        equispaced_nodes_for_space(b, shape) for b in space.bases
+        equispaced_nodes_for_space(b, s) for b, s in zip(space.bases, shapes)
         ])
 
 
@@ -558,8 +565,9 @@ def _edge_clustered_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
+    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
     return tensor_product_nodes([
-        edge_clustered_nodes_for_space(b, shape) for b in space.bases
+        edge_clustered_nodes_for_space(b, s) for b, s in zip(space.bases, shapes)
         ])
 
 # }}}

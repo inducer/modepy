@@ -544,7 +544,7 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
 
 
 @submesh_for_shape.register(Hypercube)
-def _submes_for_hypercube(shape: Hypercube, node_tuples):
+def _submesh_for_hypercube(shape: Hypercube, node_tuples):
     from pytools import single_valued, add_tuples
     dims = single_valued(len(nt) for nt in node_tuples)
 

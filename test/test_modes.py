@@ -191,7 +191,9 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 # {{{ test symbolic modes
 
 class MyStringifyMapper(CSESplittingStringifyMapperMixin, StringifyMapper):
-    pass
+    def map_slice(self, expr):
+        print(expr)
+        return "1"
 
 
 class MyEvaluationMapper(EvaluationMapper):
@@ -236,9 +238,11 @@ def test_symbolic_basis(shape, order, basis_getter):
 
         sym_val = MyEvaluationMapper({"r": r, "abs": abs})(sym_func)
         ref_val = func(r)
+        print(repr(sym_val))
+        print(repr(ref_val))
 
         ref_norm = la.norm(ref_val, np.inf)
-        err = la.norm(sym_val-ref_val, np.inf)
+        err = la.norm(sym_val - ref_val, np.inf)
         if ref_norm:
             err = err/ref_norm
 

@@ -170,6 +170,51 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
 
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
 
+
+@pytest.mark.parametrize("dims", [1, 2, 3])
+def test_non_homogeneous_tensor_product_resampling(dims):
+    logging.basicConfig(level=logging.INFO)
+
+    shape = mp.Hypercube(dims)
+    orders_h = 5
+    orders_nh = (3, 5, 2, 3)[:dims]
+    # orders_nh = (5, 5, 5, 5)[:dims]
+
+    # {{{ construct spaces
+
+    space_h = mp.space_for_shape(shape, orders_h)
+    nodes_h = mp.equispaced_nodes_for_space(space_h, shape)
+    basis_h = mp.orthonormal_basis_for_space(space_h, shape).functions
+
+    assert nodes_h.shape[-1] == len(basis_h)
+    assert len(basis_h) == space_h.space_dim
+
+    space_nh = mp.space_for_shape(shape, orders_nh)
+    nodes_nh = mp.equispaced_nodes_for_space(space_nh, shape)
+    basis_nh = mp.orthonormal_basis_for_space(space_nh, shape).functions
+
+    assert nodes_nh.shape[-1] == len(basis_nh)
+    assert len(basis_nh) == space_nh.space_dim
+
+    # }}}
+
+    # {{{ check resampling
+
+    from_h_mat = mp.resampling_matrix(basis_h, nodes_nh, nodes_h)
+    to_h_mat = mp.resampling_matrix(basis_nh, nodes_h, nodes_nh)
+    logger.info("cond from %.5e to %.5e", la.cond(from_h_mat), la.cond(to_h_mat))
+
+    error = la.norm(from_h_mat @ to_h_mat - np.eye(to_h_mat.shape[1]))
+    assert error < 1.0e-13, error
+
+    nodes_0_resampled = to_h_mat @ nodes_nh[0]
+    logger.info("nh_to_h error %.5e", la.norm(nodes_0_resampled - nodes_h[0]))
+
+    nodes_1_resampled = from_h_mat @ nodes_h[0]
+    logger.info("h_to_nh error: %.5e", la.norm(nodes_1_resampled - nodes_nh[0]))
+
+    # }}}
+
 # }}}
 
 
