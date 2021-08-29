@@ -653,16 +653,6 @@ def grad_simplex_best_available_basis(dims, n):
 
 # {{{ tensor product basis helpers
 
-def _get_dim_slices(dims_per_function):
-    s = 0
-    slices = []
-    for dim in dims_per_function:
-        slices.append(np.s_[s:s + dim])
-        s += dim
-
-    return tuple(slices)
-
-
 def _handle_scalar(ary):
     if isinstance(ary, np.ndarray):
         ary = np.squeeze(ary)
@@ -683,12 +673,17 @@ class _TensorProductBasisFunction:
 
         self.multi_index = multi_index
         self.functions = functions
-        self.dims = _get_dim_slices(dims_per_function)
+
+        self.dims_per_function = dims_per_function
+        self.ndims = sum(self.dims_per_function)
 
     def __call__(self, x):
         result = 1
-        for i, function in enumerate(self.functions):
-            result *= function(x[self.dims[i]])
+        d = 0
+
+        for n, function in zip(self.dims_per_function, self.functions):
+            result *= function(x[d:d + n])
+            d += n
 
         return _handle_scalar(result)
 
@@ -703,16 +698,22 @@ class _TensorProductGradientBasisFunction:
     def __init__(self, multi_index, derivatives, dims_per_function=None):
         if dims_per_function is None:
             dims_per_function = (1,) * len(derivatives[0])
+        else:
+            assert len(dims_per_function) == len(derivatives[0])
 
         self.multi_index = multi_index
         self.derivatives = tuple(derivatives)
-        self.dims = _get_dim_slices(dims_per_function)
+
+        self.dims_per_function = dims_per_function
+        self.ndims = sum(self.dims_per_function)
 
     def __call__(self, x):
         result = [1] * len(self.derivatives)
         for ider, functions in enumerate(self.derivatives):
-            for i, function in enumerate(functions):
-                result[ider] *= function(x[self.dims[i]])
+            d = 0
+            for n, function in zip(self.dims_per_function, functions):
+                result[ider] *= function(x[d:d + n])
+                d += n
 
         return tuple([_handle_scalar(r) for r in result])
 
