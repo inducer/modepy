@@ -168,6 +168,11 @@ The order of the vertices in the hypercubes follows binary counting
 in ``tsr`` (i.e. in reverse axis order).
 For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 
+Tensor Product Shapes
+---------------------
+
+.. autoclass:: TensorProductShape
+
 Submeshes
 ---------
 .. autofunction:: submesh_for_shape
@@ -575,6 +580,12 @@ def _submesh_for_hypercube(shape: Hypercube, node_tuples):
 
 @dataclass(frozen=True, init=False)
 class TensorProductShape(Shape):
+    """
+    ... attribute:: bases
+
+        A :class:`tuple` of base shapes that form the tensor product.
+    """
+
     def __init__(self, bases: Tuple[Shape]):
         self.bases = bases
 
