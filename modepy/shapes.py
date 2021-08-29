@@ -307,11 +307,11 @@ def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
 @dataclass(frozen=True)
 class Simplex(Shape):
     @property
-    def nfaces(self):
+    def nfaces(self) -> int:
         return self.dim + 1
 
     @property
-    def nvertices(self):
+    def nvertices(self) -> int:
         return self.dim + 1
 
 
@@ -371,11 +371,11 @@ def _faces_for_simplex(shape: Simplex):
 @dataclass(frozen=True)
 class Hypercube(Shape):
     @property
-    def nfaces(self):
+    def nfaces(self) -> int:
         return 2 * self.dim
 
     @property
-    def nvertices(self):
+    def nvertices(self) -> int:
         return 2**self.dim
 
 
@@ -581,24 +581,24 @@ def _submesh_for_hypercube(shape: Hypercube, node_tuples):
 @dataclass(frozen=True, init=False)
 class TensorProductShape(Shape):
     """
-    ... attribute:: bases
+    .. attribute:: bases
 
         A :class:`tuple` of base shapes that form the tensor product.
     """
 
-    def __init__(self, bases: Tuple[Shape]):
+    def __init__(self, bases: Tuple[Shape, ...]) -> None:
         self.bases = bases
 
     @property
-    def dim(self):
+    def dim(self) -> int:
         return sum(s.dim for s in self.bases)
 
     @property
-    def nvertices(self):
+    def nvertices(self) -> int:
         return np.prod([s.nvertices for s in self.bases])
 
     @property
-    def nfaces(self):
+    def nfaces(self) -> int:
         # FIXME: is there a formula for this?
         raise NotImplementedError
 

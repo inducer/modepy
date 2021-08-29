@@ -177,7 +177,7 @@ class TensorProductSpace(FunctionSpace):
         self.bases = bases
 
     @property
-    def order(self):
+    def order(self) -> Tuple[int, ...]:
         return tuple([space.order for space in self.bases])
 
     @property

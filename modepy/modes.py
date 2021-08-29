@@ -847,8 +847,8 @@ class Basis:
 
     def orthonormality_weight(self) -> float:
         """
-        Can raise :exc:`BasisNotOrthonormal` if the basis does not have
-        a weight.
+        :raises: :exc:`BasisNotOrthonormal` if the basis does not have
+            a weight.
         """
         raise NotImplementedError
 
