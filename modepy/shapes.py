@@ -595,8 +595,7 @@ class TensorProductShape(Shape):
 
     @property
     def nvertices(self):
-        from math import prod
-        return prod(s.nvertices for s in self.bases)
+        return np.prod([s.nvertices for s in self.bases])
 
     @property
     def nfaces(self):

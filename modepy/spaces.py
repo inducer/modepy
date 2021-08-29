@@ -37,6 +37,8 @@ from functools import singledispatch
 from numbers import Number
 from typing import Union, Tuple
 
+import numpy as np
+
 from modepy.shapes import Shape, Simplex, Hypercube
 
 
@@ -184,8 +186,7 @@ class TensorProductSpace(FunctionSpace):
 
     @property
     def space_dim(self) -> int:
-        import math
-        return math.prod(space.space_dim for space in self.bases)
+        return np.prod([space.space_dim for space in self.bases])
 
 # }}}
 

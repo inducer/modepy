@@ -1166,7 +1166,7 @@ def _orthonormal_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],
             orth_weight=_get_orth_weight(bases),
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
 
 
 @basis_for_space.register(TensorProductSpace)
@@ -1180,7 +1180,7 @@ def _basis_for_tp(space: TensorProductSpace, shape: Hypercube):
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],
             orth_weight=_get_orth_weight(bases),
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
 
 
 @monomial_basis_for_space.register(TensorProductSpace)
@@ -1194,7 +1194,7 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],
             orth_weight=None,
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
 
 # }}}
 
