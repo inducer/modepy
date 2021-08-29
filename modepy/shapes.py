@@ -299,6 +299,7 @@ def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
 
 # {{{ simplex
 
+@dataclass(frozen=True)
 class Simplex(Shape):
     @property
     def nfaces(self):
@@ -362,6 +363,7 @@ def _faces_for_simplex(shape: Simplex):
 
 # {{{ hypercube
 
+@dataclass(frozen=True)
 class Hypercube(Shape):
     @property
     def nfaces(self):
@@ -568,5 +570,36 @@ def _submesh_for_hypercube(shape: Hypercube, node_tuples):
 
 # }}}
 
+
+# {{{ tensor product shape
+
+@dataclass(frozen=True, init=False)
+class TensorProductShape(Shape):
+    def __init__(self, bases: Tuple[Shape]):
+        self.bases = bases
+
+    @property
+    def dim(self):
+        return sum(s.dim for s in self.bases)
+
+    @property
+    def nvertices(self):
+        from math import prod
+        return prod(s.nvertices for s in self.bases)
+
+    @property
+    def nfaces(self):
+        # FIXME: is there a formula for this?
+        raise NotImplementedError
+
+
+@unit_vertices_for_shape.register(TensorProductShape)
+def _unit_vertices_for_tp(shape: TensorProductShape):
+    from modepy.nodes import tensor_product_nodes
+    return tensor_product_nodes([
+        unit_vertices_for_shape(s) for s in shape.bases
+        ])
+
+# }}}
 
 # vim: foldmethod=marker

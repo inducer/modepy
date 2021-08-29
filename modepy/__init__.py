@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 
 from modepy.shapes import (
-        Shape, Face, Simplex, Hypercube,
+        Shape, Face, Simplex, Hypercube, TensorProductShape,
 
         face_normal, unit_vertices_for_shape, faces_for_shape,
         submesh_for_shape,
@@ -79,7 +79,7 @@ GaussLegendreQuadrature = LegendreGaussQuadrature
 __all__ = [
         "__version__",
 
-        "Shape", "Face", "Simplex", "Hypercube",
+        "Shape", "Face", "Simplex", "Hypercube", "TensorProductShape",
         "face_normal", "unit_vertices_for_shape", "faces_for_shape",
         "submesh_for_shape",
 
