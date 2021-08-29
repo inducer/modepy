@@ -689,7 +689,7 @@ class _TensorProductBasisFunction:
 
     def __repr__(self):
         return (f"{type(self).__name__}(mi={self.multi_index}, "
-                f"dims={self.dims}, functions={self.functions})")
+                f"dims={self.dims_per_function}, functions={self.functions})")
 
 
 class _TensorProductGradientBasisFunction:
@@ -708,14 +708,44 @@ class _TensorProductGradientBasisFunction:
         self.ndims = sum(self.dims_per_function)
 
     def __call__(self, x):
-        result = [1] * len(self.derivatives)
-        for ider, functions in enumerate(self.derivatives):
-            d = 0
-            for n, function in zip(self.dims_per_function, functions):
-                result[ider] *= function(x[d:d + n])
-                d += n
+        # NOTE: we're trying to do a tensor product gradient for something like
+        #
+        #       P_1(x0, x1) * P_2(x2) * P_3(x3, x4, x5) * ...
+        #
+        # (here `dims_per_function` would be `(2, 1, 3)`), where each
+        # `self.derivatives[i]` contains the derivatives of `P_i` and the
+        # remaining functions as is (in the same order as above). Then, to
+        # get the derivatives with respect to, e.g., `(x3, x4, x5)`, we
+        # loop over the `components` of the gradient of `P_3` as
+        #
+        #   result[d + 0] = P_1 * P_2 * dP_3/dx_3 * ...
+        #   result[d + 1] = P_1 * P_2 * dP_3/dx_4 * ...
+        #   result[d + 2] = P_1 * P_2 * dP_3/dx_5 * ...
+        #
+        # where d = 3 (sums up `dims_per_function`).
+
+        result = [1] * self.ndims
+        d = 0
+        for i, derivative in zip(self.dims_per_function, self.derivatives):
+            f = 0
+            for j, function in zip(self.dims_per_function, derivative):
+                components = function(x[f:f + j])
+                if not isinstance(components, tuple):
+                    # NOTE: just a function evaluation here, so we distribute
+                    # it to all the components of the derivatives
+                    components = (components,) * i
+
+                for n, r in enumerate(components):
+                    result[d + n] *= r
+
+                f += j
+            d += i
 
         return tuple([_handle_scalar(r) for r in result])
+
+    def __repr__(self):
+        return (f"{type(self).__name__}(mi={self.multi_index}, "
+                f"dims={self.dims_per_function}, derivatives={self.derivatives})")
 
 # }}}
 
@@ -1086,7 +1116,7 @@ class TensorProductBasis(Basis):
                     [func[is_deriv][iaxis][mid_i]
                         for iaxis, (is_deriv, mid_i) in
                         enumerate(zip(iderivative, mid))]
-                    for iderivative in wandering_element(self._dim)
+                    for iderivative in wandering_element(len(self._bases))
                     ],
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)

@@ -171,14 +171,17 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
     assert la.norm(my_eye_least_squares - np.eye(len(my_eye_least_squares))) < 4e-13
 
 
-@pytest.mark.parametrize("dims", [1, 2, 3])
-def test_non_homogeneous_tensor_product_resampling(dims):
+@pytest.mark.parametrize("space_nh", [
+    mp.TensorProductSpace((mp.QN(1, 3),)),
+    mp.TensorProductSpace((mp.QN(1, 3), mp.QN(1, 5))),
+    mp.TensorProductSpace((mp.QN(1, 3), mp.QN(1, 5), mp.QN(1, 2))),
+    mp.TensorProductSpace((mp.QN(2, 3), mp.QN(1, 2))),
+    ])
+def test_non_homogeneous_tensor_product_resampling(space_nh):
     logging.basicConfig(level=logging.INFO)
 
-    shape = mp.Hypercube(dims)
+    shape = mp.Hypercube(space_nh.spatial_dim)
     orders_h = 5
-    orders_nh = (3, 5, 2, 3)[:dims]
-    # orders_nh = (5, 5, 5, 5)[:dims]
 
     # {{{ construct spaces
 
@@ -189,7 +192,6 @@ def test_non_homogeneous_tensor_product_resampling(dims):
     assert nodes_h.shape[-1] == len(basis_h)
     assert len(basis_h) == space_h.space_dim
 
-    space_nh = mp.space_for_shape(shape, orders_nh)
     nodes_nh = mp.equispaced_nodes_for_space(space_nh, shape)
     basis_nh = mp.orthonormal_basis_for_space(space_nh, shape).functions
 
@@ -220,26 +222,45 @@ def test_non_homogeneous_tensor_product_resampling(dims):
 
 # {{{ test_diff_matrix
 
-@pytest.mark.parametrize("dims", [1, 2, 3])
-@pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_diff_matrix(dims, shape_cls, order=5):
-    shape = shape_cls(dims)
-    space = mp.space_for_shape(shape, order)
+def _test_diff_matrix(space, shape, rtol=2.0e-4):
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
     basis = mp.basis_for_space(space, shape)
 
     diff_mat = mp.differentiation_matrices(basis.functions, basis.gradients, nodes)
-    if isinstance(diff_mat, tuple):
-        diff_mat = diff_mat[0]
+    if not isinstance(diff_mat, tuple):
+        diff_mat = (diff_mat,)
 
-    f = np.sin(nodes[0])
+    f = sum(np.sin(nodes[i]) for i in range(shape.dim))
+    df_dx = tuple([np.cos(nodes[i]) for i in range(shape.dim)])
+    df_dx_num = tuple([np.dot(diff_mat[i], f) for i in range(shape.dim)])
 
-    df_dx = np.cos(nodes[0])
-    df_dx_num = np.dot(diff_mat, f)
+    for i in range(shape.dim):
+        error = la.norm(df_dx[i] - df_dx_num[i]) / la.norm(df_dx[i])
+        logger.info("error: %.5e", error)
+        print(error)
 
-    error = la.norm(df_dx - df_dx_num) / la.norm(df_dx)
-    logger.info("error: %.5e", error)
-    assert error < 2.0e-4, error
+        assert error < rtol, error
+
+
+@pytest.mark.parametrize("dims", [1, 2, 3])
+@pytest.mark.parametrize(("shape_cls", "order"), [
+    (mp.Simplex, 5),
+    (mp.Hypercube, 5),
+    (mp.Hypercube, (6, 7, 5))])
+def test_diff_matrix(dims, shape_cls, order):
+    if isinstance(order, tuple):
+        order = order[:dims]
+
+    shape = shape_cls(dims)
+    space = mp.space_for_shape(shape, order)
+    _test_diff_matrix(space, shape)
+
+
+def test_nonhomogeneous_tensor_product_diff_matrix():
+    shape = mp.Hypercube(3)
+    space = mp.TensorProductSpace((mp.QN(2, 5), mp.QN(1, 5)))
+
+    _test_diff_matrix(space, shape)
 
 
 @pytest.mark.parametrize("dims", [2, 3])
@@ -262,6 +283,7 @@ def test_diff_matrix_permutation(dims):
         assert la.norm(
                 diff_matrices[iref_axis]
                 - diff_matrices[0][perm][:, perm]) < 1e-10
+
 
 # }}}
 

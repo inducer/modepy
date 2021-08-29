@@ -137,6 +137,7 @@ def test_simplex_nodes(dims, n):
 def test_affine_map():
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
+
     for d in range(1, 5):
         for _i in range(100):
             a = np.random.randn(d, d)+10*np.eye(d)
@@ -204,6 +205,8 @@ def test_order0_nodes(dim, shape_cls):
 # }}}
 
 
+# {{{ test_tensor_product_shape_nodes
+
 @pytest.mark.parametrize("shape", ["square", "cube", "squared_cube", "prism"])
 def test_tensor_product_shape_nodes(shape, visualize=False):
     order = (5, 3, 4)
@@ -240,6 +243,8 @@ def test_tensor_product_shape_nodes(shape, visualize=False):
     ax.set_ylabel("$y$")
     ax.set_zlabel("$z$")
     plt.show(block=True)
+
+# }}}
 
 
 # You can test individual routines by typing
