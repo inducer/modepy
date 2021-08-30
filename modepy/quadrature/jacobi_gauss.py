@@ -208,6 +208,10 @@ def jacobi_gauss_lobatto_nodes(alpha, beta, N,          # noqa: N803
     """
 
     x = np.zeros((N + 1,))
+    if N == 0:
+        x[0] = 0
+        return x
+
     x[0] = -1
     x[-1] = 1
 
