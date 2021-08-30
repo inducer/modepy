@@ -155,6 +155,24 @@ def test_nonhomogeneous_tensor_product_nodes(dim):
             )
 
 
+@pytest.mark.parametrize("dim", [1, 2, 3])
+@pytest.mark.parametrize("shape_cls", [shp.Hypercube, shp.Simplex])
+def test_order0_nodes(dim, shape_cls):
+    shape = shape_cls(dim)
+    import modepy as mp
+    space = mp.space_for_shape(shape, order=0)
+
+    centroid = (np.mean(mp.unit_vertices_for_shape(shape), axis=1)
+            .reshape(-1, 1))
+    nodes = mp.equispaced_nodes_for_space(space, shape)
+    assert not np.isnan(nodes).any()
+    assert np.allclose(centroid, nodes)
+
+    nodes = mp.edge_clustered_nodes_for_space(space, shape)
+    assert not np.isnan(nodes).any()
+    assert np.allclose(centroid, nodes)
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 

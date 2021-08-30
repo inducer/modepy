@@ -60,7 +60,7 @@ import numpy.linalg as la
 
 from functools import singledispatch, partial
 
-from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.shapes import Shape, Simplex, Hypercube, unit_vertices_for_shape
 from modepy.spaces import FunctionSpace, PN, QN
 
 
@@ -84,6 +84,11 @@ def equidistant_nodes(dims, n, node_tuples=None):
     else:
         if len(node_tuples) != space.space_dim:
             raise ValueError("'node_tuples' list does not have the correct length")
+
+    if n == 0:
+        from modepy.shapes import unit_vertices_for_shape
+        return (np.mean(unit_vertices_for_shape(Simplex(dims)), axis=1)
+                .reshape(-1, 1))
 
     # shape: (dims, nnodes)
     return (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
@@ -296,6 +301,11 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_.
     (See also :func:`modepy.tools.estimate_lebesgue_constant`)
     """
+    if n == 0:
+        from modepy.shapes import unit_vertices_for_shape
+        return (np.mean(unit_vertices_for_shape(Simplex(dims)), axis=1)
+                .reshape(-1, 1))
+
     if dims == 0:
         return np.empty((0, 1), dtype=np.float64)
 
@@ -410,8 +420,13 @@ def _equispaced_nodes_for_pn(space: PN, shape: Simplex):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    return (np.array(node_tuples_for_space(space), dtype=np.float64)
-            / space.order*2 - 1).T
+    if space.order == 0:
+        return (
+                np.mean(unit_vertices_for_shape(shape), axis=1)
+                .reshape(-1, 1))
+    else:
+        return (np.array(node_tuples_for_space(space), dtype=np.float64)
+                / space.order*2 - 1).T
 
 
 @edge_clustered_nodes_for_space.register(PN)
@@ -465,8 +480,11 @@ def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    return (np.array(node_tuples_for_space(space), dtype=np.float64)
-            / space.order*2 - 1).T
+    if space.order == 0:
+        return np.array(node_tuples_for_space(space), dtype=np.float64).T
+    else:
+        return (np.array(node_tuples_for_space(space), dtype=np.float64)
+                / space.order*2 - 1).T
 
 
 @edge_clustered_nodes_for_space.register(QN)
