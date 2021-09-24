@@ -302,6 +302,71 @@ def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
 # }}}
 
 
+# {{{ tensor product shape
+
+@dataclass(frozen=True, init=False)
+class TensorProductShape(Shape):
+    """
+    .. attribute:: bases
+
+        A :class:`tuple` of base shapes that form the tensor product.
+    """
+
+    bases: Tuple[Shape, ...]
+
+    def __new__(cls, bases: Tuple[Shape, ...]) -> "Shape":
+        if len(bases) == 1:
+            return bases[0]
+        else:
+            return Shape.__new__(cls)
+
+    def __init__(self, bases: Tuple[Shape, ...]) -> None:
+        dim = sum(s.dim for s in bases)
+        if dim > 3:
+            raise NotImplementedError(
+                    "tensor product shapes with dimension larger than 3, "
+                    f"got {dim} for the given base shapes")
+
+        # flatten input shapes
+        bases = sum([
+            s.bases if isinstance(s, TensorProductShape) else (s,)
+            for s in bases
+            ], ())
+
+        super().__init__(dim)
+        object.__setattr__(self, "bases", bases)
+
+    @property
+    def nvertices(self) -> int:
+        return np.prod([s.nvertices for s in self.bases])
+
+    @property
+    def nfaces(self) -> int:
+        assert self.dim <= 3
+
+        # NOTE: for dim <= 3, we always have at least one line segment
+        segment, *shapes = sorted(self.bases, key=lambda s: s.dim)
+
+        if len(shapes) == 1:
+            # polygon x segment is just extruded in the extra dimension
+            return 2 + shapes[0].nfaces
+        elif len(shapes) == 2:
+            # only shape with 3 factors is the cube
+            return 2 * self.dim
+        else:
+            raise AssertionError
+
+
+@unit_vertices_for_shape.register(TensorProductShape)
+def _unit_vertices_for_tp(shape: TensorProductShape):
+    from modepy.nodes import tensor_product_nodes
+    return tensor_product_nodes([
+        unit_vertices_for_shape(s) for s in shape.bases
+        ])
+
+# }}}
+
+
 # {{{ simplex
 
 @dataclass(frozen=True)
@@ -369,25 +434,28 @@ def _faces_for_simplex(shape: Simplex):
 # {{{ hypercube
 
 @dataclass(frozen=True)
-class Hypercube(Shape):
-    @property
-    def nfaces(self) -> int:
-        return 2 * self.dim
+class Hypercube(TensorProductShape):
+    def __new__(cls, dim: int) -> Shape:
+        if dim == 1:
+            return Simplex(1)
+        else:
+            return Shape.__new__(cls)
 
-    @property
-    def nvertices(self) -> int:
-        return 2**self.dim
+    def __init__(self, dim: int) -> None:
+        super().__init__((Simplex(1),) * dim)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    pass
+    def __new__(cls, dim, **kwargs) -> Shape:
+        if dim == 1:
+            return _SimplexFace(dim=1, **kwargs)
+        else:
+            return Shape.__new__(cls)
 
-
-@unit_vertices_for_shape.register(Hypercube)
-def _unit_vertices_for_hypercube(shape: Hypercube):
-    from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
+    def __init__(self, **kwargs) -> None:
+        Hypercube.__init__(self, kwargs.pop("dim"))
+        Face.__init__(self, **kwargs)
 
 
 def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
@@ -572,43 +640,6 @@ def _submesh_for_hypercube(shape: Hypercube, node_tuples):
             pass
 
     return result
-
-# }}}
-
-
-# {{{ tensor product shape
-
-@dataclass(frozen=True, init=False)
-class TensorProductShape(Shape):
-    """
-    .. attribute:: bases
-
-        A :class:`tuple` of base shapes that form the tensor product.
-    """
-
-    def __init__(self, bases: Tuple[Shape, ...]) -> None:
-        self.bases = bases
-
-    @property
-    def dim(self) -> int:
-        return sum(s.dim for s in self.bases)
-
-    @property
-    def nvertices(self) -> int:
-        return np.prod([s.nvertices for s in self.bases])
-
-    @property
-    def nfaces(self) -> int:
-        # FIXME: is there a formula for this?
-        raise NotImplementedError
-
-
-@unit_vertices_for_shape.register(TensorProductShape)
-def _unit_vertices_for_tp(shape: TensorProductShape):
-    from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes([
-        unit_vertices_for_shape(s) for s in shape.bases
-        ])
 
 # }}}
 

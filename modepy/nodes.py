@@ -61,8 +61,10 @@ import numpy.linalg as la
 
 from functools import singledispatch, partial
 
-from modepy.shapes import Shape, Simplex, Hypercube, unit_vertices_for_shape
-from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
+from modepy.shapes import (
+        Shape, TensorProductShape, Simplex, Hypercube,
+        unit_vertices_for_shape)
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN  # noqa: F401
 
 
 # {{{ equidistant nodes
@@ -464,7 +466,7 @@ def _edge_clustered_nodes_for_pn(space: PN, shape: Simplex):
 @random_nodes_for_shape.register(Simplex)
 def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
     if rng is None:
-        rng = np.random
+        rng = np.random.default_rng()
 
     result = np.zeros((shape.dim, nnodes))
     nnodes_obtained = 0
@@ -477,52 +479,6 @@ def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
 
         if nnodes_obtained == nnodes:
             return result
-
-# }}}
-
-
-# {{{ QN
-
-@node_tuples_for_space.register(QN)
-def _node_tuples_for_qn(space: QN):
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
-    return tuple([
-        tp[::-1] for tp in gnitb(space.order + 1, space.spatial_dim)
-        ])
-
-
-@equispaced_nodes_for_space.register(QN)
-def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
-
-    if space.spatial_dim != shape.dim:
-        raise ValueError("spatial dimensions of shape and space must match")
-
-    if space.order == 0:
-        return np.array(node_tuples_for_space(space), dtype=np.float64).T
-    else:
-        return (np.array(node_tuples_for_space(space), dtype=np.float64)
-                / space.order*2 - 1).T
-
-
-@edge_clustered_nodes_for_space.register(QN)
-def _edge_clustered_nodes_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
-
-    if space.spatial_dim != shape.dim:
-        raise ValueError("spatial dimensions of shape and space must match")
-
-    return legendre_gauss_lobatto_tensor_product_nodes(
-            space.spatial_dim, space.order)
-
-
-@random_nodes_for_shape.register(Hypercube)
-def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
-    if rng is None:
-        rng = np.random
-    return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
 
 # }}}
 
@@ -544,31 +500,59 @@ def _node_tuples_for_tp(space: TensorProductSpace):
 
 
 @equispaced_nodes_for_space.register(TensorProductSpace)
-def _equispaced_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+def _equispaced_nodes_for_tp(
+        space: TensorProductSpace,
+        shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
     return tensor_product_nodes([
-        equispaced_nodes_for_space(b, s) for b, s in zip(space.bases, shapes)
+        equispaced_nodes_for_space(b, s)
+        for b, s in zip(space.bases, shape.bases)
         ])
 
 
 @edge_clustered_nodes_for_space.register(TensorProductSpace)
-def _edge_clustered_nodes_for_tp(space: TensorProductSpace, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+def _edge_clustered_nodes_for_tp(
+        space: TensorProductSpace,
+        shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
     return tensor_product_nodes([
-        edge_clustered_nodes_for_space(b, s) for b, s in zip(space.bases, shapes)
+        edge_clustered_nodes_for_space(b, s)
+        for b, s in zip(space.bases, shape.bases)
         ])
+
+
+@random_nodes_for_shape.register(TensorProductShape)
+def _random_nodes_for_tp(shape: TensorProductShape, nnodes: int, rng=None):
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # FIXME: this may not be exactly uniform per dimension; any better way?
+    nnodes_per_dim = int(nnodes**(1/shape.dim)) + 1
+    nnodes_per_shape = [nnodes_per_dim**s.dim for s in shape.bases[:-1]]
+    nnodes_per_shape += [nnodes - sum(nnodes_per_shape)]
+
+    return tensor_product_nodes([
+        random_nodes_for_shape(s, nnodes, rng=rng)
+        for s, nnodes in zip(shape.bases, nnodes_per_shape)
+        ])
+
+
+@random_nodes_for_shape.register(Hypercube)
+def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
+    if rng is None:
+        rng = np.random.default_rng()
+
+    return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
 
 # }}}
 

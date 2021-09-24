@@ -39,7 +39,7 @@ from typing import Union, Tuple
 
 import numpy as np
 
-from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.shapes import Shape, Simplex, Hypercube, TensorProductShape
 
 
 # {{{ function spaces
@@ -60,12 +60,78 @@ class FunctionSpace:
 
 
 @singledispatch
-def space_for_shape(shape: Shape, order: int) -> FunctionSpace:
+def space_for_shape(
+        shape: Shape, order: Union[int, Tuple[int, ...]]
+        ) -> FunctionSpace:
     r"""Return an unspecified instance of :class:`FunctionSpace` suitable
     for approximation on *shape* attaining interpolation error of
     :math:`O(h^{\text{order}+1})`.
     """
     raise NotImplementedError(type(shape).__name__)
+
+# }}}
+
+
+# # {{{ generic tensor product space
+
+class TensorProductSpace(FunctionSpace):
+    """
+    .. attribute:: bases
+
+        A :class:`tuple` of the base spaces that take part in the
+        tensor product.
+
+    .. attribute:: order
+
+        A :class:`tuple` of orders per spatial dimension.
+
+    .. automethod:: __init__
+    """
+
+    def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> FunctionSpace:
+        if len(bases) == 1:
+            return bases[0]
+        else:
+            return FunctionSpace.__new__(cls)
+
+    def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
+        self.bases = sum([
+            space.bases if isinstance(space, TensorProductSpace) else (space,)
+            for space in bases
+            ], ())
+
+    @property
+    def order(self) -> Tuple[int, ...]:
+        return tuple([space.order for space in self.bases])
+
+    @property
+    def spatial_dim(self) -> int:
+        return sum(space.spatial_dim for space in self.bases)
+
+    @property
+    def space_dim(self) -> int:
+        return np.prod([space.space_dim for space in self.bases])
+
+    def __repr__(self) -> str:
+        return (f"{type(self).__name__}("
+                f"spatial_dim={self.spatial_dim}, order={self.order}, "
+                f"bases={self.bases!r}"
+                ")")
+
+
+@space_for_shape.register(TensorProductShape)
+def _space_for_tensor_product_shape(
+        shape: TensorProductShape,
+        order: Union[int, Tuple[int, ...]]) -> TensorProductSpace:
+    nbases = len(shape.bases)
+    if isinstance(order, Number):
+        order = (order,) * nbases
+    else:
+        assert len(order) == nbases
+
+    return TensorProductSpace(tuple([
+        space_for_shape(shape.bases[i], order[i]) for i in range(nbases)
+        ]))
 
 # }}}
 
@@ -105,12 +171,12 @@ class PN(FunctionSpace):
 
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
-            f"spatial_dim={self.spatial_dim}, order={self.order}"
-            ")")
+                f"spatial_dim={self.spatial_dim}, order={self.order}"
+                ")")
 
 
 @space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: int):
+def _space_for_simplex(shape: Simplex, order: int) -> PN:
     return PN(shape.dim, order)
 
 # }}}
@@ -118,7 +184,7 @@ def _space_for_simplex(shape: Simplex, order: int):
 
 # {{{ QN
 
-class QN(FunctionSpace):
+class QN(TensorProductSpace):
     r"""The function space of polynomials with maximum degree
     :math:`N` = :attr:`order`:
 
@@ -132,61 +198,33 @@ class QN(FunctionSpace):
     .. automethod:: __init__
     """
 
+    def __new__(cls, spatial_dim: int, order: int) -> FunctionSpace:
+        if spatial_dim == 1:
+            return PN(spatial_dim, order)
+        else:
+            return FunctionSpace.__new__(cls)
+
     def __init__(self, spatial_dim: int, order: int) -> None:
-        super().__init__()
-        self.spatial_dim = spatial_dim
-        self.order = order
+        super().__init__((PN(1, order),) * spatial_dim)
 
     @property
-    def space_dim(self) -> int:
-        return (self.order + 1)**self.spatial_dim
+    def order(self):
+        return self.bases[0].order
 
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
-            f"spatial_dim={self.spatial_dim}, order={self.order}"
-            ")")
+                f"spatial_dim={self.spatial_dim}, order={self.order}"
+                ")")
 
 
 @space_for_shape.register(Hypercube)
-def _space_for_hypercube(shape: Hypercube, order: Union[int, Tuple[int, ...]]):
+def _space_for_hypercube(
+        shape: Hypercube, order: Union[int, Tuple[int, ...]]
+        ) -> TensorProductSpace:
     if isinstance(order, Number):
         return QN(shape.dim, order)
     else:
-        return TensorProductSpace([QN(1, n) for n in order])
-
-# }}}
-
-
-# # {{{ generic tensor product space
-
-class TensorProductSpace(FunctionSpace):
-    """
-    .. attribute:: bases
-
-        A :class:`tuple` of the base spaces that take part in the
-        tensor product.
-
-    .. attribute:: order
-
-        A :class:`tuple` of orders per spatial dimension.
-
-    .. automethod:: __init__
-    """
-
-    def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
-        self.bases = bases
-
-    @property
-    def order(self) -> Tuple[int, ...]:
-        return tuple([space.order for space in self.bases])
-
-    @property
-    def spatial_dim(self) -> int:
-        return sum(space.spatial_dim for space in self.bases)
-
-    @property
-    def space_dim(self) -> int:
-        return np.prod([space.space_dim for space in self.bases])
+        return TensorProductSpace(tuple([PN(1, n) for n in order]))
 
 # }}}
 

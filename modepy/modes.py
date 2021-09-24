@@ -29,7 +29,7 @@ from typing import Callable, Optional, Sequence, TypeVar, Tuple, Union, TYPE_CHE
 import numpy as np
 
 from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
-from modepy.shapes import Shape, Simplex, Hypercube
+from modepy.shapes import Shape, TensorProductShape, Simplex
 
 if TYPE_CHECKING:
     import pymbolic.primitives
@@ -1038,7 +1038,7 @@ def _monomial_basis_for_pn(space: PN, shape: Simplex):
 # }}}
 
 
-# {{{ QN bases
+# {{{ generic tensor product bases
 
 class TensorProductBasis(Basis):
     """Adapts multiple bases into a tensor product basis.
@@ -1122,58 +1122,6 @@ class TensorProductBasis(Basis):
                 for mid in self.mode_ids)
 
 
-@orthonormal_basis_for_space.register(QN)
-def _orthonormal_basis_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
-
-    order = space.order
-    dim = space.spatial_dim
-    return TensorProductBasis(
-            # NOTE: https://github.com/python/mypy/issues/1484
-            [[partial(jacobi, 0, 0, n)              # type: ignore[misc]
-                for n in range(order + 1)]] * dim,
-            [[partial(grad_jacobi, 0, 0, n)         # type: ignore[misc]
-                for n in range(order + 1)]] * dim,
-            orth_weight=1)
-
-
-@basis_for_space.register(QN)
-def _basis_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
-
-    return orthonormal_basis_for_space(space, shape)
-
-
-def _monomial_1d(order, r):
-    return r**order
-
-
-def _grad_monomial_1d(order, r):
-    if order == 0:
-        return 0*r
-    else:
-        return order*r**(order-1)
-
-
-@monomial_basis_for_space.register(QN)
-def _monomial_basis_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
-
-    order = space.order
-    dim = space.spatial_dim
-    return TensorProductBasis(
-            [[partial(_monomial_1d, n) for n in range(order + 1)]] * dim,
-            [[partial(_grad_monomial_1d, n) for n in range(order + 1)]] * dim,
-            orth_weight=None)
-
-# }}}
-
-
-# {{{ generic tensor product space
-
 def _get_orth_weight(bases: Sequence[Basis]) -> Optional[float]:
     orth_weight = 1
     for b in bases:
@@ -1187,12 +1135,19 @@ def _get_orth_weight(bases: Sequence[Basis]) -> Optional[float]:
 
 
 @orthonormal_basis_for_space.register(TensorProductSpace)
-def _orthonormal_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+def _orthonormal_basis_for_tp(
+        space: TensorProductSpace,
+        shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
-    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
-    bases = [orthonormal_basis_for_space(b, s) for b, s in zip(space.bases, shapes)]
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    bases = [
+            orthonormal_basis_for_space(b, s)
+            for b, s in zip(space.bases, shape.bases)]
+
     return TensorProductBasis(
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],
@@ -1201,12 +1156,14 @@ def _orthonormal_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
 
 
 @basis_for_space.register(TensorProductSpace)
-def _basis_for_tp(space: TensorProductSpace, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
-    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
-    bases = [basis_for_space(b, s) for b, s in zip(space.bases, shapes)]
+    if space.spatial_dim != shape.dim:
+        raise ValueError("spatial dimensions of shape and space must match")
+
+    bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
     return TensorProductBasis(
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],
@@ -1215,12 +1172,14 @@ def _basis_for_tp(space: TensorProductSpace, shape: Hypercube):
 
 
 @monomial_basis_for_space.register(TensorProductSpace)
-def _monomial_basis_for_tp(space: TensorProductSpace, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
-    shapes = [type(shape)(b.spatial_dim) for b in space.bases]
-    bases = [monomial_basis_for_space(b, s) for b, s in zip(space.bases, shapes)]
+    bases = [
+            monomial_basis_for_space(b, s)
+            for b, s in zip(space.bases, shape.bases)]
+
     return TensorProductBasis(
             [b.functions for b in reversed(bases)],
             [b.gradients for b in reversed(bases)],

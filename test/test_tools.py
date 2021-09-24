@@ -249,7 +249,10 @@ def _test_diff_matrix(space, shape, rtol=2.0e-4):
     (mp.Hypercube, (6, 7, 5))])
 def test_diff_matrix(dims, shape_cls, order):
     if isinstance(order, tuple):
-        order = order[:dims]
+        if dims == 1:
+            order = order[dims]
+        else:
+            order = order[:dims]
 
     shape = shape_cls(dims)
     space = mp.space_for_shape(shape, order)
@@ -527,6 +530,37 @@ def test_normals(shape):
                 (face_vertices[:, i+1] - face_vertices[:, 0]) @ normal) < 1e-13
 
         assert abs(la.norm(normal, 2) - 1) < 1e-13
+
+# }}}
+
+
+# {{{ test_tensor_product_shapes
+
+def test_tensor_product_shapes():
+    # shape, dim, nvertices, nfaces
+    shapes = [
+            (mp.Hypercube(1), 1, 2, 2),
+            (mp.Hypercube(2), 2, 4, 4),
+            (mp.Hypercube(3), 3, 8, 6),
+            (mp.TensorProductShape((mp.Simplex(1),) * 2), 2, 4, 4),
+            (mp.TensorProductShape((mp.Simplex(1),) * 3), 3, 8, 6),
+            (mp.TensorProductShape((mp.Hypercube(1), mp.Hypercube(2))), 3, 8, 6),
+            (mp.TensorProductShape((mp.Simplex(2), mp.Simplex(1))), 3, 6, 5),
+            (mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2))), 3, 6, 5),
+            ]
+
+    assert isinstance(mp.Hypercube(1), mp.Simplex)
+    assert isinstance(mp.TensorProductShape((mp.Simplex(2),)), mp.Simplex)
+
+    for shape, dim, nvertices, nfaces in shapes:
+        assert shape.dim == dim
+        assert shape.nvertices == nvertices
+        assert shape.nfaces == nfaces
+
+    with pytest.raises(NotImplementedError):
+        mp.TensorProductShape((mp.Simplex(2),) * 2)
+
+    mp.faces_for_shape(mp.Hypercube(3))
 
 # }}}
 
