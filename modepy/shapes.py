@@ -256,6 +256,10 @@ class Face:
     volume_vertex_indices: Tuple[int, ...]
     map_to_volume: Callable[[np.ndarray], np.ndarray]
 
+    @property
+    def dim(self):
+        return self.volume_shape.dim - 1
+
 
 def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     """
@@ -337,7 +341,7 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
 @faces_for_shape.register(Simplex)
 def _faces_for_simplex(shape: Simplex):
     # NOTE: order is chosen to maintain a positive orientation
-    face_vertex_indices = {
+    face_vertex_indices: Tuple[Tuple[int, ...], ...] = {  # type: ignore[assignment]
             1: ((0,), (1,)),
             2: ((0, 1), (2, 0), (1, 2)),
             3: ((0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3))
@@ -399,7 +403,7 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
 @faces_for_shape.register(Hypercube)
 def _faces_for_hypercube(shape: Hypercube):
     # NOTE: order is chosen to maintain a positive orientation
-    face_vertex_indices = {
+    face_vertex_indices: Tuple[Tuple[int, ...], ...] = {  # type: ignore[assignment]
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b11, 0b10), (0b10, 0b00), (0b01, 0b11)),
         3: (

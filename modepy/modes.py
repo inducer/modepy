@@ -31,13 +31,15 @@ import numpy as np
 
 from modepy.spaces import FunctionSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
-from pytools import T
 
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
 
 .. currentmodule:: modepy
+
+.. class:: T
+
 
 Basis Retrieval
 ---------------
@@ -129,7 +131,7 @@ def _where(op_a, comp, op_b, then, else_):
 
 # {{{ jacobi polynomials
 
-def jacobi(alpha: float, beta: float, n: int, x: T) -> T:
+def jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
     r"""Evaluate `Jacobi polynomials
     <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type
     :math:`(\alpha, \beta)`, with :math:`\alpha, \beta > -1`, and order *n*
@@ -145,7 +147,7 @@ def jacobi(alpha: float, beta: float, n: int, x: T) -> T:
     :returns: a vector of :math:`P^{(\alpha, \beta)}_n` evaluated at all *x*.
     """
 
-    from modepy.tools import gamma
+    from math import gamma
 
     # Initial values P_0(x) and P_1(x)
     # NOTE: general formula gets a divide by 0 in the `alpha + beta == -1` case,
@@ -190,7 +192,7 @@ def jacobi(alpha: float, beta: float, n: int, x: T) -> T:
     return pl[n]
 
 
-def grad_jacobi(alpha: float, beta: float, n: int, x: T) -> T:
+def grad_jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
     """Evaluate the derivative of :func:`jacobi`, with the same meanings and
     restrictions for all arguments.
     """
@@ -204,7 +206,9 @@ def grad_jacobi(alpha: float, beta: float, n: int, x: T) -> T:
 
 # {{{ 2D PKDO
 
-def _rstoab(r: T, s: T, tol: float = 1.0e-12,) -> Tuple[T, T]:
+def _rstoab(
+        r: np.ndarray, s: np.ndarray,
+        tol: float = 1.0e-12) -> Tuple[np.ndarray, np.ndarray]:
     """Transfer from (r, s) -> (a, b) coordinates in triangle."""
 
     # We may divide by zero below (or close to it), but we won't use the
@@ -215,7 +219,7 @@ def _rstoab(r: T, s: T, tol: float = 1.0e-12,) -> Tuple[T, T]:
     return a, b
 
 
-def pkdo_2d(order: Tuple[int, int], rs: T) -> T:
+def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :param order: A tuple *(i, j)* representing the order of the polynomial.
@@ -230,7 +234,7 @@ def pkdo_2d(order: Tuple[int, int], rs: T) -> T:
     * |dubiner-ref|
     """
 
-    a, b = _rstoab(*rs)
+    a, b = _rstoab(*rs)     # type: ignore[misc]
     i, j = order
 
     h1 = jacobi(0, 0, i, a)
@@ -238,7 +242,9 @@ def pkdo_2d(order: Tuple[int, int], rs: T) -> T:
     return sqrt(2)*h1*h2*(1-b)**i
 
 
-def grad_pkdo_2d(order: Tuple[int, int], rs: T) -> Tuple[T, T]:
+def grad_pkdo_2d(
+        order: Tuple[int, int],
+        rs: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
     :param order: A tuple *(i, j)* representing the order of the polynomial.
@@ -254,7 +260,7 @@ def grad_pkdo_2d(order: Tuple[int, int], rs: T) -> Tuple[T, T]:
     * |dubiner-ref|
     """
 
-    a, b = _rstoab(*rs)
+    a, b = _rstoab(*rs)     # type: ignore[misc]
     i, j = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
@@ -292,7 +298,9 @@ def grad_pkdo_2d(order: Tuple[int, int], rs: T) -> Tuple[T, T]:
 
 # {{{ 3D PKDO
 
-def _rsttoabc(r: T, s: T, t: T, tol: float = 1.0e-10) -> Tuple[T, T, T]:
+def _rsttoabc(
+        r: np.ndarray, s: np.ndarray, t: np.ndarray,
+        tol: float = 1.0e-10) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
     with np.errstate(all="ignore"):
@@ -303,7 +311,7 @@ def _rsttoabc(r: T, s: T, t: T, tol: float = 1.0e-10) -> Tuple[T, T, T]:
     return a, b, c
 
 
-def pkdo_3d(order: Tuple[int, int, int], rst: T) -> T:
+def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :param order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -318,7 +326,7 @@ def pkdo_3d(order: Tuple[int, int, int], rst: T) -> T:
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)
+    a, b, c = _rsttoabc(*rst)       # type: ignore[misc]
     i, j, k = order
 
     h1 = jacobi(0, 0, i, a)
@@ -328,7 +336,9 @@ def pkdo_3d(order: Tuple[int, int, int], rst: T) -> T:
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
 
-def grad_pkdo_3d(order: Tuple[int, int, int], rst: T) -> Tuple[T, T, T]:
+def grad_pkdo_3d(
+        order: Tuple[int, int, int],
+        rst: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
     :param order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -344,7 +354,7 @@ def grad_pkdo_3d(order: Tuple[int, int, int], rst: T) -> Tuple[T, T, T]:
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)
+    a, b, c = _rsttoabc(*rst)       # type: ignore[misc]
     i, j, k = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
@@ -396,7 +406,7 @@ def grad_pkdo_3d(order: Tuple[int, int, int], rst: T) -> Tuple[T, T, T]:
 
 # {{{ monomials
 
-def monomial(order: Tuple[int, ...], rst: T) -> T:
+def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     """Evaluate the monomial of order *order* at the points *rst*.
 
     :param order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -410,7 +420,7 @@ def monomial(order: Tuple[int, ...], rst: T) -> T:
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-def grad_monomial(order: Tuple[int, ...], rst: T) -> T:
+def grad_monomial(order: Tuple[int, ...], rst: np.ndarray) -> Tuple[np.ndarray, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :param order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -744,8 +754,8 @@ def grad_legendre_tensor_product_basis(dims, order):
 # {{{ conversion to symbolic
 
 def symbolicize_function(
-        f: Callable[[T], Union[T, Tuple[T, ...]]], dim: int,
-        ref_coord_var_name: str = "r") -> Any:
+        f: Callable[[np.ndarray], Union[np.ndarray, Tuple[np.ndarray, ...]]],
+        dim: int, ref_coord_var_name: str = "r") -> Any:
     """For a function *f* (basis or gradient) returned by one of the functions in
     this module, return a :mod:`pymbolic` expression representing the
     same function.
@@ -847,7 +857,7 @@ def monomial_basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
 # }}}
 
 
-def zerod_basis(x: T) -> T:
+def zerod_basis(x: np.ndarray) -> np.ndarray:
     assert len(x) == 0
     x_sub = np.ones(x.shape[1:], x.dtype)
     return 1 + x_sub
@@ -855,13 +865,13 @@ def zerod_basis(x: T) -> T:
 
 # {{{ PN bases
 
-def _pkdo_1d(order: Tuple[int], r: T) -> T:
+def _pkdo_1d(order: Tuple[int], r: np.ndarray) -> np.ndarray:
     i, = order
     r0, = r
     return jacobi(0, 0, i, r0)
 
 
-def _grad_pkdo_1d(order: Tuple[int], r: T) -> Tuple[T]:
+def _grad_pkdo_1d(order: Tuple[int], r: np.ndarray) -> Tuple[np.ndarray]:
     i, = order
     r0, = r
     return (grad_jacobi(0, 0, i, r0),)
@@ -929,7 +939,7 @@ class _SimplexMonomialBasis(_SimplexBasis):
 @basis_for_space.register(PN)
 def _basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     if space.spatial_dim <= 3:
         return _SimplexONB(space.spatial_dim, space.order)
@@ -940,7 +950,7 @@ def _basis_for_pn(space: PN, shape: Simplex):
 @orthonormal_basis_for_space.register(PN)
 def _orthonormal_basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     return _SimplexONB(space.spatial_dim, space.order)
 
@@ -948,7 +958,7 @@ def _orthonormal_basis_for_pn(space: PN, shape: Simplex):
 @monomial_basis_for_space.register(PN)
 def _monomial_basis_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     return _SimplexMonomialBasis(space.spatial_dim, space.order)
 
@@ -964,8 +974,10 @@ class TensorProductBasis(Basis):
     """
 
     def __init__(self,
-            bases_1d: Sequence[Sequence[Callable[[T], T]]],
-            grad_bases_1d: Sequence[Sequence[Callable[[T], Tuple[T, ...]]]],
+            bases_1d: Sequence[Sequence[
+                Callable[[np.ndarray], np.ndarray]]],
+            grad_bases_1d: Sequence[Sequence[
+                Callable[[np.ndarray], Tuple[np.ndarray, ...]]]],
             orth_weight: Optional[float]) -> None:
         """
         :param bases_1d: a sequence (one entry per axis/dimension)
@@ -1027,20 +1039,22 @@ class TensorProductBasis(Basis):
 @orthonormal_basis_for_space.register(QN)
 def _orthonormal_basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     order = space.order
     dim = space.spatial_dim
     return TensorProductBasis(
             [[partial(jacobi, 0, 0, n) for n in range(order + 1)]] * dim,
-            [[partial(grad_jacobi, 0, 0, n) for n in range(order + 1)]] * dim,
+            # NOTE: https://github.com/python/mypy/issues/1484
+            [[partial(grad_jacobi, 0, 0, n)         # type: ignore[misc]
+                for n in range(order + 1)]] * dim,
             orth_weight=1)
 
 
 @basis_for_space.register(QN)
 def _basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     return orthonormal_basis_for_space(space, shape)
 
@@ -1059,7 +1073,7 @@ def _grad_monomial_1d(order, r):
 @monomial_basis_for_space.register(QN)
 def _monomial_basis_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
     order = space.order
     dim = space.spatial_dim

@@ -39,47 +39,14 @@ THE SOFTWARE.
 """
 
 from functools import reduce
+from math import gamma      # noqa: F401
+from math import sqrt
 
 import numpy as np
 import numpy.linalg as la
-from math import sqrt
+
 from pytools import memoize_method, MovedFunctionDeprecationWrapper
 import modepy.shapes as shp
-
-
-try:
-    # Python 2.7 and newer
-    from math import gamma
-except ImportError:
-    _have_gamma = False
-else:
-    _have_gamma = True
-
-
-if not _have_gamma:
-    try:
-        from scipy.special import gamma  # noqa
-    except ImportError:
-        pass
-    else:
-        _have_gamma = True
-
-
-if not _have_gamma:
-    def gamma(z):  # noqa
-        from warnings import warn
-        warn("Using makeshift gamma function that only works for integers. "
-                "No better one was found.")
-
-        if z != int(z):
-            raise RuntimeError("makeshift gamma function doesn't work "
-                    "for non-integers")
-
-        g = 1
-        for i in range(1, int(z)):
-            g = g*i
-
-        return g
 
 
 class Monomial:
@@ -154,12 +121,12 @@ class AffineMap:
         # This .T goofiness allows both the nD and the 1D case.
         return (np.dot(self.a, x).T + self.b).T
 
-    @property
+    @property           # type: ignore[misc]
     @memoize_method
     def jacobian(self):
         return la.det(self.a)
 
-    @property
+    @property           # type: ignore[misc]
     @memoize_method
     def inverse(self):
         """The inverse :class:`AffineMap` of *self*."""
