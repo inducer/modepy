@@ -289,7 +289,7 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
 @singledispatch
 def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
     r"""
-    :results: a tuple of :class:`Face`\ s representing the faces of *shape*.
+    :returns: a tuple of :class:`Face`\ s representing the faces of *shape*.
     """
     raise NotImplementedError(type(shape).__name__)
 

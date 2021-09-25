@@ -32,14 +32,10 @@ import numpy as np
 from modepy.spaces import FunctionSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
 
-
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
 
 .. currentmodule:: modepy
-
-.. class:: T
-
 
 Basis Retrieval
 ---------------
