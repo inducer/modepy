@@ -166,19 +166,19 @@ def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
     :returns: a :class:`~modepy.Quadrature` that exactly integrates the functions
         in *space* over *shape*.
     """
-    raise NotImplementedError((type(space).__name__, type(shape).__name))
+    raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @quadrature_for_space.register(PN)
 def _quadrature_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
     import modepy as mp
     if space.spatial_dim == 0:
-        quad = ZeroDimensionalQuadrature()
+        quad: Quadrature = ZeroDimensionalQuadrature()
     else:
         try:
             quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
@@ -193,12 +193,12 @@ def _quadrature_for_pn(space: PN, shape: Simplex):
 @quadrature_for_space.register(QN)
 def _quadrature_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
-        quad = ZeroDimensionalQuadrature()
+        quad: Quadrature = ZeroDimensionalQuadrature()
     else:
         quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
 

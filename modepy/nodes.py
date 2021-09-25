@@ -348,7 +348,7 @@ def warp_and_blend_nodes(
 
 def tensor_product_nodes(
         dims_or_nodes: Union[int, Sequence[np.ndarray]],
-        nodes_1d: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+        nodes_1d: Optional[np.ndarray] = None) -> np.ndarray:
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -358,9 +358,9 @@ def tensor_product_nodes(
 
         The node ordering has changed and is no longer documented.
     """
-    from numbers import Number
-    if isinstance(dims_or_nodes, Number):
-        nodes = [nodes_1d] * dims_or_nodes
+    if isinstance(dims_or_nodes, int):
+        assert nodes_1d is not None
+        nodes: Sequence[np.ndarray] = [nodes_1d] * dims_or_nodes
         dims = dims_or_nodes
     else:
         assert nodes_1d is None
@@ -427,7 +427,7 @@ def _node_tuples_for_pn(space: PN):
 @equispaced_nodes_for_space.register(PN)
 def _equispaced_nodes_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
@@ -443,7 +443,7 @@ def _equispaced_nodes_for_pn(space: PN, shape: Simplex):
 @edge_clustered_nodes_for_space.register(PN)
 def _edge_clustered_nodes_for_pn(space: PN, shape: Simplex):
     if not isinstance(shape, Simplex):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
@@ -487,7 +487,7 @@ def _node_tuples_for_qn(space: QN):
 @equispaced_nodes_for_space.register(QN)
 def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
@@ -501,7 +501,7 @@ def _equispaced_nodes_for_qn(space: QN, shape: Hypercube):
 @edge_clustered_nodes_for_space.register(QN)
 def _edge_clustered_nodes_for_qn(space: QN, shape: Hypercube):
     if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+        raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 

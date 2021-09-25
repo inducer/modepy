@@ -40,7 +40,7 @@ from modepy.shapes import Shape, Simplex, Hypercube
 
 class FunctionSpace:
     r"""An opaque object representing a finite-dimensional function space
-    of functions :math:`\mathbb R^n \to \mathbb R`.
+    of functions :math:`\mathbb{R}^n \to \mathbb{R}`.
 
     .. attribute:: spatial_dim
 
@@ -51,11 +51,6 @@ class FunctionSpace:
 
         The number of dimensions of the function space.
     """
-
-    def __repr__(self) -> str:
-        return (f"{type(self).__name__}("
-            f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}"
-            ")")
 
 
 @singledispatch
