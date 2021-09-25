@@ -72,10 +72,10 @@ def equidistant_nodes(
         node_tuples: Optional[Sequence[Tuple[int, ...]]] = None
         ) -> np.ndarray:
     """
-    :param dims: dimensionality of desired simplex
+    :arg dims: dimensionality of desired simplex
         (e.g. 1, 2 or 3, for interval, triangle or tetrahedron).
-    :param n: Desired maximum total polynomial degree to interpolate.
-    :param node_tuples: a list of tuples of integers indicating the node order.
+    :arg n: Desired maximum total polynomial degree to interpolate.
+    :arg node_tuples: a list of tuples of integers indicating the node order.
         Use default order if *None*, see
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
 
@@ -294,10 +294,10 @@ def warp_and_blend_nodes(
         Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
         http://dx.doi.org/10.1007/s10665-006-9086-6
 
-    :param dims: dimensionality of desired simplex
+    :arg dims: dimensionality of desired simplex
         (1, 2 or 3, i.e. interval, triangle or tetrahedron).
-    :param n: Desired maximum total polynomial degree to interpolate.
-    :param node_tuples: a list of tuples of integers indicating the node order.
+    :arg n: Desired maximum total polynomial degree to interpolate.
+    :arg node_tuples: a list of tuples of integers indicating the node order.
         Use default order if *None*, see
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
     :returns: An array of shape *(dims, nnodes)* containing unit coordinates
@@ -405,7 +405,7 @@ def random_nodes_for_shape(
         shape: Shape, nnodes: int,
         rng: Optional[np.random.Generator] = None) -> np.ndarray:
     """
-    :param rng: a :class:`numpy.random.Generator`.
+    :arg rng: a :class:`numpy.random.Generator`.
 
     :returns: a :class:`numpy.ndarray` of shape `(dim, nnodes)` of random
         nodes in the reference *shape*.

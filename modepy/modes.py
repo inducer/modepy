@@ -218,8 +218,8 @@ def _rstoab(
 def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
-    :param order: A tuple *(i, j)* representing the order of the polynomial.
-    :param rs: ``rs[0], rs[1]`` are arrays of :math:`(r,s)` coordinates.
+    :arg order: A tuple *(i, j)* representing the order of the polynomial.
+    :arg rs: ``rs[0], rs[1]`` are arrays of :math:`(r,s)` coordinates.
         (See :ref:`tri-coords`)
     :return: a vector of values of the same length as the *rs* arrays.
 
@@ -243,8 +243,8 @@ def grad_pkdo_2d(
         rs: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
-    :param order: A tuple *(i, j)* representing the order of the polynomial.
-    :param rs: ``rs[0], rs[1]`` are arrays of :math:`(r, s)` coordinates.
+    :arg order: A tuple *(i, j)* representing the order of the polynomial.
+    :arg rs: ``rs[0], rs[1]`` are arrays of :math:`(r, s)` coordinates.
         (See :ref:`tri-coords`)
     :return: a tuple of vectors *(dphi_dr, dphi_ds)*, each of the same length
         as the *rs* arrays.
@@ -310,8 +310,8 @@ def _rsttoabc(
 def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
-    :param order: A tuple *(i, j, k)* representing the order of the polynomial.
-    :param rs: ``rst[0], rst[1], rst[2]`` are arrays of :math:`(r, s, t)`
+    :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
+    :arg rs: ``rst[0], rst[1], rst[2]`` are arrays of :math:`(r, s, t)`
         coordinates. (See :ref:`tet-coords`)
     :return: a vector of values of the same length as the *rst* arrays.
 
@@ -337,8 +337,8 @@ def grad_pkdo_3d(
         rst: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
-    :param order: A tuple *(i, j, k)* representing the order of the polynomial.
-    :param rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
+    :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
+    :arg rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
         (See :ref:`tet-coords`)
     :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same
         length as the *rst* arrays.
@@ -405,8 +405,8 @@ def grad_pkdo_3d(
 def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     """Evaluate the monomial of order *order* at the points *rst*.
 
-    :param order: A tuple *(i, j,...)* representing the order of the polynomial.
-    :param rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
+    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
         (See :ref:`tri-coords`)
     """
     dim = len(order)
@@ -419,8 +419,8 @@ def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
 def grad_monomial(order: Tuple[int, ...], rst: np.ndarray) -> Tuple[np.ndarray, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
-    :param order: A tuple *(i, j,...)* representing the order of the polynomial.
-    :param rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
+    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
         (See :ref:`tri-coords`)
     :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt, ....)*, each
         of the same length as the *rst* arrays.
@@ -756,7 +756,7 @@ def symbolicize_function(
     this module, return a :mod:`pymbolic` expression representing the
     same function.
 
-    :param dim: the number of dimensions of the reference element on which
+    :arg dim: the number of dimensions of the reference element on which
         *basis* is defined.
 
     .. versionadded:: 2020.2
@@ -976,10 +976,10 @@ class TensorProductBasis(Basis):
                 Callable[[np.ndarray], Tuple[np.ndarray, ...]]]],
             orth_weight: Optional[float]) -> None:
         """
-        :param bases_1d: a sequence (one entry per axis/dimension)
+        :arg bases_1d: a sequence (one entry per axis/dimension)
             of sequences (representing the basis) of 1D functions
             representing the approximation basis.
-        :param grad_bases_1d: a sequence (one entry per axis/dimension)
+        :arg grad_bases_1d: a sequence (one entry per axis/dimension)
             representing the derivatives of *bases_1d*.
         """
         self._bases_1d = bases_1d

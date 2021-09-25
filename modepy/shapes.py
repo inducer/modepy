@@ -436,7 +436,7 @@ def submesh_for_shape(
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
 
-    :param node_tuples: A list of tuples *(i, j, ...)* of integers
+    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
         returned list references indices in this list.
 
