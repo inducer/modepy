@@ -54,7 +54,8 @@ THE SOFTWARE.
 
 # }}}
 
-from typing import List, Tuple
+from typing import Sequence, Optional, Tuple, Union
+
 import numpy as np
 import numpy.linalg as la
 
@@ -66,14 +67,18 @@ from modepy.spaces import FunctionSpace, PN, QN
 
 # {{{ equidistant nodes
 
-def equidistant_nodes(dims, n, node_tuples=None):
+def equidistant_nodes(
+        dims: int, n: int,
+        node_tuples: Optional[Sequence[Tuple[int, ...]]] = None
+        ) -> np.ndarray:
     """
-    :arg dims: dimensionality of desired simplex
+    :param dims: dimensionality of desired simplex
         (e.g. 1, 2 or 3, for interval, triangle or tetrahedron).
-    :arg n: Desired maximum total polynomial degree to interpolate.
-    :arg node_tuples: a list of tuples of integers indicating the node order.
+    :param n: Desired maximum total polynomial degree to interpolate.
+    :param node_tuples: a list of tuples of integers indicating the node order.
         Use default order if *None*, see
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
+
     :returns: An array of shape *(dims, nnodes)* containing bi-unit coordinates
         of the interpolation nodes. (see :ref:`tri-coords` and :ref:`tet-coords`)
     """
@@ -279,7 +284,9 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 # {{{ generic interface to warp-and-blend nodes
 
-def warp_and_blend_nodes(dims, n, node_tuples=None):
+def warp_and_blend_nodes(
+        dims: int, n: int,
+        node_tuples: Optional[Sequence[Tuple[int, ...]]] = None) -> np.ndarray:
     """Return interpolation nodes as described in [warburton-nodes]_
 
     .. [warburton-nodes] Warburton, T.
@@ -287,10 +294,10 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
         Journal of Engineering Mathematics 56, no. 3 (2006): 247-262.
         http://dx.doi.org/10.1007/s10665-006-9086-6
 
-    :arg dims: dimensionality of desired simplex
+    :param dims: dimensionality of desired simplex
         (1, 2 or 3, i.e. interval, triangle or tetrahedron).
-    :arg n: Desired maximum total polynomial degree to interpolate.
-    :arg node_tuples: a list of tuples of integers indicating the node order.
+    :param n: Desired maximum total polynomial degree to interpolate.
+    :param node_tuples: a list of tuples of integers indicating the node order.
         Use default order if *None*, see
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`.
     :returns: An array of shape *(dims, nnodes)* containing unit coordinates
@@ -339,7 +346,9 @@ def warp_and_blend_nodes(dims, n, node_tuples=None):
 
 # {{{ tensor product nodes
 
-def tensor_product_nodes(dims_or_nodes, nodes_1d=None):
+def tensor_product_nodes(
+        dims_or_nodes: Union[int, Sequence[np.ndarray]],
+        nodes_1d: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -348,7 +357,6 @@ def tensor_product_nodes(dims_or_nodes, nodes_1d=None):
     .. versionchanged:: 2020.3
 
         The node ordering has changed and is no longer documented.
-
     """
     from numbers import Number
     if isinstance(dims_or_nodes, Number):
@@ -368,7 +376,7 @@ def tensor_product_nodes(dims_or_nodes, nodes_1d=None):
     return result.reshape(dims, -1)
 
 
-def legendre_gauss_lobatto_tensor_product_nodes(dims, n):
+def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
     return tensor_product_nodes(dims, legendre_gauss_lobatto_nodes(n))
 
@@ -378,26 +386,29 @@ def legendre_gauss_lobatto_tensor_product_nodes(dims, n):
 # {{{ space-based interface
 
 @singledispatch
-def node_tuples_for_space(space: FunctionSpace) -> List[Tuple[int]]:
+def node_tuples_for_space(space: FunctionSpace) -> Sequence[Tuple[int]]:
     raise NotImplementedError(type(space).__name__)
 
 
 @singledispatch
-def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape):
-    raise NotImplementedError((type(space).__name__, type(shape).__name))
+def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape) -> np.ndarray:
+    raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
-def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape):
-    raise NotImplementedError((type(space).__name__, type(shape).__name))
+def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> np.ndarray:
+    raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
-def random_nodes_for_shape(shape: Shape, nnodes: int, rng=None):
+def random_nodes_for_shape(
+        shape: Shape, nnodes: int,
+        rng: Optional[np.random.Generator] = None) -> np.ndarray:
     """
-    :arg generator: a :class:`numpy.random.Generator`.
-    :returns: a :class:`numpy.ndarray` that returns an array of
-        shape `(dim, nnodes)` of random nodes in the reference element.
+    :param rng: a :class:`numpy.random.Generator`.
+
+    :returns: a :class:`numpy.ndarray` of shape `(dim, nnodes)` of random
+        nodes in the reference *shape*.
     """
     raise NotImplementedError(type(shape).__name__)
 
