@@ -28,6 +28,8 @@ import modepy.shapes as shp
 import modepy.nodes as nd
 
 
+# {{{ test_barycentric_coordinate_map
+
 @pytest.mark.parametrize("dims", [1, 2, 3])
 def test_barycentric_coordinate_map(dims):
     n = 100
@@ -50,6 +52,10 @@ def test_barycentric_coordinate_map(dims):
     unit3 = equilateral_to_unit(equi)
     assert la.norm(unit-unit3) < 1e-14
 
+# }}}
+
+
+# {{{ test_warp
 
 def test_warp():
     """Check some assumptions on the node warp factor calculator"""
@@ -67,6 +73,10 @@ def test_warp():
     lgq = LegendreGaussQuadrature(n)
     assert abs(lgq(partial(nd.warp_factor, n, scaled=False))) < 6e-14
 
+# }}}
+
+
+# {{{ test_tri_face_node_distribution
 
 def test_tri_face_node_distribution():
     """Test whether the nodes on the faces of the triangle are distributed
@@ -103,10 +113,14 @@ def test_tri_face_node_distribution():
         error = la.norm(points-first_points, np.Inf)
         assert error < 1e-15
 
+# }}}
+
+
+# {{{ test_simplex_nodes
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("n", [1, 3, 6])
-def test_simp_nodes(dims, n):
+def test_simplex_nodes(dims, n):
     """Verify basic assumptions on simplex interpolation nodes"""
 
     eps = 1e-10
@@ -115,11 +129,14 @@ def test_simp_nodes(dims, n):
     assert (unodes >= -1-eps).all()
     assert (np.sum(unodes) <= eps).all()
 
+# }}}
+
+
+# {{{ test_affine_map
 
 def test_affine_map():
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
-    # for d in [3]:
     for d in range(1, 5):
         for _i in range(100):
             a = np.random.randn(d, d)+10*np.eye(d)
@@ -130,6 +147,10 @@ def test_affine_map():
 
             assert la.norm(x-m.inverse(m(x))) < 1e-10
 
+# }}}
+
+
+# {{{ test_tensor_product_nodes
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
 def test_tensor_product_nodes(dim):
@@ -141,6 +162,10 @@ def test_tensor_product_nodes(dim):
             nodes[0],
             np.array(nodes_1d.tolist() * nnodes**(dim - 1)))
 
+# }}}
+
+
+# {{{ test_nonhomogeneous_tensor_product_nodes
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
 def test_nonhomogeneous_tensor_product_nodes(dim):
@@ -154,6 +179,10 @@ def test_nonhomogeneous_tensor_product_nodes(dim):
             list(range(nnodes[-1])) * int(np.prod(nnodes[:-1]))
             )
 
+# }}}
+
+
+# {{{ test_order0_nodes
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("shape_cls", [shp.Hypercube, shp.Simplex])
@@ -171,6 +200,8 @@ def test_order0_nodes(dim, shape_cls):
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
     assert not np.isnan(nodes).any()
     assert np.allclose(centroid, nodes)
+
+# }}}
 
 
 # You can test individual routines by typing
