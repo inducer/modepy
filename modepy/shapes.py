@@ -201,7 +201,7 @@ THE SOFTWARE.
 """
 
 import numpy as np
-from typing import Tuple, Callable
+from typing import Callable, Sequence, Tuple
 
 from functools import singledispatch, partial
 from dataclasses import dataclass
@@ -220,7 +220,7 @@ class Shape:
 
 
 @singledispatch
-def unit_vertices_for_shape(shape: Shape):
+def unit_vertices_for_shape(shape: Shape) -> np.ndarray:
     """
     :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
@@ -253,7 +253,7 @@ class Face:
     """
     volume_shape: Shape
     face_index: int
-    volume_vertex_indices: Tuple[int]
+    volume_vertex_indices: Tuple[int, ...]
     map_to_volume: Callable[[np.ndarray], np.ndarray]
 
 
@@ -286,9 +286,9 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
 
 
 @singledispatch
-def faces_for_shape(shape: Shape):
-    """
-    :results: a tuple of :class:`Face` representing the faces of *shape*.
+def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
+    r"""
+    :results: a tuple of :class:`Face`\ s representing the faces of *shape*.
     """
     raise NotImplementedError(type(shape).__name__)
 
@@ -429,11 +429,13 @@ def _faces_for_hypercube(shape: Hypercube):
 # {{{ submeshes
 
 @singledispatch
-def submesh_for_shape(shape: Shape, node_tuples):
+def submesh_for_shape(
+        shape: Shape, node_tuples: Sequence[Tuple[int, ...]]
+        ) -> Sequence[Tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
     generate a tesselation of the reference element.
 
-    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
+    :param node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
         returned list references indices in this list.
 
