@@ -52,11 +52,24 @@ class FunctionSpace:
         The number of dimensions of the function space.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"{type(self).__name__}("
             f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}"
             ")")
 
+
+@singledispatch
+def space_for_shape(shape: Shape, order: int) -> FunctionSpace:
+    r"""Return an unspecified instance of :class:`FunctionSpace` suitable
+    for approximation on *shape* attaining interpolation error of
+    :math:`O(h^{\text{order}+1})`.
+    """
+    raise NotImplementedError(type(shape).__name__)
+
+# }}}
+
+
+# {{{ PN
 
 class PN(FunctionSpace):
     r"""The function space of polynomials with total degree
@@ -70,13 +83,14 @@ class PN(FunctionSpace):
 
     .. automethod:: __init__
     """
-    def __init__(self, spatial_dim, order):
+
+    def __init__(self, spatial_dim: int, order: int) -> None:
         super().__init__()
         self.spatial_dim = spatial_dim
         self.order = order
 
     @property
-    def space_dim(self):
+    def space_dim(self) -> int:
         spdim = self.spatial_dim
         order = self.order
         try:
@@ -88,11 +102,20 @@ class PN(FunctionSpace):
             return reduce(mul, range(order + 1, order + spdim + 1), 1) \
                     // reduce(mul, range(1, spdim + 1), 1)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"{type(self).__name__}("
             f"spatial_dim={self.spatial_dim}, order={self.order}"
             ")")
 
+
+@space_for_shape.register(Simplex)
+def _space_for_simplex(shape: Simplex, order: int):
+    return PN(shape.dim, order)
+
+# }}}
+
+
+# {{{ QN
 
 class QN(FunctionSpace):
     r"""The function space of polynomials with maximum degree
@@ -107,38 +130,27 @@ class QN(FunctionSpace):
 
     .. automethod:: __init__
     """
-    def __init__(self, spatial_dim, order):
+
+    def __init__(self, spatial_dim: int, order: int) -> None:
         super().__init__()
         self.spatial_dim = spatial_dim
         self.order = order
 
     @property
-    def space_dim(self):
+    def space_dim(self) -> int:
         return (self.order + 1)**self.spatial_dim
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"{type(self).__name__}("
             f"spatial_dim={self.spatial_dim}, order={self.order}"
             ")")
 
 
-@singledispatch
-def space_for_shape(shape: Shape, order: int) -> FunctionSpace:
-    r"""Return an unspecified instance of :class:`FunctionSpace` suitable
-    for approximation on *shape* attaining interpolation error of
-    :math:`O(h^{\text{order}+1})`.
-    """
-    raise NotImplementedError(type(shape).__name__)
-
-
-@space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: int):
-    return PN(shape.dim, order)
-
-
 @space_for_shape.register(Hypercube)
 def _space_for_hypercube(shape: Hypercube, order: int):
     return QN(shape.dim, order)
+
+# }}}
 
 # }}}
 
