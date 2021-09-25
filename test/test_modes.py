@@ -34,6 +34,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# {{{ test_orthonormality_jacobi_1d
+
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
     (0, 0, 5e-14),              # Gauss-Legendre
     (-0.5, -0.5, 6e-15),        # Chebyshev-Gauss (first kind)
@@ -68,6 +70,10 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
 
             assert abs(result-true_result) < ebound
 
+# }}}
+
+
+# {{{ test_basis_orthogonality
 
 @pytest.mark.parametrize(("order", "ebound"), [
     (1, 2e-15),
@@ -83,7 +89,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     mp.Hypercube(2),
     mp.Hypercube(3),
     ])
-def test_orthogonality(shape, order, ebound):
+def test_basis_orthogonality(shape, order, ebound):
     """Test orthogonality of ONBs using cubature."""
 
     qspace = mp.space_for_shape(shape, 2*order)
@@ -99,13 +105,19 @@ def test_orthogonality(shape, order, ebound):
                 true_result = 0
             result = cub(lambda x: f(x)*g(x))
             err = abs(result-true_result)
-            print((maxerr, err))
+            logger.info("error %.5e max %.5e", err, maxerr)
             maxerr = max(maxerr, err)
             if err > ebound:
-                print("bad", order, i, j, err)
+                logger.info("bound exceeded at order %d for (f_{%d}, f_{%d}): %.5e",
+                        order, i, j, err)
             assert err < ebound
-    # print(order, maxerr)
 
+    logger.info("order %d max error %.5e", order, maxerr)
+
+# }}}
+
+
+# {{{ test_basis_grad
 
 def get_inhomogeneous_tensor_prod_basis(space, shape):
     if not isinstance(shape, mp.Hypercube):
@@ -169,8 +181,11 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
         tol = 1e-8
         if eoc_rec.max_error() >= tol:
-            print(eoc_rec)
+            logger.info("\n%s", str(eoc_rec))
+
         assert (eoc_rec.max_error() < tol or eoc_rec.order_estimate() >= 1.5)
+
+# }}}
 
 
 # {{{ test symbolic modes
@@ -205,9 +220,9 @@ def test_symbolic_basis(shape, order, basis_getter):
 
     # {{{ test symbolic against direct eval
 
-    print(75*"#")
-    print("VALUES")
-    print(75*"#")
+    logger.info(75*"#")
+    logger.info("VALUES")
+    logger.info(75*"#")
 
     rng = np.random.Generator(np.random.PCG64(17))
     r = mp.random_nodes_for_shape(shape, 10000, rng=rng)
@@ -216,8 +231,8 @@ def test_symbolic_basis(shape, order, basis_getter):
         strmap = MyStringifyMapper()
         s = strmap(sym_func)
         for name, val in strmap.cse_name_list:
-            print(f"{name} <- {val}")
-        print(s)
+            logger.info("%s <- %s", name, val)
+        logger.info("sym_func: %s", s)
 
         sym_val = MyEvaluationMapper({"r": r, "abs": abs})(sym_func)
         ref_val = func(r)
@@ -226,17 +241,19 @@ def test_symbolic_basis(shape, order, basis_getter):
         err = la.norm(sym_val-ref_val, np.inf)
         if ref_norm:
             err = err/ref_norm
-        print(f"ERROR: {err}")
-        print()
+
+        logger.info("ERROR: %.5e", err)
+        logger.info("\n")
+
         assert np.allclose(sym_val, ref_val)
 
     # }}}
 
     # {{{ test gradients
 
-    print(75*"#")
-    print("GRADIENTS")
-    print(75*"#")
+    logger.info(75*"#")
+    logger.info("GRADIENTS")
+    logger.info(75*"#")
 
     sym_grad_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.gradients]
 
@@ -244,8 +261,8 @@ def test_symbolic_basis(shape, order, basis_getter):
         strmap = MyStringifyMapper()
         s = strmap(sym_grad)
         for name, val in strmap.cse_name_list:
-            print(f"{name} <- {val}")
-        print(s)
+            logger.info("%s <- %s", name, val)
+        logger.info("sym_grad: %s", s)
 
         sym_val = MyEvaluationMapper({"r": r, "abs": abs})(sym_grad)
         ref_val = grad(r)
@@ -259,14 +276,18 @@ def test_symbolic_basis(shape, order, basis_getter):
             err = la.norm(sv_i-rv_i, np.inf)
             if ref_norm:
                 err = err/ref_norm
-            print(f"ERROR: {err}")
-            print()
+
+            logger.info("ERROR: %.5e", err)
+            logger.info("\n")
+
             assert np.allclose(sv_i, rv_i)
 
     # }}}
 
 # }}}
 
+
+# {{{ test_modal_coeffs_by_projection
 
 @pytest.mark.parametrize("dim", [2, 3])
 def test_modal_coeffs_by_projection(dim):
@@ -287,6 +308,8 @@ def test_modal_coeffs_by_projection(dim):
     diff = modal_coeffs - modal_coeffs_2
 
     assert la.norm(diff, 2) < 3e-13
+
+# }}}
 
 
 # You can test individual routines by typing
