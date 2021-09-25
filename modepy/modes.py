@@ -25,11 +25,14 @@ THE SOFTWARE.
 from warnings import warn
 from math import sqrt
 from functools import singledispatch, partial
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 from modepy.spaces import FunctionSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
+from pytools import T
+
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
@@ -51,11 +54,12 @@ Jacobi polynomials
 
 .. currentmodule:: modepy
 
-.. autofunction:: jacobi(alpha, beta, n, x)
-.. autofunction:: grad_jacobi(alpha, beta, n, x)
+.. autofunction:: jacobi
+.. autofunction:: grad_jacobi
 
 Conversion to Symbolic
 ----------------------
+
 .. autofunction:: symbolicize_function
 
 Tensor product adapter
@@ -125,20 +129,20 @@ def _where(op_a, comp, op_b, then, else_):
 
 # {{{ jacobi polynomials
 
-def jacobi(alpha, beta, n, x):
+def jacobi(alpha: float, beta: float, n: int, x: T) -> T:
     r"""Evaluate `Jacobi polynomials
-    <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type :math:`(\alpha,
-    \beta)` with :math:`\alpha, \beta > -1` and :math:`\alpha+\beta \ne -1` at a
-    vector of points *x* for order *n*. The points *x* must lie on the interval
-    :math:`[-1,1]`.
-
-    :return: a vector of :math:`P^{(\alpha, \beta)}_n` evaluated at all *x*.
+    <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type
+    :math:`(\alpha, \beta)`, with :math:`\alpha, \beta > -1`, and order *n*
+    at a vector of points *x*. The points *x* must lie on the interval
+    :math:`[-1, 1]`.
 
     The polynomials are normalized to be orthonormal with respect to the
-    Jacobi weight :math:`(1-x)^\alpha(1+x)^\beta`.
+    Jacobi weight :math:`(1 - x)^\alpha (1 + x)^\beta`.
 
-    Observe that choosing :math:`\alpha=\beta=0` will yield the
+    Observe that choosing :math:`\alpha = \beta = 0` will yield the
     `Legendre polynomials <https://en.wikipedia.org/wiki/Legendre_polynomials>`__.
+
+    :returns: a vector of :math:`P^{(\alpha, \beta)}_n` evaluated at all *x*.
     """
 
     from modepy.tools import gamma
@@ -186,9 +190,9 @@ def jacobi(alpha, beta, n, x):
     return pl[n]
 
 
-def grad_jacobi(alpha, beta, n, x):
-    """Evaluate the derivative of :func:`jacobi`,
-    with the same meanings and restrictions for all arguments.
+def grad_jacobi(alpha: float, beta: float, n: int, x: T) -> T:
+    """Evaluate the derivative of :func:`jacobi`, with the same meanings and
+    restrictions for all arguments.
     """
     if n == 0:
         return 0*x
@@ -200,9 +204,8 @@ def grad_jacobi(alpha, beta, n, x):
 
 # {{{ 2D PKDO
 
-def _rstoab(r, s, tol=1e-12):
-    """Transfer from (r, s) -> (a, b) coordinates in triangle.
-    """
+def _rstoab(r: T, s: T, tol: float = 1.0e-12,) -> Tuple[T, T]:
+    """Transfer from (r, s) -> (a, b) coordinates in triangle."""
 
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
@@ -212,11 +215,11 @@ def _rstoab(r, s, tol=1e-12):
     return a, b
 
 
-def pkdo_2d(order, rs):
+def pkdo_2d(order: Tuple[int, int], rs: T) -> T:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
-    :arg order: A tuple *(i, j)* representing the order of the polynomial.
-    :arg rs: ``rs[0], rs[1]`` are arrays of :math:`(r,s)` coordinates.
+    :param order: A tuple *(i, j)* representing the order of the polynomial.
+    :param rs: ``rs[0], rs[1]`` are arrays of :math:`(r,s)` coordinates.
         (See :ref:`tri-coords`)
     :return: a vector of values of the same length as the *rs* arrays.
 
@@ -235,11 +238,11 @@ def pkdo_2d(order, rs):
     return sqrt(2)*h1*h2*(1-b)**i
 
 
-def grad_pkdo_2d(order, rs):
+def grad_pkdo_2d(order: Tuple[int, int], rs: T) -> Tuple[T, T]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
-    :arg order: A tuple *(i, j)* representing the order of the polynomial.
-    :arg rs: ``rs[0], rs[1]`` are arrays of :math:`(r,s)` coordinates.
+    :param order: A tuple *(i, j)* representing the order of the polynomial.
+    :param rs: ``rs[0], rs[1]`` are arrays of :math:`(r, s)` coordinates.
         (See :ref:`tri-coords`)
     :return: a tuple of vectors *(dphi_dr, dphi_ds)*, each of the same length
         as the *rs* arrays.
@@ -289,7 +292,7 @@ def grad_pkdo_2d(order, rs):
 
 # {{{ 3D PKDO
 
-def _rsttoabc(r, s, t, tol=1e-10):
+def _rsttoabc(r: T, s: T, t: T, tol: float = 1.0e-10) -> Tuple[T, T, T]:
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
     with np.errstate(all="ignore"):
@@ -300,12 +303,12 @@ def _rsttoabc(r, s, t, tol=1e-10):
     return a, b, c
 
 
-def pkdo_3d(order, rst):
+def pkdo_3d(order: Tuple[int, int, int], rst: T) -> T:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
-    :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
-    :arg rs: ``rst[0], rst[1], rst[2]`` are arrays of :math:`(r,s,t)` coordinates.
-        (See :ref:`tet-coords`)
+    :param order: A tuple *(i, j, k)* representing the order of the polynomial.
+    :param rs: ``rst[0], rst[1], rst[2]`` are arrays of :math:`(r, s, t)`
+        coordinates. (See :ref:`tet-coords`)
     :return: a vector of values of the same length as the *rst* arrays.
 
     See the following publications:
@@ -325,11 +328,11 @@ def pkdo_3d(order, rst):
     return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
 
-def grad_pkdo_3d(order, rst):
+def grad_pkdo_3d(order: Tuple[int, int, int], rst: T) -> Tuple[T, T, T]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
-    :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
-    :arg rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
+    :param order: A tuple *(i, j, k)* representing the order of the polynomial.
+    :param rs: ``rs[0], rs[1], rs[2]`` are arrays of :math:`(r,s,t)` coordinates.
         (See :ref:`tet-coords`)
     :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same
         length as the *rst* arrays.
@@ -393,11 +396,11 @@ def grad_pkdo_3d(order, rst):
 
 # {{{ monomials
 
-def monomial(order, rst):
+def monomial(order: Tuple[int, ...], rst: T) -> T:
     """Evaluate the monomial of order *order* at the points *rst*.
 
-    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
-    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r,s,...)` coordinates.
+    :param order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :param rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
         (See :ref:`tri-coords`)
     """
     dim = len(order)
@@ -407,14 +410,14 @@ def monomial(order, rst):
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-def grad_monomial(order, rst):
+def grad_monomial(order: Tuple[int, ...], rst: T) -> T:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
-    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
-    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r,s,...)` coordinates.
+    :param order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :param rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
         (See :ref:`tri-coords`)
-    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt)*, each of the same
-        length as the *rst* arrays.
+    :return: a tuple of vectors *(dphi_dr, dphi_ds, dphi_dt, ....)*, each
+        of the same length as the *rst* arrays.
 
     .. versionadded:: 2016.1
     """
@@ -740,12 +743,14 @@ def grad_legendre_tensor_product_basis(dims, order):
 
 # {{{ conversion to symbolic
 
-def symbolicize_function(f, dim, ref_coord_var_name="r"):
+def symbolicize_function(
+        f: Callable[[T], Union[T, Tuple[T, ...]]], dim: int,
+        ref_coord_var_name: str = "r") -> Any:
     """For a function *f* (basis or gradient) returned by one of the functions in
     this module, return a :mod:`pymbolic` expression representing the
     same function.
 
-    :arg dim: the number of dimensions of the reference element on which
+    :param dim: the number of dimensions of the reference element on which
         *basis* is defined.
 
     .. versionadded:: 2020.2
@@ -787,31 +792,36 @@ class Basis:
     .. autoattribute:: gradients
     """
 
-    def orthonormality_weight(self):
+    def orthonormality_weight(self) -> float:
+        """
+        Can raise :exc:`BasisNotOrthonormal` if the basis does not have
+        a weight.
+        """
         raise NotImplementedError
 
     @property
     def mode_ids(self):
-        """Return a tuple of of mode (basis function) identifiers, one for
-        each basis function. Mode identifiers should generally be viewed as opaque.
-        They are hashable. For some bases, they are tuples of length matching
-        the number of dimensions and indicating the order along each reference
-        axis.
+        """A tuple of of mode (basis function) identifiers, one for
+        each basis function. Mode identifiers should generally be viewed
+        as opaque. They are hashable. For some bases, they are tuples of
+        length matching the number of dimensions and indicating the order
+        along each reference axis.
         """
         raise NotImplementedError
 
     @property
     def functions(self):
-        """Return a tuple of (callable) basis functions of length matching
-        :attr:`mode_ids`.  Each function takes a vector of (r,s,t) reference
-        coordinates as input.
+        """A tuple of (callable) basis functions of length matching
+        :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
+        reference coordinates (depending on dimension) as input.
         """
         raise NotImplementedError
 
     @property
     def gradients(self):
-        """Return a tuple of basis functions of length matching :attr:`mode_ids`.
-        Each function takes a vector of (r,s,t) reference coordinates as input.
+        """A tuple of basis functions of length matching :attr:`mode_ids`.
+        Each function takes a vector of :math:`(r, s, t)` reference coordinates
+        (depending on dimension) as input.
         """
         raise NotImplementedError
 
@@ -837,7 +847,7 @@ def monomial_basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
 # }}}
 
 
-def zerod_basis(x):
+def zerod_basis(x: T) -> T:
     assert len(x) == 0
     x_sub = np.ones(x.shape[1:], x.dtype)
     return 1 + x_sub
@@ -845,13 +855,13 @@ def zerod_basis(x):
 
 # {{{ PN bases
 
-def _pkdo_1d(order, r):
+def _pkdo_1d(order: Tuple[int], r: T) -> T:
     i, = order
     r0, = r
     return jacobi(0, 0, i, r0)
 
 
-def _grad_pkdo_1d(order, r):
+def _grad_pkdo_1d(order: Tuple[int], r: T) -> Tuple[T]:
     i, = order
     r0, = r
     return (grad_jacobi(0, 0, i, r0),)
@@ -953,12 +963,15 @@ class TensorProductBasis(Basis):
     .. automethod:: __init__
     """
 
-    def __init__(self, bases_1d, grad_bases_1d, orth_weight):
+    def __init__(self,
+            bases_1d: Sequence[Sequence[Callable[[T], T]]],
+            grad_bases_1d: Sequence[Sequence[Callable[[T], Tuple[T, ...]]]],
+            orth_weight: Optional[float]) -> None:
         """
-        :arg bases_1d: a sequence (one entry per axis/dimension)
+        :param bases_1d: a sequence (one entry per axis/dimension)
             of sequences (representing the basis) of 1D functions
             representing the approximation basis.
-        :arg grad_bases_1d: a sequence (one entry per axis/dimension)
+        :param grad_bases_1d: a sequence (one entry per axis/dimension)
             representing the derivatives of *bases_1d*.
         """
         self._bases_1d = bases_1d
