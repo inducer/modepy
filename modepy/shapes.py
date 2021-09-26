@@ -201,7 +201,7 @@ THE SOFTWARE.
 """
 
 import numpy as np
-from typing import Callable, Sequence, Tuple
+from typing import Callable, Sequence, Tuple, Dict
 
 from functools import singledispatch, partial
 from dataclasses import dataclass
@@ -336,14 +336,17 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@faces_for_shape.register(Simplex)
-def _faces_for_simplex(shape: Simplex):
-    # NOTE: order is chosen to maintain a positive orientation
-    face_vertex_indices: Tuple[Tuple[int, ...], ...] = {  # type: ignore[assignment]
+_SIMPLEX_FACES: Dict[int, Tuple[Tuple[int, ...], ...]] = {
             1: ((0,), (1,)),
             2: ((0, 1), (2, 0), (1, 2)),
             3: ((0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3))
-            }[shape.dim]
+            }
+
+
+@faces_for_shape.register(Simplex)
+def _faces_for_simplex(shape: Simplex):
+    # NOTE: order is chosen to maintain a positive orientation
+    face_vertex_indices = _SIMPLEX_FACES[shape.dim]
 
     vertices = unit_vertices_for_shape(shape)
     return [
@@ -398,10 +401,7 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-@faces_for_shape.register(Hypercube)
-def _faces_for_hypercube(shape: Hypercube):
-    # NOTE: order is chosen to maintain a positive orientation
-    face_vertex_indices: Tuple[Tuple[int, ...], ...] = {  # type: ignore[assignment]
+_HYPERCUBE_FACES: Dict[int, Tuple[Tuple[int, ...], ...]] = {
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b11, 0b10), (0b10, 0b00), (0b01, 0b11)),
         3: (
@@ -414,7 +414,13 @@ def _faces_for_hypercube(shape: Hypercube):
             (0b000, 0b001, 0b100, 0b101,),
             (0b010, 0b110, 0b011, 0b111,),
             )
-        }[shape.dim]
+        }
+
+
+@faces_for_shape.register(Hypercube)
+def _faces_for_hypercube(shape: Hypercube):
+    # NOTE: order is chosen to maintain a positive orientation
+    face_vertex_indices = _HYPERCUBE_FACES[shape.dim]
 
     vertices = unit_vertices_for_shape(shape)
     return [

@@ -121,11 +121,13 @@ class AffineMap:
         # This .T goofiness allows both the nD and the 1D case.
         return (np.dot(self.a, x).T + self.b).T
 
+    # mypy limitation: "Decorated property not supported"
     @property           # type: ignore[misc]
     @memoize_method
     def jacobian(self):
         return la.det(self.a)
 
+    # mypy limitation: "Decorated property not supported"
     @property           # type: ignore[misc]
     @memoize_method
     def inverse(self):

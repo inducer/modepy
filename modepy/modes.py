@@ -230,7 +230,7 @@ def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
     * |dubiner-ref|
     """
 
-    a, b = _rstoab(*rs)     # type: ignore[misc]
+    a, b = _rstoab(*rs)
     i, j = order
 
     h1 = jacobi(0, 0, i, a)
@@ -256,7 +256,7 @@ def grad_pkdo_2d(
     * |dubiner-ref|
     """
 
-    a, b = _rstoab(*rs)     # type: ignore[misc]
+    a, b = _rstoab(*rs)
     i, j = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
@@ -322,7 +322,7 @@ def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)       # type: ignore[misc]
+    a, b, c = _rsttoabc(*rst)
     i, j, k = order
 
     h1 = jacobi(0, 0, i, a)
@@ -350,7 +350,7 @@ def grad_pkdo_3d(
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)       # type: ignore[misc]
+    a, b, c = _rsttoabc(*rst)
     i, j, k = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
