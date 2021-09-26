@@ -264,8 +264,9 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     volume_vertices = unit_vertices_for_shape(face.volume_shape)
     face_vertices = volume_vertices[:, face.volume_vertex_indices]
 
-    dim = getattr(face, "dim", face.volume_shape.dim - 1)
-    if dim == 0:
+    assert isinstance(face, Shape)
+
+    if face.dim == 0:
         # FIXME Grrrr. Hardcoded special case. Got a better idea?
         (fv,), = face_vertices
         return np.array([np.sign(fv)])
@@ -277,7 +278,7 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     from functools import reduce
     surface_ps = reduce(outerprod, [
         MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
-        for i in range(dim)])
+        for i in range(face.dim)])
 
     if normalize:
         surface_ps = surface_ps / np.sqrt(surface_ps.norm_squared())
