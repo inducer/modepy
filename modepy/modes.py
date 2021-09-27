@@ -25,15 +25,29 @@ THE SOFTWARE.
 from warnings import warn
 from math import sqrt
 from functools import singledispatch, partial
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, TypeVar, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 
 from modepy.spaces import FunctionSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
 
+if TYPE_CHECKING:
+    import pymbolic.primitives
+
+InputType = Union[np.ndarray, "pymbolic.primitives.Expression", float]
+InputTypeT = TypeVar("InputTypeT",
+        np.ndarray, "pymbolic.primitives.Expression", float)
+
+
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
+
+.. class:: InputTypeT
+
+    :class:`~typing.TypeVar` for basis function inputs, can be one of
+    :class:`numpy.ndarray`, :class:`pymbolic.primitives.Expression` or a
+    :class:`numbers.Number`.
 
 .. currentmodule:: modepy
 
@@ -127,7 +141,7 @@ def _where(op_a, comp, op_b, then, else_):
 
 # {{{ jacobi polynomials
 
-def jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
+def jacobi(alpha: float, beta: float, n: int, x: InputTypeT) -> InputTypeT:
     r"""Evaluate `Jacobi polynomials
     <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_ of type
     :math:`(\alpha, \beta)`, with :math:`\alpha, \beta > -1`, and order *n*
@@ -188,7 +202,7 @@ def jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
     return pl[n]
 
 
-def grad_jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
+def grad_jacobi(alpha: float, beta: float, n: int, x: InputTypeT) -> InputTypeT:
     """Evaluate the derivative of :func:`jacobi`, with the same meanings and
     restrictions for all arguments.
     """
@@ -203,8 +217,8 @@ def grad_jacobi(alpha: float, beta: float, n: int, x: np.ndarray) -> np.ndarray:
 # {{{ 2D PKDO
 
 def _rstoab(
-        r: np.ndarray, s: np.ndarray,
-        tol: float = 1.0e-12) -> Tuple[np.ndarray, np.ndarray]:
+        r: InputTypeT, s: InputTypeT,
+        tol: float = 1.0e-12) -> Tuple[InputType, InputType]:
     """Transfer from (r, s) -> (a, b) coordinates in triangle."""
 
     # We may divide by zero below (or close to it), but we won't use the
@@ -240,7 +254,7 @@ def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
 
 def grad_pkdo_2d(
         order: Tuple[int, int],
-        rs: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        rs: np.ndarray) -> Tuple[InputTypeT, InputTypeT]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -295,8 +309,8 @@ def grad_pkdo_2d(
 # {{{ 3D PKDO
 
 def _rsttoabc(
-        r: np.ndarray, s: np.ndarray, t: np.ndarray,
-        tol: float = 1.0e-10) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        r: InputTypeT, s: InputTypeT, t: InputTypeT,
+        tol: float = 1.0e-10) -> Tuple[InputType, InputType, InputType]:
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
     with np.errstate(all="ignore"):
@@ -307,7 +321,7 @@ def _rsttoabc(
     return a, b, c
 
 
-def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
+def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> InputType:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -334,7 +348,7 @@ def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
 
 def grad_pkdo_3d(
         order: Tuple[int, int, int],
-        rst: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        rst: np.ndarray) -> Tuple[InputTypeT, InputTypeT, InputTypeT]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -402,7 +416,7 @@ def grad_pkdo_3d(
 
 # {{{ monomials
 
-def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
+def monomial(order: Tuple[int, ...], rst: np.ndarray) -> InputType:
     """Evaluate the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -416,7 +430,7 @@ def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-def grad_monomial(order: Tuple[int, ...], rst: np.ndarray) -> Tuple[np.ndarray, ...]:
+def grad_monomial(order: Tuple[int, ...], rst: np.ndarray) -> Tuple[InputType, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -750,8 +764,10 @@ def grad_legendre_tensor_product_basis(dims, order):
 # {{{ conversion to symbolic
 
 def symbolicize_function(
-        f: Callable[[np.ndarray], Union[np.ndarray, Tuple[np.ndarray, ...]]],
-        dim: int, ref_coord_var_name: str = "r") -> Any:
+        f: Callable[[InputTypeT], Union[InputTypeT, Tuple[InputTypeT, ...]]],
+        dim: int,
+        ref_coord_var_name: str = "r",
+        ) -> Union[InputTypeT, Tuple[InputTypeT, ...]]:
     """For a function *f* (basis or gradient) returned by one of the functions in
     this module, return a :mod:`pymbolic` expression representing the
     same function.
@@ -1040,8 +1056,9 @@ def _orthonormal_basis_for_qn(space: QN, shape: Hypercube):
     order = space.order
     dim = space.spatial_dim
     return TensorProductBasis(
-            [[partial(jacobi, 0, 0, n) for n in range(order + 1)]] * dim,
             # NOTE: https://github.com/python/mypy/issues/1484
+            [[partial(jacobi, 0, 0, n)              # type: ignore[misc]
+                for n in range(order + 1)]] * dim,
             [[partial(grad_jacobi, 0, 0, n)         # type: ignore[misc]
                 for n in range(order + 1)]] * dim,
             orth_weight=1)
