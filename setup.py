@@ -43,8 +43,10 @@ def main():
               "pytest>=2.3",
               "pymbolic",
 
-              "dataclasses; python_version<='3.6'",
-              ])
+              "dataclasses; python_version<'3.7'",
+              ],
+          package_data={"modepy": ["py.typed"]},
+          )
 
 
 if __name__ == "__main__":
