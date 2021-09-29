@@ -318,6 +318,8 @@ class TensorProductShape(Shape):
     .. attribute:: bases
 
         A :class:`tuple` of base shapes that form the tensor product.
+
+    .. automethod:: __init__
     """
 
     bases: Tuple[Shape, ...]
@@ -330,18 +332,20 @@ class TensorProductShape(Shape):
             return Shape.__new__(cls)
 
     def __init__(self, bases: Tuple[Shape, ...]) -> None:
-        dim = sum(s.dim for s in bases)
-        if dim > 3:
-            raise NotImplementedError(
-                    "tensor product shapes with dimension larger than 3, "
-                    f"got {dim} for the given base shapes")
-
         # flatten input shapes
         bases = sum([
             s.bases if isinstance(s, TensorProductShape) else (s,)
             for s in bases
             ], ())
 
+        nsegments = len([s for s in bases if s.dim == 1])
+        if nsegments < len(bases) - 1:
+            raise NotImplementedError(
+                    "only tensor products between (at most) one arbitrary polygonal "
+                    f"shape and line segments supported; got {nsegments} line "
+                    f"segments in a total of {len(bases)} shapes")
+
+        dim = sum(s.dim for s in bases)
         super().__init__(dim)
         object.__setattr__(self, "bases", bases)
 
@@ -351,19 +355,9 @@ class TensorProductShape(Shape):
 
     @property
     def nfaces(self) -> int:
-        assert self.dim <= 3
-
-        # NOTE: for dim <= 3, we always have at least one line segment
-        segment, *shapes = sorted(self.bases, key=lambda s: s.dim)
-
-        if len(shapes) == 1:
-            # polygon x segment is just extruded in the extra dimension
-            return 2 + shapes[0].nfaces
-        elif len(shapes) == 2:
-            # only shape with 3 factors is the cube
-            return 2 * self.dim
-        else:
-            raise AssertionError
+        # FIXME: this obviously only works for `shape x segment x segment x ...`
+        *segments, shape = sorted(self.bases, key=lambda s: s.dim)
+        return shape.nfaces + len(segments) * segments[0].nfaces
 
 
 @unit_vertices_for_shape.register(TensorProductShape)

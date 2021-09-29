@@ -57,6 +57,13 @@ class FunctionSpace:
 
         The number of dimensions of the function space.
     """
+    @property
+    def spatial_dim(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def space_dim(self) -> int:
+        raise NotImplementedError
 
 
 @singledispatch
@@ -81,12 +88,10 @@ class TensorProductSpace(FunctionSpace):
         A :class:`tuple` of the base spaces that take part in the
         tensor product.
 
-    .. attribute:: order
-
-        A :class:`tuple` of orders per spatial dimension.
-
     .. automethod:: __init__
     """
+
+    bases: Tuple[FunctionSpace, ...]
 
     # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> Any:
@@ -96,15 +101,11 @@ class TensorProductSpace(FunctionSpace):
             return FunctionSpace.__new__(cls)
 
     def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
+        # FIXME: should understand the type
         self.bases = sum([
-            space.bases             # type: ignore[has-type]
-            if isinstance(space, TensorProductSpace) else (space,)
+            space.bases if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
             ], ())
-
-    @property
-    def order(self) -> Tuple[int, ...]:
-        return tuple([space.order for space in self.bases])
 
     @property
     def spatial_dim(self) -> int:
@@ -116,7 +117,7 @@ class TensorProductSpace(FunctionSpace):
 
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
-                f"spatial_dim={self.spatial_dim}, order={self.order}, "
+                f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}, "
                 f"bases={self.bases!r}"
                 ")")
 
@@ -158,8 +159,12 @@ class PN(FunctionSpace):
 
     def __init__(self, spatial_dim: int, order: int) -> None:
         super().__init__()
-        self.spatial_dim = spatial_dim
+        self._spatial_dim = spatial_dim
         self.order = order
+
+    @property
+    def spatial_dim(self) -> int:
+        return self._spatial_dim
 
     @property
     def space_dim(self) -> int:
@@ -203,6 +208,7 @@ class QN(TensorProductSpace):
     .. automethod:: __init__
     """
 
+    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, spatial_dim: int, order: int) -> Any:
         if spatial_dim == 1:
             return PN(spatial_dim, order)

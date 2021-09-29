@@ -221,7 +221,7 @@ def _quadrature_for_tp(space: TensorProductSpace, shape: Hypercube):
             quadrature_for_space(s, shape) for s in space.bases
             ])
 
-    assert all(quad.exact_to >= o for o in space.order)
+    assert all(quad.exact_to >= getattr(s, "order", 0) for s in space.bases)
     return quad
 
 # }}}

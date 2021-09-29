@@ -489,14 +489,13 @@ def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
 def _node_tuples_for_tp(space: TensorProductSpace):
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
-    tensor_product_tuples = tuple([
-        tp[::-1] for tp in gnitb([len(tp) for tp in tuples_for_space])
+
+    r = tuple([
+        sum((tuples_for_space[i][j] for i, j in enumerate(tp[::-1])), ())
+        for tp in gnitb([len(tp) for tp in tuples_for_space])
         ])
 
-    return tuple([
-        sum([tuples_for_space[i] for i in tp], ())
-        for tp in tensor_product_tuples
-        ])
+    return r
 
 
 @equispaced_nodes_for_space.register(TensorProductSpace)
