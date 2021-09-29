@@ -490,8 +490,9 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
 
+    n = len(tuples_for_space)
     r = tuple([
-        sum((tuples_for_space[i][j] for i, j in enumerate(tp[::-1])), ())
+        sum((tuples_for_space[n - i - 1][j] for i, j in enumerate(tp[::-1])), ())
         for tp in gnitb([len(tp) for tp in tuples_for_space])
         ])
 

@@ -247,6 +247,26 @@ def test_tensor_product_shape_nodes(shape, visualize=False):
 # }}}
 
 
+# {{{ test_tensor_product_nodes_vs_tuples
+
+def test_tensor_product_nodes_vs_tuples():
+    import modepy as mp
+    shapes = [
+            (shp.Hypercube(2), (3, 5)),
+            (shp.Hypercube(3), (3, 5, 4)),
+            ]
+
+    for shape, order in shapes:
+        space = mp.space_for_shape(shape, order)
+        ref_nodes = nd.equispaced_nodes_for_space(space, shape)
+        nodes = (np.array(nd.node_tuples_for_space(space), dtype=np.float64)
+                / np.array(order[::-1]) * 2 - 1).T
+
+        assert np.linalg.norm(nodes - ref_nodes) < 1.0e-14
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 
