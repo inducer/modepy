@@ -206,7 +206,7 @@ THE SOFTWARE.
 """
 
 import numpy as np
-from typing import Callable, Sequence, Tuple, Dict
+from typing import Any, Callable, Sequence, Tuple, Dict
 
 from functools import singledispatch, partial
 from dataclasses import dataclass
@@ -222,6 +222,14 @@ class Shape:
     .. attribute :: nvertices
     """
     dim: int
+
+    @property
+    def nvertices(self):
+        raise NotImplementedError
+
+    @property
+    def nfaces(self):
+        raise NotImplementedError
 
 
 @singledispatch
@@ -314,7 +322,8 @@ class TensorProductShape(Shape):
 
     bases: Tuple[Shape, ...]
 
-    def __new__(cls, bases: Tuple[Shape, ...]) -> "Shape":
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, bases: Tuple[Shape, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
         else:
@@ -435,7 +444,8 @@ def _faces_for_simplex(shape: Simplex):
 
 @dataclass(frozen=True)
 class Hypercube(TensorProductShape):
-    def __new__(cls, dim: int) -> Shape:
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, dim: int) -> Any:
         if dim == 1:
             return Simplex(1)
         else:
@@ -447,7 +457,8 @@ class Hypercube(TensorProductShape):
 
 @dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    def __new__(cls, dim, **kwargs) -> Shape:
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, dim, **kwargs) -> Any:
         if dim == 1:
             return _SimplexFace(dim=1, **kwargs)
         else:

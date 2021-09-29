@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 from functools import singledispatch
 from numbers import Number
-from typing import Union, Tuple
+from typing import Any, Tuple, Union
 
 import numpy as np
 
@@ -88,7 +88,8 @@ class TensorProductSpace(FunctionSpace):
     .. automethod:: __init__
     """
 
-    def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> FunctionSpace:
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
         else:
@@ -96,7 +97,8 @@ class TensorProductSpace(FunctionSpace):
 
     def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
         self.bases = sum([
-            space.bases if isinstance(space, TensorProductSpace) else (space,)
+            space.bases             # type: ignore[has-type]
+            if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
             ], ())
 
@@ -125,12 +127,15 @@ def _space_for_tensor_product_shape(
         order: Union[int, Tuple[int, ...]]) -> TensorProductSpace:
     nbases = len(shape.bases)
     if isinstance(order, Number):
-        order = (order,) * nbases
+        assert isinstance(order, int)
+        orders = (order,) * nbases
     else:
+        assert isinstance(order, tuple)
         assert len(order) == nbases
+        orders = order
 
     return TensorProductSpace(tuple([
-        space_for_shape(shape.bases[i], order[i]) for i in range(nbases)
+        space_for_shape(shape.bases[i], orders[i]) for i in range(nbases)
         ]))
 
 # }}}
@@ -198,7 +203,7 @@ class QN(TensorProductSpace):
     .. automethod:: __init__
     """
 
-    def __new__(cls, spatial_dim: int, order: int) -> FunctionSpace:
+    def __new__(cls, spatial_dim: int, order: int) -> Any:
         if spatial_dim == 1:
             return PN(spatial_dim, order)
         else:
@@ -222,8 +227,14 @@ def _space_for_hypercube(
         shape: Hypercube, order: Union[int, Tuple[int, ...]]
         ) -> TensorProductSpace:
     if isinstance(order, Number):
+        assert isinstance(order, int)
         return QN(shape.dim, order)
     else:
+        assert isinstance(order, tuple)
+        if len(order) != shape.dim:
+            raise ValueError("must provide one order per dimension; "
+                    f"got {order} for a {shape.dim}d hypercube")
+
         return TensorProductSpace(tuple([PN(1, n) for n in order]))
 
 # }}}

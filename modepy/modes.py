@@ -1123,11 +1123,12 @@ class TensorProductBasis(Basis):
 
 
 def _get_orth_weight(bases: Sequence[Basis]) -> Optional[float]:
-    orth_weight = 1
+    orth_weight: Optional[float] = 1.0
     for b in bases:
-        if b.is_orthonormal:
+        try:
+            assert orth_weight is not None
             orth_weight *= b.orthonormality_weight()
-        else:
+        except BasisNotOrthonormal:
             orth_weight = None
             break
 

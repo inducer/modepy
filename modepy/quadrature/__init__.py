@@ -215,7 +215,7 @@ def _quadrature_for_tp(space: TensorProductSpace, shape: Hypercube):
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
-        quad = ZeroDimensionalQuadrature()
+        quad: Quadrature = ZeroDimensionalQuadrature()
     else:
         quad = TensorProductQuadrature([
             quadrature_for_space(s, shape) for s in space.bases
