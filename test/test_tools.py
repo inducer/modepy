@@ -178,8 +178,6 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
     mp.TensorProductSpace((mp.QN(2, 3), mp.QN(1, 2))),
     ])
 def test_non_homogeneous_tensor_product_resampling(space_nh):
-    logging.basicConfig(level=logging.INFO)
-
     shape = mp.Hypercube(space_nh.spatial_dim)
     orders_h = 5
 
@@ -439,7 +437,6 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
 @pytest.mark.parametrize("order", [3, 5, 8])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
 def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
-    logging.basicConfig(level=logging.INFO)
     shape = shape_cls(dims)
     space = mp.space_for_shape(shape, order)
 

@@ -653,23 +653,11 @@ def grad_simplex_best_available_basis(dims, n):
 
 # {{{ tensor product basis helpers
 
-def _handle_scalar(ary):
-    if isinstance(ary, np.ndarray):
-        ary = np.squeeze(ary)
-        if ary.shape == ():
-            ary = ary[()]
-
-    return ary
-
-
 class _TensorProductBasisFunction:
     # multi_index is here just for debugging.
 
-    def __init__(self, multi_index, functions, dims_per_function=None):
-        if dims_per_function is None:
-            dims_per_function = (1,) * len(functions)
-        else:
-            assert len(dims_per_function) == len(functions)
+    def __init__(self, multi_index, functions, *, dims_per_function):
+        assert len(dims_per_function) == len(functions)
 
         self.multi_index = multi_index
         self.functions = functions
@@ -685,7 +673,7 @@ class _TensorProductBasisFunction:
             result *= function(x[d:d + n])
             d += n
 
-        return _handle_scalar(result)
+        return result
 
     def __repr__(self):
         return (f"{type(self).__name__}(mi={self.multi_index}, "
@@ -695,11 +683,8 @@ class _TensorProductBasisFunction:
 class _TensorProductGradientBasisFunction:
     # multi_index is here just for debugging.
 
-    def __init__(self, multi_index, derivatives, dims_per_function=None):
-        if dims_per_function is None:
-            dims_per_function = (1,) * len(derivatives[0])
-        else:
-            assert len(dims_per_function) == len(derivatives[0])
+    def __init__(self, multi_index, derivatives, *, dims_per_function):
+        assert len(dims_per_function) == len(derivatives[0])
 
         self.multi_index = multi_index
         self.derivatives = tuple(derivatives)
@@ -741,7 +726,7 @@ class _TensorProductGradientBasisFunction:
                 f += j
             d += i
 
-        return tuple([_handle_scalar(r) for r in result])
+        return tuple(result)
 
     def __repr__(self):
         return (f"{type(self).__name__}(mi={self.multi_index}, "
@@ -841,6 +826,7 @@ def symbolicize_function(
     """
     import pymbolic.primitives as p
     r_sym = p.make_sym_vector(ref_coord_var_name, dim)
+
     result = f(r_sym)
 
     if dim == 1:
@@ -878,7 +864,7 @@ class Basis:
     def orthonormality_weight(self) -> float:
         """
         :raises: :exc:`BasisNotOrthonormal` if the basis does not have
-            a weight.
+            a weight, i.e. it is not orthogonal.
         """
         raise NotImplementedError
 
@@ -1073,14 +1059,10 @@ class TensorProductBasis(Basis):
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
 
-        self._bases = bases
-        self._grad_bases = grad_bases
+        self._bases = list(reversed(bases))
+        self._grad_bases = list(reversed(grad_bases))
         self._orth_weight = orth_weight
-        self._dims_per_basis = dims_per_basis
-
-    @property
-    def is_orthonormal(self):
-        return self._orth_weight is not None
+        self._dims_per_basis = list(reversed(dims_per_basis))
 
     def orthonormality_weight(self):
         if self._orth_weight is None:
@@ -1093,6 +1075,10 @@ class TensorProductBasis(Basis):
         return sum(self._dims_per_basis)
 
     @property
+    def _nbases(self):
+        return len(self._bases)
+
+    @property
     def mode_ids(self):
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
         return tuple(gnitb([len(b) for b in self._bases]))
@@ -1101,8 +1087,8 @@ class TensorProductBasis(Basis):
     def functions(self):
         return tuple(
                 _TensorProductBasisFunction(mid, [
-                    self._bases[iaxis][mid_i]
-                    for iaxis, mid_i in enumerate(mid)
+                    self._bases[ibasis][mid_i]
+                    for ibasis, mid_i in enumerate(mid)
                     ],
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)
@@ -1113,10 +1099,10 @@ class TensorProductBasis(Basis):
         func = (self._bases, self._grad_bases)
         return tuple(
                 _TensorProductGradientBasisFunction(mid, [
-                    [func[is_deriv][iaxis][mid_i]
-                        for iaxis, (is_deriv, mid_i) in
+                    [func[is_deriv][ibasis][mid_i]
+                        for ibasis, (is_deriv, mid_i) in
                         enumerate(zip(iderivative, mid))]
-                    for iderivative in wandering_element(len(self._bases))
+                    for iderivative in wandering_element(self._nbases)
                     ],
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)
@@ -1150,10 +1136,10 @@ def _orthonormal_basis_for_tp(
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in reversed(bases)],
-            [b.gradients for b in reversed(bases)],
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
             orth_weight=_get_orth_weight(bases),
-            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
+            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
 
 @basis_for_space.register(TensorProductSpace)
@@ -1166,10 +1152,10 @@ def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
 
     bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
     return TensorProductBasis(
-            [b.functions for b in reversed(bases)],
-            [b.gradients for b in reversed(bases)],
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
             orth_weight=_get_orth_weight(bases),
-            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
+            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
 
 @monomial_basis_for_space.register(TensorProductSpace)
@@ -1182,10 +1168,10 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape)
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in reversed(bases)],
-            [b.gradients for b in reversed(bases)],
+            [b.functions for b in bases],
+            [b.gradients for b in bases],
             orth_weight=None,
-            dims_per_basis=tuple([b.spatial_dim for b in reversed(space.bases)]))
+            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
 # }}}
 

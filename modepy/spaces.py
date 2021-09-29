@@ -101,7 +101,6 @@ class TensorProductSpace(FunctionSpace):
             return FunctionSpace.__new__(cls)
 
     def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
-        # FIXME: should understand the type
         self.bases = sum([
             space.bases if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
@@ -132,7 +131,10 @@ def _space_for_tensor_product_shape(
         orders = (order,) * nbases
     else:
         assert isinstance(order, tuple)
-        assert len(order) == nbases
+        if len(order) != nbases:
+            raise ValueError("must provide one order per base shape in 'shape'; "
+                    f"got {order} for {len(shape.bases)} tensor product shapes")
+
         orders = order
 
     return TensorProductSpace(tuple([
@@ -186,7 +188,7 @@ class PN(FunctionSpace):
 
 
 @space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: int) -> PN:
+def _space_for_simplex(shape: Simplex, order: int):
     return PN(shape.dim, order)
 
 # }}}

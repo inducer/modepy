@@ -375,11 +375,11 @@ def _unit_vertices_for_tp(shape: TensorProductShape):
 @dataclass(frozen=True)
 class Simplex(Shape):
     @property
-    def nfaces(self) -> int:
+    def nfaces(self):
         return self.dim + 1
 
     @property
-    def nvertices(self) -> int:
+    def nvertices(self):
         return self.dim + 1
 
 
@@ -647,5 +647,6 @@ def _submesh_for_hypercube(shape: Hypercube, node_tuples):
     return result
 
 # }}}
+
 
 # vim: foldmethod=marker
