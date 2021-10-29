@@ -103,7 +103,7 @@ jobs:
             env:
                 DOWNSTREAM_PROJECT: ${{ matrix.downstream_project }}
             run: |
-                curl -L -O -k https://tiker.net/ci-support-v0
+                curl -L -O https://tiker.net/ci-support-v0
                 . ./ci-support-v0
 
                 git clone "https://github.com/inducer/$DOWNSTREAM_PROJECT.git"
