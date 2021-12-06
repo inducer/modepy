@@ -287,6 +287,45 @@ def test_symbolic_basis(shape, order, basis_getter):
 # }}}
 
 
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(1),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    ])
+@pytest.mark.parametrize("order", [3, 6])
+@pytest.mark.parametrize("basis_getter", [
+    (mp.orthonormal_basis_for_space),
+    ])
+def test_nonsing_onb(shape, order, basis_getter):
+    logging.basicConfig(level="INFO")
+    basis = basis_getter(mp.space_for_shape(shape, order), shape)
+    sym_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.functions]
+
+    rng = np.random.Generator(np.random.PCG64(17))
+    r = mp.random_nodes_for_shape(shape, 10000, rng=rng)
+
+    from modepy.modes import basis_func_to_polynomial
+
+    for i, (sym_f, f) in enumerate(zip(sym_basis, basis.functions)):
+        poly_f = basis_func_to_polynomial(sym_f)
+
+        logger.info("BASISFUNC %d: %s", i, poly_f)
+
+        sym_val = MyEvaluationMapper({"r": r, "abs": abs})(poly_f)
+        ref_val = f(r)
+
+        ref_norm = la.norm(ref_val, np.inf)
+        err = la.norm(sym_val-ref_val, np.inf)
+        if ref_norm:
+            err = err/ref_norm
+
+        logger.info("ERROR: %.5g", err)
+
+        assert np.allclose(sym_val, ref_val)
+
+    # }}}
+
+
 # {{{ test_modal_coeffs_by_projection
 
 @pytest.mark.parametrize("dim", [2, 3])

@@ -32,6 +32,8 @@ import numpy as np
 from modepy.spaces import FunctionSpace, PN, QN
 from modepy.shapes import Shape, Simplex, Hypercube
 
+from pymbolic.mapper import IdentityMapper
+
 if TYPE_CHECKING:
     import pymbolic.primitives
 
@@ -795,6 +797,44 @@ def symbolicize_function(
             return result
     else:
         return result
+
+
+class _DeclutterMapper(IdentityMapper):
+    def map_common_subexpression(self, expr):
+        return self.rec(expr.child)
+
+    def map_if(self, expr):
+        # Assumes that the general-but-singular expression is in the "then_"
+        # branch.
+        return self.rec(expr.then)
+
+
+class _DivisionFoundError(Exception):
+    pass
+
+
+class _DivisionRaiser(IdentityMapper):
+    def map_quotient(self, expr):
+        raise _DivisionFoundError()
+
+
+def basis_func_to_polynomial(expr):
+    draise = _DivisionRaiser()
+    declutter = _DeclutterMapper()
+
+    from pymbolic.interop.sympy import PymbolicToSympyMapper, SympyToPymbolicMapper
+    p2s = PymbolicToSympyMapper()
+    s2p = SympyToPymbolicMapper()
+
+    import sympy as sp
+
+    clean_expr = declutter(expr)
+    sympy_expr = sp.sympify(p2s(clean_expr)).simplify()
+    poly_expr = s2p(sympy_expr)
+
+    draise(poly_expr)
+
+    return poly_expr
 
 # }}}
 
