@@ -365,7 +365,11 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
     if not visualize:
         return lebesgue_constant
 
-    if shape.dim == 2:
+    if shape.dim == 1:
+        import matplotlib.pyplot as plt
+        plt.plot(equi_nodes[0], lebesgue_worst)
+        plt.show()
+    elif shape.dim == 2:
         print(f"Lebesgue constant: {lebesgue_constant}")
         triangles = shp.submesh_for_shape(shape, equi_node_tuples)
 
