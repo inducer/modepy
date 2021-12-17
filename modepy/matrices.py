@@ -262,7 +262,8 @@ def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
     .. versionadded:: 2020.3
     """
 
-    mapped_nodes = face.map_to_volume(face_quad.nodes)
+    # NOTE: type ignore for https://github.com/python/mypy/issues/11776
+    mapped_nodes = face.map_to_volume(face_quad.nodes)  # type: ignore
 
     result = np.empty((len(test_functions), len(trial_functions)))
 
@@ -326,7 +327,8 @@ def nodal_quad_mass_matrix_for_face(face: Face, face_quad: Quadrature,
     """
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
-    mapped_nodes = face.map_to_volume(face_quad.nodes)
+    # NOTE: type ignore for https://github.com/python/mypy/issues/11776
+    mapped_nodes = face.map_to_volume(face_quad.nodes)  # type: ignore
 
     vol_modal_mass_matrix = np.empty((len(test_functions), len(face_quad.weights)))
 
