@@ -623,15 +623,14 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
 
-@submesh_for_shape.register(Hypercube)
-def _submesh_for_hypercube(shape: Hypercube, node_tuples):
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
+@submesh_for_shape.register(TensorProductShape)
+def _submesh_for_hypercube(shape: TensorProductShape, node_tuples):
+    from modepy.spaces import space_for_shape
+    space = space_for_shape(shape, order=1)
+    from modepy.nodes import node_tuples_for_space
+    vertex_node_tuples = node_tuples_for_space(space)
 
-    # NOTE: nodes use "first coordinate varies faster" (see node_tuples_for_space)
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
-    vertex_node_tuples = [nt[::-1] for nt in gnitb(2, dims)]
-
+    from pytools import add_tuples
     result = []
     node_dict = {ituple: idx for idx, ituple in enumerate(node_tuples)}
     for current in node_tuples:
