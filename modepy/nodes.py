@@ -491,12 +491,16 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
 
     n = len(tuples_for_space)
-    r = tuple([
-        sum((tuples_for_space[n - i - 1][j] for i, j in enumerate(tp[::-1])), ())
+    def concat(tuples):
+        return sum(tuples, ())
+
+    return tuple([
+        concat((
+            tuples_for_space[n - i - 1][j]
+            for i, j in enumerate(tp[::-1])
+            ))
         for tp in gnitb([len(tp) for tp in tuples_for_space])
         ])
-
-    return r
 
 
 @equispaced_nodes_for_space.register(TensorProductSpace)
