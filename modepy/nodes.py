@@ -491,6 +491,7 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
 
     n = len(tuples_for_space)
+
     def concat(tuples):
         return sum(tuples, ())
 
