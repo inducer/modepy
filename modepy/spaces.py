@@ -58,6 +58,7 @@ class FunctionSpace(ABC):
 
         The number of dimensions of the function space.
     """
+
     @abstractproperty
     def spatial_dim(self) -> int:
         pass
@@ -74,7 +75,13 @@ def space_for_shape(
     r"""Return an unspecified instance of :class:`FunctionSpace` suitable
     for approximation on *shape* attaining interpolation error of
     :math:`O(h^{\text{order}+1})`.
+
+    :arg order: an integer interpolation order or a :class:`tuple` of orders.
+        Taking a :class:`tuple` of orders is not supported by all function
+        spaces. A notable exception being :class:`TensorProductSpace`,
+        which allows defining different orders for each base space.
     """
+
     raise NotImplementedError(type(shape).__name__)
 
 # }}}
@@ -189,7 +196,8 @@ class PN(FunctionSpace):
 
 
 @space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: int):
+def _space_for_simplex(shape: Simplex, order: Union[int, Tuple[int, ...]]) -> PN:
+    assert isinstance(order, int)
     return PN(shape.dim, order)
 
 # }}}
