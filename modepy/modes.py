@@ -713,9 +713,9 @@ class _TensorProductGradientBasisFunction:
 
         result = [1] * self.ndims
         d = 0
-        for i, derivative in zip(self.dims_per_function, self.derivatives):
+        for nfunc_dims, derivative in zip(self.dims_per_function, self.derivatives):
             f = 0
-            for j, function in zip(self.dims_per_function, derivative):
+            for iaxis_loc, df_daxis_loc in zip(self.dims_per_function, derivative):
                 components = function(x[f:f + j])
                 if not isinstance(components, tuple):
                     # NOTE: just a function evaluation here, so we distribute
@@ -1103,7 +1103,7 @@ class TensorProductBasis(Basis):
                     [func[is_deriv][ibasis][mid_i]
                         for ibasis, (is_deriv, mid_i) in
                         enumerate(zip(iderivative, mid))]
-                    for iderivative in wandering_element(self._nbases)
+                    for deriv_indicator_vec in wandering_element(self._nbases)
                     ],
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)
