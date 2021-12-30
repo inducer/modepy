@@ -205,6 +205,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from abc import ABC, abstractproperty
 import numpy as np
 from typing import Any, Callable, Sequence, Tuple, Dict
 
@@ -214,8 +215,9 @@ from dataclasses import dataclass
 
 # {{{ interface
 
-@dataclass(frozen=True)
-class Shape:
+@dataclass(frozen=True)  # type: ignore[misc]
+# https://github.com/python/mypy/issues/11868
+class Shape(ABC):
     """
     .. attribute :: dim
     .. attribute :: nfaces
@@ -223,13 +225,13 @@ class Shape:
     """
     dim: int
 
-    @property
+    @abstractproperty
     def nvertices(self):
-        raise NotImplementedError
+        pass
 
-    @property
+    @abstractproperty
     def nfaces(self):
-        raise NotImplementedError
+        pass
 
 
 @singledispatch

@@ -21,10 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from abc import ABC, abstractproperty, abstractmethod
 from warnings import warn
 from math import sqrt
 from functools import singledispatch, partial
-from typing import Callable, Optional, Sequence, TypeVar, Tuple, Union, TYPE_CHECKING
+from typing import (Callable, Optional, Sequence, TypeVar, Tuple, Union,
+        Hashable, TYPE_CHECKING)
 
 import numpy as np
 
@@ -853,7 +855,7 @@ class BasisNotOrthonormal(Exception):
     pass
 
 
-class Basis:
+class Basis(ABC):
     """
     .. automethod:: orthonormality_weight
     .. autoattribute:: mode_ids
@@ -861,38 +863,37 @@ class Basis:
     .. autoattribute:: gradients
     """
 
+    @abstractmethod
     def orthonormality_weight(self) -> float:
         """
         :raises: :exc:`BasisNotOrthonormal` if the basis does not have
             a weight, i.e. it is not orthogonal.
         """
-        raise NotImplementedError
 
-    @property
-    def mode_ids(self):
+    @abstractproperty
+    def mode_ids(self) -> Tuple[Hashable, ...]:
         """A tuple of of mode (basis function) identifiers, one for
         each basis function. Mode identifiers should generally be viewed
         as opaque. They are hashable. For some bases, they are tuples of
         length matching the number of dimensions and indicating the order
         along each reference axis.
         """
-        raise NotImplementedError
 
-    @property
-    def functions(self):
+    @abstractproperty
+    def functions(self) -> Tuple[Callable[[np.ndarray], np.ndarray], ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
         """
-        raise NotImplementedError
 
-    @property
-    def gradients(self):
-        """A tuple of basis functions of length matching :attr:`mode_ids`.
-        Each function takes a vector of :math:`(r, s, t)` reference coordinates
-        (depending on dimension) as input.
+    @abstractproperty
+    def gradients(
+            self) -> Tuple[Callable[[np.ndarray], Tuple[np.ndarray, ...]], ...]:
+        """A tuple of (callable) basis functions of length matching
+        :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
+        reference coordinates (depending on dimension) as input.
+        Each function returns a tuple of derivatives, one per reference axis.
         """
-        raise NotImplementedError
 
 # }}}
 
@@ -983,7 +984,7 @@ class _SimplexONB(_SimplexBasis):
 
 
 class _SimplexMonomialBasis(_SimplexBasis):
-    def orthonormality_weight(self):
+    def orthonormality_weight(self) -> float:
         raise BasisNotOrthonormal
 
     @property

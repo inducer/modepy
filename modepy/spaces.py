@@ -33,6 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from abc import ABC, abstractproperty
 from functools import singledispatch
 from numbers import Number
 from typing import Any, Tuple, Union
@@ -44,7 +45,7 @@ from modepy.shapes import Shape, Simplex, Hypercube, TensorProductShape
 
 # {{{ function spaces
 
-class FunctionSpace:
+class FunctionSpace(ABC):
     r"""An opaque object representing a finite-dimensional function space
     of functions :math:`\mathbb{R}^n \to \mathbb{R}`.
 
@@ -57,13 +58,13 @@ class FunctionSpace:
 
         The number of dimensions of the function space.
     """
-    @property
+    @abstractproperty
     def spatial_dim(self) -> int:
-        raise NotImplementedError
+        pass
 
-    @property
+    @abstractproperty
     def space_dim(self) -> int:
-        raise NotImplementedError
+        pass
 
 
 @singledispatch
