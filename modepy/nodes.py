@@ -62,7 +62,7 @@ import numpy.linalg as la
 from functools import singledispatch, partial
 
 from modepy.shapes import (
-        Shape, TensorProductShape, Simplex, Hypercube,
+        Shape, TensorProductShape, Simplex,
         unit_vertices_for_shape)
 from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN  # noqa: F401
 
@@ -541,23 +541,10 @@ def _random_nodes_for_tp(shape: TensorProductShape, nnodes: int, rng=None):
     if rng is None:
         rng = np.random.default_rng()
 
-    # FIXME: this may not be exactly uniform per dimension; any better way?
-    nnodes_per_dim = int(nnodes**(1/shape.dim)) + 1
-    nnodes_per_shape = [nnodes_per_dim**s.dim for s in shape.bases[:-1]]
-    nnodes_per_shape += [nnodes - sum(nnodes_per_shape)]
-
-    return tensor_product_nodes([
-        random_nodes_for_shape(s, nnodes, rng=rng)
-        for s, nnodes in zip(shape.bases, nnodes_per_shape)
+    return np.stack([
+        np.squeeze(random_nodes_for_shape(s, nnodes, rng=rng))
+        for s in shape.bases
         ])
-
-
-@random_nodes_for_shape.register(Hypercube)
-def _random_nodes_for_hypercube(shape: Hypercube, nnodes: int, rng=None):
-    if rng is None:
-        rng = np.random.default_rng()
-
-    return rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes))
 
 # }}}
 
