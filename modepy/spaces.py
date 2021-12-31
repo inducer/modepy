@@ -40,7 +40,7 @@ from typing import Any, Tuple, Union
 
 import numpy as np
 
-from modepy.shapes import Shape, Simplex, Hypercube, TensorProductShape
+from modepy.shapes import Shape, Simplex, TensorProductShape
 
 
 # {{{ function spaces
@@ -113,6 +113,14 @@ class TensorProductSpace(FunctionSpace):
             space.bases if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
             ], ())
+
+    @property
+    def order(self):
+        from pytools import is_single_valued
+        if is_single_valued([space.order for space in self.bases]):
+            return self.bases[0].order
+        else:
+            raise AttributeError(f"{type(self).__name__} has no attribute 'order'")
 
     @property
     def spatial_dim(self) -> int:
@@ -237,22 +245,6 @@ class QN(TensorProductSpace):
         return (f"{type(self).__name__}("
                 f"spatial_dim={self.spatial_dim}, order={self.order}"
                 ")")
-
-
-@space_for_shape.register(Hypercube)
-def _space_for_hypercube(
-        shape: Hypercube, order: Union[int, Tuple[int, ...]]
-        ) -> TensorProductSpace:
-    if isinstance(order, Number):
-        assert isinstance(order, int)
-        return QN(shape.dim, order)
-    else:
-        assert isinstance(order, tuple)
-        if len(order) != shape.dim:
-            raise ValueError("must provide one order per dimension; "
-                    f"got {order} for a {shape.dim}d hypercube")
-
-        return TensorProductSpace(tuple([PN(1, n) for n in order]))
 
 # }}}
 
