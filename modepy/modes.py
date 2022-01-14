@@ -721,7 +721,7 @@ class _TensorProductGradientBasisFunction:
         A :class:`tuple` of :class:`tuple`\ s of callables ``df[i][j]`` that
         evaluate the derivatives of the tensor product. Each ``df[i]`` tuple
         is equivalent to a :class:`_TensorProductBasisFunction` and is used
-        to evaluate the derivative of a single basis functions of the tensor
+        to evaluate the derivatives of a single basis function of the tensor
         product. To be specific, a basis function in the tensor product is
         given by
 
@@ -742,10 +742,12 @@ class _TensorProductGradientBasisFunction:
                 \times \cdots \times
                 f_n.
 
-        In our notation, ``df[i][k]`` represents a term in the product above.
-        When evaluating :math:`f_i`, the callable just returns the function
-        values, but when evaluating :math:`\partial_k f_i` it should return
-        all the derivatives with respect to :math:`k \in [d_i, d_{i + 1}]`.
+        In our notation, ``df[i]`` gives all the derivatives of :math:`f`
+        with respect to :math:`k \in [d_i, d_{i + 1})`. When evaluating
+        ``df[i][j]`` can be a function :math:`f_i`, for which the callable
+        just returns the function values, or :math:`\partial_k f_i`, for
+        which it returns all the derivatives with respect to
+        :math:`k \in [d_i, d_{i + 1}]`.
 
     .. attribute:: dims_per_function
 
