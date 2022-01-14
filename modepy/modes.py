@@ -21,12 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from abc import ABC, abstractproperty, abstractmethod
+import math
+
 from warnings import warn
-from math import sqrt
+from abc import ABC, abstractmethod
 from functools import singledispatch, partial
-from typing import (Callable, Optional, Sequence, TypeVar, Tuple, Union,
-        Hashable, TYPE_CHECKING)
+from typing import (
+        Callable, Optional, Sequence, TypeVar, Tuple, Union, Hashable,
+        TYPE_CHECKING)
 
 import numpy as np
 
@@ -170,7 +172,7 @@ def jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
                 * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
     # Storage for recursive construction
-    pl = [1.0/sqrt(gamma0) + 0*x]
+    pl = [1.0/math.sqrt(gamma0) + 0*x]
 
     if n == 0:
         return pl[0]
@@ -178,20 +180,20 @@ def jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0
 
     pl.append(_cse(
-        ((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1),
+        ((alpha+beta+2)*x/2 + (alpha-beta)/2)/math.sqrt(gamma1),
         prefix="jac_p1"))
     if n == 1:
         return pl[1]
 
     # Repeat value in recurrence.
-    aold = 2./(2.+alpha+beta)*sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
+    aold = 2./(2.+alpha+beta)*math.sqrt((alpha+1.)*(beta+1.)/(alpha+beta+3.))
 
     # Forward recurrence using the symmetry of the recurrence.
     for i in range(1, n):
         h1 = 2.*i+alpha+beta
 
         foo = (i+1.)*(i+1.+alpha+beta)*(i+1.+alpha)*(i+1.+beta)/(h1+1.)/(h1+3.)
-        anew = 2./(h1+2.)*sqrt(foo)
+        anew = 2./(h1+2.)*math.sqrt(foo)
 
         bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
         pl.append(_cse(
@@ -209,7 +211,7 @@ def grad_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
     if n == 0:
         return 0*x
     else:
-        return sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
+        return math.sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
 
 # }}}
 
@@ -249,7 +251,7 @@ def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> RealValueT:
 
     h1 = jacobi(0, 0, i, a)
     h2 = jacobi(2*i+1, 0, j, b)
-    return sqrt(2)*h1*h2*(1-b)**i
+    return math.sqrt(2)*h1*h2*(1-b)**i
 
 
 def grad_pkdo_2d(
@@ -343,7 +345,7 @@ def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> RealValueT:
     h2 = jacobi(2*i+1, 0, j, b)
     h3 = jacobi(2*(i+j)+2, 0, k, c)
 
-    return 2*sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
+    return 2*math.sqrt(2)*h1*h2*((1-b)**i)*h3*((1-c)**(i+j))
 
 
 def grad_pkdo_3d(
@@ -656,24 +658,49 @@ def grad_simplex_best_available_basis(dims, n):
 # {{{ tensor product basis helpers
 
 class _TensorProductBasisFunction:
-    # multi_index is here just for debugging.
+    r"""
+    .. attribute:: multi_index
 
-    def __init__(self, multi_index, functions, *, dims_per_function):
+        A :class:`tuple` used to identify each function in :attr:`functions`
+        that is mainly meant for debugging and not used internally.
+
+    .. attribute:: functions
+
+        A :class:`tuple` of callables that can be evaluated on the tensor
+        product space :math:`\mathbb{R}^{d_1} \times \cdots \times \mathbb{R}^{d_n}`,
+        i.e. one function :math:`f_i` for each :math:`\mathbb{R}^{d_i}` component
+
+        .. math::
+
+            f(x_1, \dots, x_d) =
+                    f_1(x_1, \dots, x_{d_1}) \times \cdots \times
+                    f_n(x_{d_{n - 1}}, \dots, x_{d_n})
+
+    .. attribute:: dims_per_function
+
+        A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`.
+    """
+
+    def __init__(self,
+            multi_index: Tuple[Hashable, ...],
+            functions: Tuple[Callable[[np.ndarray], np.ndarray], ...], *,
+            dims_per_function: Tuple[int, ...]) -> None:
         assert len(dims_per_function) == len(functions)
 
         self.multi_index = multi_index
         self.functions = functions
 
         self.dims_per_function = dims_per_function
-        self.ndims = sum(self.dims_per_function)
+        self.ndim = sum(self.dims_per_function)
 
     def __call__(self, x):
-        result = 1
-        d = 0
+        assert x.shape[0] == self.ndim
 
-        for n, function in zip(self.dims_per_function, self.functions):
-            result *= function(x[d:d + n])
-            d += n
+        n = 0
+        result = 1
+        for d, function in zip(self.dims_per_function, self.functions):
+            result *= function(x[n:n + d])
+            n += d
 
         return result
 
@@ -683,50 +710,86 @@ class _TensorProductBasisFunction:
 
 
 class _TensorProductGradientBasisFunction:
-    # multi_index is here just for debugging.
+    r"""
+    .. attribute:: multi_index
 
-    def __init__(self, multi_index, derivatives, *, dims_per_function):
-        assert len(dims_per_function) == len(derivatives[0])
+        A :class:`tuple` used to identify each function in :attr:`functions`
+        that is mainly meant for debugging and not used internally.
+
+    .. attribute:: derivatives
+
+        A :class:`tuple` of :class:`tuple`\ s of callables ``df[i][j]`` that
+        evaluate the derivatives of the tensor product. Each ``df[i]`` tuple
+        is equivalent to a :class:`_TensorProductBasisFunction` and is used
+        to evaluate the derivative of a single basis functions of the tensor
+        product. To be specific, a basis function in the tensor product is
+        given by
+
+        .. math::
+
+            f(x_1, \dots, x_d) =
+                    f_1(x_1, \dots, x_{d_1}) \times \cdots \times
+                    f_n(x_{d_{n - 1}}, \dots, x_{d_n})
+
+        and its derivative with respect to :math:`x_k`, for :math:`k \in
+        [d_i, d_{i + 1})` is given by
+
+        .. math::
+
+            \frac{\partial f}{\partial x_k} =
+                f_1 \times \cdots \times
+                \frac{\partial f_i}{x_k}
+                \times \cdots \times
+                f_n.
+
+        In our notation, ``df[i][k]`` represents a term in the product above.
+        When evaluating :math:`f_i`, the callable just returns the function
+        values, but when evaluating :math:`\partial_k f_i` it should return
+        all the derivatives with respect to :math:`k \in [d_i, d_{i + 1}]`.
+
+    .. attribute:: dims_per_function
+
+        A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`.
+    """
+
+    def __init__(self,
+            multi_index: Tuple[int, ...],
+            derivatives: Tuple[Tuple[
+                Callable[[np.ndarray], Union[np.ndarray, Tuple[np.ndarray, ...]]],
+                ...], ...], *,
+            dims_per_function: Tuple[int, ...]) -> None:
+        assert all(len(dims_per_function) == len(df) for df in derivatives)
 
         self.multi_index = multi_index
         self.derivatives = tuple(derivatives)
 
         self.dims_per_function = dims_per_function
-        self.ndims = sum(self.dims_per_function)
+        self.ndim = sum(self.dims_per_function)
 
     def __call__(self, x):
-        # NOTE: we're trying to do a tensor product gradient for something like
-        #
-        #       P_1(x0, x1) * P_2(x2) * P_3(x3, x4, x5) * ...
-        #
-        # (here `dims_per_function` would be `(2, 1, 3)`), where each
-        # `self.derivatives[i]` contains the derivatives of `P_i` and the
-        # remaining functions as is (in the same order as above). Then, to
-        # get the derivatives with respect to, e.g., `(x3, x4, x5)`, we
-        # loop over the `components` of the gradient of `P_3` as
-        #
-        #   result[d + 0] = P_1 * P_2 * dP_3/dx_3 * ...
-        #   result[d + 1] = P_1 * P_2 * dP_3/dx_4 * ...
-        #   result[d + 2] = P_1 * P_2 * dP_3/dx_5 * ...
-        #
-        # where d = 3 (sums up `dims_per_function`).
+        assert x.shape[0] == self.ndim
 
-        result = [1] * self.ndims
-        d = 0
-        for nfunc_dims, derivative in zip(self.dims_per_function, self.derivatives):
+        result = [1] * self.ndim
+        n = 0
+        for ider, derivative in enumerate(self.derivatives):
             f = 0
-            for iaxis, df_daxis_func in zip(self.dims_per_function, derivative):
-                components = df_daxis_func(x[f:f + iaxis])
-                if not isinstance(components, tuple):
-                    # NOTE: just a function evaluation here, so we distribute
-                    # it to all the components of the derivatives
-                    components = (components,) * nfunc_dims
+            for iaxis, function in zip(self.dims_per_function, derivative):
+                components = function(x[f:f + iaxis])
 
-                for n, r in enumerate(components):
-                    result[d + n] *= r
+                if isinstance(components, tuple):
+                    # NOTE: this is a derivative evaluation, so it should give
+                    # a tuple of derivative wrt to each variable of f_i
+                    assert len(components) == self.dims_per_function[ider]
+                else:
+                    # NOTE: this is a function evaluation, so we distribute
+                    # it to all the components of the final derivatives
+                    components = (components,) * self.dims_per_function[ider]
+
+                for j, comp in enumerate(components):
+                    result[n + j] *= comp
 
                 f += iaxis
-            d += nfunc_dims
+            n += self.dims_per_function[ider]
 
         return tuple(result)
 
@@ -870,7 +933,8 @@ class Basis(ABC):
             a weight, i.e. it is not orthogonal.
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def mode_ids(self) -> Tuple[Hashable, ...]:
         """A tuple of of mode (basis function) identifiers, one for
         each basis function. Mode identifiers should generally be viewed
@@ -879,14 +943,16 @@ class Basis(ABC):
         along each reference axis.
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def functions(self) -> Tuple[Callable[[np.ndarray], np.ndarray], ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def gradients(
             self) -> Tuple[Callable[[np.ndarray], Tuple[np.ndarray, ...]], ...]:
         """A tuple of (callable) basis functions of length matching
@@ -1063,7 +1129,7 @@ class TensorProductBasis(Basis):
         self._bases = list(reversed(bases))
         self._grad_bases = list(reversed(grad_bases))
         self._orth_weight = orth_weight
-        self._dims_per_basis = list(reversed(dims_per_basis))
+        self._dims_per_basis = tuple(reversed(dims_per_basis))
 
     def orthonormality_weight(self):
         if self._orth_weight is None:
@@ -1087,10 +1153,10 @@ class TensorProductBasis(Basis):
     @property
     def functions(self):
         return tuple(
-                _TensorProductBasisFunction(mid, [
+                _TensorProductBasisFunction(mid, tuple([
                     self._bases[ibasis][mid_i]
                     for ibasis, mid_i in enumerate(mid)
-                    ],
+                    ]),
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)
 
@@ -1099,12 +1165,14 @@ class TensorProductBasis(Basis):
         from pytools import wandering_element
         func = (self._bases, self._grad_bases)
         return tuple(
-                _TensorProductGradientBasisFunction(mid, [
-                    [func[is_deriv][ibasis][mid_i]
-                        for ibasis, (is_deriv, mid_i) in
-                        enumerate(zip(deriv_indicator_vec, mid))]
+                _TensorProductGradientBasisFunction(mid, tuple([
+                    tuple([
+                        func[is_deriv][ibasis][mid_i]
+                        for ibasis, (is_deriv, mid_i) in enumerate(
+                            zip(deriv_indicator_vec, mid))
+                        ])
                     for deriv_indicator_vec in wandering_element(self._nbases)
-                    ],
+                    ]),
                     dims_per_function=self._dims_per_basis)
                 for mid in self.mode_ids)
 
