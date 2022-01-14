@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 from functools import singledispatch
 from numbers import Number
 from typing import Any, Tuple, Union
@@ -59,11 +59,13 @@ class FunctionSpace(ABC):
         The number of dimensions of the function space.
     """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def spatial_dim(self) -> int:
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def space_dim(self) -> int:
         pass
 

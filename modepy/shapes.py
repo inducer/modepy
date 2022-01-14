@@ -205,7 +205,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 import numpy as np
 from typing import Any, Callable, Sequence, Tuple, Dict
 
@@ -225,11 +225,13 @@ class Shape(ABC):
     """
     dim: int
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def nvertices(self):
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def nfaces(self):
         pass
 
