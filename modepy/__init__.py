@@ -23,13 +23,13 @@ THE SOFTWARE.
 
 
 from modepy.shapes import (
-        Shape, Face, Simplex, Hypercube,
+        Shape, Face, Simplex, Hypercube, TensorProductShape,
 
         face_normal, unit_vertices_for_shape, faces_for_shape,
         submesh_for_shape,
         )
 from modepy.spaces import (
-        FunctionSpace, PN, QN, space_for_shape)
+        FunctionSpace, TensorProductSpace, PN, QN, space_for_shape)
 from modepy.modes import (
         jacobi, grad_jacobi,
         simplex_onb, grad_simplex_onb, simplex_onb_with_mode_ids,
@@ -79,11 +79,11 @@ GaussLegendreQuadrature = LegendreGaussQuadrature
 __all__ = [
         "__version__",
 
-        "Shape", "Face", "Simplex", "Hypercube",
+        "Shape", "Face", "Simplex", "Hypercube", "TensorProductShape",
         "face_normal", "unit_vertices_for_shape", "faces_for_shape",
         "submesh_for_shape",
 
-        "FunctionSpace", "PN", "QN", "space_for_shape",
+        "FunctionSpace", "TensorProductSpace", "PN", "QN", "space_for_shape",
 
         "jacobi", "grad_jacobi",
         "simplex_onb", "grad_simplex_onb", "simplex_onb_with_mode_ids",

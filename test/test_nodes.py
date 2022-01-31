@@ -137,6 +137,7 @@ def test_simplex_nodes(dims, n):
 def test_affine_map():
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
+
     for d in range(1, 5):
         for _i in range(100):
             a = np.random.randn(d, d)+10*np.eye(d)
@@ -200,6 +201,85 @@ def test_order0_nodes(dim, shape_cls):
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
     assert not np.isnan(nodes).any()
     assert np.allclose(centroid, nodes)
+
+# }}}
+
+
+# {{{ test_tensor_product_shape_nodes
+
+@pytest.mark.parametrize("shape", ["square", "cube", "squared_cube", "prism"])
+def test_tensor_product_shape_nodes(shape, visualize=False):
+    order = (5, 3, 4)
+
+    if shape == "square":
+        nodes = [nd.equidistant_nodes(1, n)[0] for n in order[:2]]
+    elif shape == "cube":
+        nodes = [nd.equidistant_nodes(1, n)[0] for n in order[:3]]
+    elif shape == "squared_cube":
+        square = nd.tensor_product_nodes([
+            nd.equidistant_nodes(1, n)[0] for n in order[:2]
+            ])
+        nodes = [square, nd.equidistant_nodes(1, order[2])[0]]
+    elif shape == "prism":
+        triangle = nd.warp_and_blend_nodes(2, order[0])
+        nodes = [triangle, nd.equidistant_nodes(1, order[1])[0]]
+    else:
+        raise ValueError(f"unknown shape name: '{shape}'")
+
+    nodes = nd.tensor_product_nodes(nodes)
+
+    if not visualize or nodes.shape[0] <= 2:
+        return
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    ax.scatter(*nodes)
+    for i in range(nodes.shape[1]):
+        ax.text(*nodes[:, i], f"{i}")
+
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_zlabel("$z$")
+    plt.show(block=True)
+
+# }}}
+
+
+# {{{ test_tensor_product_nodes_vs_tuples
+
+def test_tensor_product_nodes_vs_tuples():
+    import modepy as mp
+    shapes = [
+            (shp.Hypercube(2), (3, 5)),
+            (shp.Hypercube(3), (3, 5, 4)),
+            ]
+
+    for shape, order in shapes:
+        space = mp.space_for_shape(shape, order)
+        ref_nodes = nd.equispaced_nodes_for_space(space, shape)
+        nodes = (np.array(nd.node_tuples_for_space(space), dtype=np.float64)
+                / np.array(order[::-1]) * 2 - 1).T
+
+        assert np.linalg.norm(nodes - ref_nodes) < 1.0e-14
+
+# }}}
+
+
+# {{{ test_random_nodes_for_tensor_product
+
+def test_random_nodes_for_tensor_product():
+    import modepy as mp
+    shape = mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2)))
+
+    nnodes = 10
+    nodes = mp.random_nodes_for_shape(shape, nnodes)
+    assert nodes.shape == (3, 10)
+
+    nnodes = 1
+    nodes = mp.random_nodes_for_shape(shape, nnodes)
+    assert nodes.shape == (3, 1)
 
 # }}}
 

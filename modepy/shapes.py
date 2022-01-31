@@ -168,6 +168,11 @@ The order of the vertices in the hypercubes follows binary counting
 in ``tsr`` (i.e. in reverse axis order).
 For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 
+Tensor Product Shapes
+---------------------
+
+.. autoclass:: TensorProductShape
+
 Submeshes
 ---------
 .. autofunction:: submesh_for_shape
@@ -200,8 +205,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from abc import ABC, abstractmethod
 import numpy as np
-from typing import Callable, Sequence, Tuple, Dict
+from typing import Any, Callable, Sequence, Tuple, Dict
 
 from functools import singledispatch, partial
 from dataclasses import dataclass
@@ -209,14 +215,25 @@ from dataclasses import dataclass
 
 # {{{ interface
 
-@dataclass(frozen=True)
-class Shape:
+@dataclass(frozen=True)  # type: ignore[misc]
+# https://github.com/python/mypy/issues/11868
+class Shape(ABC):
     """
     .. attribute :: dim
     .. attribute :: nfaces
     .. attribute :: nvertices
     """
     dim: int
+
+    @property
+    @abstractmethod
+    def nvertices(self):
+        pass
+
+    @property
+    @abstractmethod
+    def nfaces(self):
+        pass
 
 
 @singledispatch
@@ -297,8 +314,69 @@ def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
 # }}}
 
 
+# {{{ tensor product shape
+
+@dataclass(frozen=True, init=False)
+class TensorProductShape(Shape):
+    """
+    .. attribute:: bases
+
+        A :class:`tuple` of base shapes that form the tensor product.
+
+    .. automethod:: __init__
+    """
+
+    bases: Tuple[Shape, ...]
+
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, bases: Tuple[Shape, ...]) -> Any:
+        if len(bases) == 1:
+            return bases[0]
+        else:
+            return Shape.__new__(cls)
+
+    def __init__(self, bases: Tuple[Shape, ...]) -> None:
+        # flatten input shapes
+        bases = sum([
+            s.bases if isinstance(s, TensorProductShape) else (s,)
+            for s in bases
+            ], ())
+
+        nsegments = len([s for s in bases if s.dim == 1])
+        if nsegments < len(bases) - 1:
+            raise NotImplementedError(
+                    "only tensor products between (at most) one arbitrary polygonal "
+                    f"shape and line segments supported; got {nsegments} line "
+                    f"segments in a total of {len(bases)} shapes")
+
+        dim = sum(s.dim for s in bases)
+        super().__init__(dim)
+        object.__setattr__(self, "bases", bases)
+
+    @property
+    def nvertices(self) -> int:
+        return np.prod([s.nvertices for s in self.bases])
+
+    @property
+    def nfaces(self) -> int:
+        # FIXME: this obviously only works for `shape x segment x segment x ...`
+        *segments, shape = sorted(self.bases, key=lambda s: s.dim)
+        return shape.nfaces + len(segments) * segments[0].nfaces
+
+
+@unit_vertices_for_shape.register(TensorProductShape)
+def _unit_vertices_for_tp(shape: TensorProductShape):
+    from modepy.nodes import tensor_product_nodes
+    return tensor_product_nodes([
+        unit_vertices_for_shape(s) for s in shape.bases
+        ])
+
+# }}}
+
+
 # {{{ simplex
 
+@dataclass(frozen=True)
 class Simplex(Shape):
     @property
     def nfaces(self):
@@ -362,25 +440,31 @@ def _faces_for_simplex(shape: Simplex):
 
 # {{{ hypercube
 
-class Hypercube(Shape):
-    @property
-    def nfaces(self):
-        return 2 * self.dim
-
-    @property
-    def nvertices(self):
-        return 2**self.dim
-
-
 @dataclass(frozen=True)
+class Hypercube(TensorProductShape):
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, dim: int) -> Any:
+        if dim == 1:
+            return Simplex(1)
+        else:
+            return Shape.__new__(cls)
+
+    def __init__(self, dim: int) -> None:
+        super().__init__((Simplex(1),) * dim)
+
+
+@dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    pass
+    # NOTE: https://github.com/python/mypy/issues/1020
+    def __new__(cls, dim, **kwargs) -> Any:
+        if dim == 1:
+            return _SimplexFace(dim=1, **kwargs)
+        else:
+            return Shape.__new__(cls)
 
-
-@unit_vertices_for_shape.register(Hypercube)
-def _unit_vertices_for_hypercube(shape: Hypercube):
-    from modepy.nodes import tensor_product_nodes
-    return tensor_product_nodes(shape.dim, np.array([-1.0, 1.0]))
+    def __init__(self, **kwargs) -> None:
+        Hypercube.__init__(self, kwargs.pop("dim"))
+        Face.__init__(self, **kwargs)
 
 
 def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
@@ -543,15 +627,14 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         raise NotImplementedError("%d-dimensional sub-meshes" % dims)
 
 
-@submesh_for_shape.register(Hypercube)
-def _submes_for_hypercube(shape: Hypercube, node_tuples):
-    from pytools import single_valued, add_tuples
-    dims = single_valued(len(nt) for nt in node_tuples)
+@submesh_for_shape.register(TensorProductShape)
+def _submesh_for_hypercube(shape: TensorProductShape, node_tuples):
+    from modepy.spaces import space_for_shape
+    space = space_for_shape(shape, order=1)
+    from modepy.nodes import node_tuples_for_space
+    vertex_node_tuples = node_tuples_for_space(space)
 
-    # NOTE: nodes use "first coordinate varies faster" (see node_tuples_for_space)
-    from pytools import generate_nonnegative_integer_tuples_below as gnitb
-    vertex_node_tuples = [nt[::-1] for nt in gnitb(2, dims)]
-
+    from pytools import add_tuples
     result = []
     node_dict = {ituple: idx for idx, ituple in enumerate(node_tuples)}
     for current in node_tuples:

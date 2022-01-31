@@ -33,8 +33,8 @@ THE SOFTWARE.
 from functools import singledispatch
 
 import numpy as np
-from modepy.shapes import Shape, Simplex, Hypercube
-from modepy.spaces import FunctionSpace, PN, QN
+from modepy.shapes import Shape, Simplex, TensorProductShape
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN
 
 
 class QuadratureRuleUnavailable(RuntimeError):
@@ -179,6 +179,8 @@ def _quadrature_for_pn(space: PN, shape: Simplex):
     import modepy as mp
     if space.spatial_dim == 0:
         quad: Quadrature = ZeroDimensionalQuadrature()
+    elif space.spatial_dim == 1:
+        quad = mp.LegendreGaussQuadrature(space.order, force_dim_axis=True)
     else:
         try:
             quad = mp.XiaoGimbutasSimplexQuadrature(space.order, space.spatial_dim)
@@ -190,19 +192,23 @@ def _quadrature_for_pn(space: PN, shape: Simplex):
     return quad
 
 
-@quadrature_for_space.register(QN)
-def _quadrature_for_qn(space: QN, shape: Hypercube):
-    if not isinstance(shape, Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name__))
+@quadrature_for_space.register(TensorProductSpace)
+def _quadrature_for_tp(space: TensorProductSpace, shape: TensorProductShape):
+    if not isinstance(shape, TensorProductShape):
+        raise NotImplementedError((type(space).__name__, type(shape).__name))
+
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
     if space.spatial_dim == 0:
         quad: Quadrature = ZeroDimensionalQuadrature()
     else:
-        quad = LegendreGaussTensorProductQuadrature(space.order, space.spatial_dim)
+        quad = TensorProductQuadrature([
+            quadrature_for_space(sp, shp)
+            for sp, shp in zip(space.bases, shape.bases)
+            ])
 
-    assert quad.exact_to >= space.order
+    assert all(quad.exact_to >= getattr(s, "order", 0) for s in space.bases)
     return quad
 
 # }}}

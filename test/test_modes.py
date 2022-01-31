@@ -21,7 +21,6 @@ THE SOFTWARE.
 """
 
 
-from functools import partial
 import numpy as np
 import numpy.linalg as la
 import pytest
@@ -120,19 +119,12 @@ def test_basis_orthogonality(shape, order, ebound):
 # {{{ test_basis_grad
 
 def get_inhomogeneous_tensor_prod_basis(space, shape):
-    if not isinstance(shape, mp.Hypercube):
-        raise NotImplementedError((type(space).__name__, type(shape).__name))
+    if space.spatial_dim == 1:
+        return mp.basis_for_space(space, shape)
 
-    # FIXME: Yuck. A total lie. Not a basis for the space at all.
-    assert isinstance(space, mp.QN)
-    orders = (3, 5, 7)[:space.spatial_dim]
-
-    return mp.TensorProductBasis(
-            [[partial(mp.jacobi, 0, 0, n) for n in range(o)]
-                for o in orders],
-            [[partial(mp.grad_jacobi, 0, 0, n) for n in range(o)]
-                for o in orders],
-            orth_weight=1)
+    orders = (space.order, 2, 7)[:space.spatial_dim]
+    space = mp.space_for_shape(shape, orders)
+    return mp.basis_for_space(space, shape)
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3])

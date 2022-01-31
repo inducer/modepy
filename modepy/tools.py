@@ -258,6 +258,7 @@ def hypercube_submesh(node_tuples):
 
 
 # {{{ plotting helpers
+
 def plot_element_values(n, nodes, values, resample_n=None,
         node_tuples=None, show_nodes=False):
     dims = len(nodes)
@@ -311,6 +312,7 @@ def _evaluate_lebesgue_function(n, nodes, shape):
     basis = basis_for_space(space, shape)
     equi_node_tuples = node_tuples_for_space(huge_space)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
+    assert equi_nodes.shape[0] == nodes.shape[0]
 
     from modepy.matrices import vandermonde
     vdm = vandermonde(basis.functions, nodes)
