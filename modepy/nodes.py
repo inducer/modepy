@@ -541,10 +541,13 @@ def _random_nodes_for_tp(shape: TensorProductShape, nnodes: int, rng=None):
     if rng is None:
         rng = np.random.default_rng()
 
-    return np.stack([
-        np.squeeze(random_nodes_for_shape(s, nnodes, rng=rng))
-        for s in shape.bases
-        ])
+    d = 0
+    nodes = np.empty((shape.dim, nnodes))
+    for s in shape.bases:
+        nodes[d:d + s.dim, :] = random_nodes_for_shape(s, nnodes, rng=rng)
+        d += s.dim
+
+    return nodes
 
 # }}}
 

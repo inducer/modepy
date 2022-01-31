@@ -267,6 +267,23 @@ def test_tensor_product_nodes_vs_tuples():
 # }}}
 
 
+# {{{ test_random_nodes_for_tensor_product
+
+def test_random_nodes_for_tensor_product():
+    import modepy as mp
+    shape = mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2)))
+
+    nnodes = 10
+    nodes = mp.random_nodes_for_shape(shape, nnodes)
+    assert nodes.shape == (3, 10)
+
+    nnodes = 1
+    nodes = mp.random_nodes_for_shape(shape, nnodes)
+    assert nodes.shape == (3, 1)
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 
