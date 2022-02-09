@@ -93,7 +93,7 @@ class Quadrature:
         *f* is assumed to accept arrays of shape *(dims, npts)*,
         or of shape *(npts,)* for 1D quadrature.
         """
-        return np.dot(self.weights, f(self.nodes))
+        return np.dot(self.weights, f(self.nodes).T).T
 
 
 class ZeroDimensionalQuadrature(Quadrature):
