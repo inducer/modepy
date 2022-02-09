@@ -34,14 +34,18 @@ def test_transformed_quadrature():
     """Test 1D quadrature on arbitrary intervals"""
 
     def gaussian_density(x, mu, sigma):
-        return 1 / (sigma * np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2 / (2 * sigma**2))
+        return (
+            1 / (sigma * np.sqrt(2*np.pi))
+            * np.exp(-np.sum((x-mu)**2, axis=0) / (2 * sigma**2))
+        )
 
     from modepy.quadrature import Transformed1DQuadrature
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     mu = 17
     sigma = 12
-    tq = Transformed1DQuadrature(LegendreGaussQuadrature(20),
+    tq = Transformed1DQuadrature(
+            LegendreGaussQuadrature(20, force_dim_axis=True),
             mu - 6*sigma, mu + 6*sigma)
 
     result = tq(lambda x: gaussian_density(x, mu, sigma))
@@ -61,10 +65,10 @@ def test_gauss_quadrature(backend):
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     for s in range(9 + 1):
-        quad = LegendreGaussQuadrature(s, backend)
+        quad = LegendreGaussQuadrature(s, backend, force_dim_axis=True)
         for deg in range(quad.exact_to + 1):
             def f(x):
-                return x**deg
+                return np.sum(x**deg, axis=0)
 
             i_f = quad(f)
             i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
@@ -76,7 +80,7 @@ def test_clenshaw_curtis_quadrature():
     from modepy.quadrature.clenshaw_curtis import ClenshawCurtisQuadrature
 
     for s in range(1, 9 + 1):
-        quad = ClenshawCurtisQuadrature(s)
+        quad = ClenshawCurtisQuadrature(s, force_dim_axis=True)
         for deg in range(quad.exact_to + 1):
             def f(x):
                 return x**deg
@@ -93,7 +97,7 @@ def test_fejer_quadrature(kind):
 
     for deg in range(1, 9 + 1):
         s = deg * 3
-        quad = FejerQuadrature(s, kind)
+        quad = FejerQuadrature(s, kind, force_dim_axis=True)
 
         def f(x):
             return x**deg

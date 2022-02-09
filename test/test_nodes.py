@@ -70,7 +70,7 @@ def test_warp():
 
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
-    lgq = LegendreGaussQuadrature(n)
+    lgq = LegendreGaussQuadrature(n, force_dim_axis=True)
     assert abs(lgq(partial(nd.warp_factor, n, scaled=False))) < 6e-14
 
 # }}}

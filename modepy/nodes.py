@@ -112,7 +112,7 @@ def warp_factor(n, output_nodes, scaled=True):
 
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
 
-    warped_nodes = legendre_gauss_lobatto_nodes(n)
+    warped_nodes = legendre_gauss_lobatto_nodes(n, force_dim_axis=True).squeeze()
     equi_nodes = np.linspace(-1, 1, n+1)
 
     from modepy.matrices import vandermonde
@@ -320,17 +320,19 @@ def warp_and_blend_nodes(
 
     elif dims == 1:
         from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
-        result = legendre_gauss_lobatto_nodes(n)
+        result = legendre_gauss_lobatto_nodes(n, force_dim_axis=True)
 
         if node_tuples is not None:
             new_result = np.empty_like(result)
-            if len(node_tuples) != n+1:
+            if len(node_tuples) != n + 1:
                 raise ValueError("node_tuples list does not have the correct length")
+
             for i, (nti,) in enumerate(node_tuples):
-                new_result[i] = result[nti]
+                new_result[:, i] = result[:, nti]
+
             result = new_result
 
-        return result.reshape(1, -1)
+        return result
 
     elif dims == 2:
         return warp_and_blend_nodes_2d(n, node_tuples)
@@ -388,7 +390,8 @@ def tensor_product_nodes(
 
 def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
-    return tensor_product_nodes(dims, legendre_gauss_lobatto_nodes(n))
+    return tensor_product_nodes(dims,
+        legendre_gauss_lobatto_nodes(n, force_dim_axis=True))
 
 # }}}
 

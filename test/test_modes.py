@@ -50,7 +50,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature
 
     max_n = 10
-    quad = JacobiGaussQuadrature(alpha, beta, 4*max_n)
+    quad = JacobiGaussQuadrature(alpha, beta, 4*max_n, force_dim_axis=True)
 
     from functools import partial
     jac_f = [partial(mp.jacobi, alpha, beta, n) for n in range(max_n)]
