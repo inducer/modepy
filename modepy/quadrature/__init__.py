@@ -155,7 +155,9 @@ class TensorProductQuadrature(Quadrature):
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
     def __init__(self, N, dims, backend=None):      # noqa: N803
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
-        super().__init__([LegendreGaussQuadrature(N, backend=backend)] * dims)
+        super().__init__([
+            LegendreGaussQuadrature(N, backend=backend, force_dim_axis=True)
+            ] * dims)
 
 
 # {{{ quadrature
