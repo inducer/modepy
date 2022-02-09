@@ -66,7 +66,12 @@ class JacobiGaussQuadrature(Quadrature):
         if backend == "builtin":
             x, w = self.compute_weights_and_nodes(N, alpha, beta)
         elif backend == "scipy":
-            from scipy.special.orthogonal import roots_jacobi
+            try:
+                from scipy.special import roots_jacobi
+            except ImportError:
+                # NOTE: deprecated in scipy >=1.8.0
+                from scipy.special.orthogonal import roots_jacobi
+
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
             raise NotImplementedError("Unsupported backend: %s" % backend)
