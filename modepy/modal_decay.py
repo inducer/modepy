@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from typing import Tuple
 
 import numpy as np
 import numpy.linalg as la
@@ -44,7 +45,9 @@ The method implemented in this module follows this article:
 
 
 def simplex_interp_error_coefficient_estimator_matrix(
-        unit_nodes, order, n_tail_orders):
+        unit_nodes: np.ndarray,
+        order: int,
+        n_tail_orders: int) -> np.ndarray:
     """Return a matrix :math:`C` that, when multiplied by a vector of nodal values,
     yields the coeffiicients belonging to the basis functions of the *n_tail_orders*
     highest orders.
@@ -69,9 +72,13 @@ def simplex_interp_error_coefficient_estimator_matrix(
     vdm_inv = la.inv(vdm)
 
     if dim > 1:
-        order_vector = np.array([sum(mode_id) for mode_id in basis.mode_ids])
+        order_vector = np.array([
+            # NOTE: basis.mode_ids are declared as `Tuple[Hashable, ...]`, which
+            # cannot be summed
+            sum(mode_id) for mode_id in basis.mode_ids  # type: ignore[call-overload]
+            ])
     else:
-        order_vector = basis.mode_ids
+        order_vector = np.array(basis.mode_ids)
 
     max_order = np.max(order_vector)
     assert max_order == order
@@ -79,7 +86,9 @@ def simplex_interp_error_coefficient_estimator_matrix(
     return vdm_inv[order_vector > max_order-n_tail_orders]
 
 
-def make_mode_number_vector(mode_order_tuples, ignored_modes):
+def make_mode_number_vector(
+        mode_order_tuples: Tuple[Tuple[int, ...], ...],
+        ignored_modes: int) -> np.ndarray:
     node_cnt = len(mode_order_tuples)
 
     mode_number_vector = np.zeros(node_cnt-ignored_modes, dtype=np.int32)
@@ -91,7 +100,7 @@ def make_mode_number_vector(mode_order_tuples, ignored_modes):
     return mode_number_vector
 
 
-def create_decay_baseline(mode_number_vector, n):
+def create_decay_baseline(mode_number_vector: np.ndarray, n: int) -> np.ndarray:
     """Create a vector of modal coefficients that exhibit 'optimal'
     (:math:`k^{-N}`) decay.
     """
@@ -101,12 +110,16 @@ def create_decay_baseline(mode_number_vector, n):
     modal_coefficients = mode_number_vector**(-n)
     modal_coefficients[zeros] = 1  # irrelevant, just keeps log from NaNing
 
-    modal_coefficients /= la.norm(modal_coefficients)
+    # NOTE: mypy seems to be confused by the __itruediv__ argument types
+    modal_coefficients /= la.norm(modal_coefficients)   # type: ignore[misc]
 
     return modal_coefficients
 
 
-def get_decay_fit_matrix(mode_number_vector, ignored_modes, weight_vector):
+def get_decay_fit_matrix(
+        mode_number_vector: np.ndarray,
+        ignored_modes: int,
+        weight_vector: np.ndarray) -> np.ndarray:
     a = np.zeros((len(mode_number_vector), 2), dtype=np.float64)
     a[:, 0] = weight_vector
     a[:, 1] = weight_vector * np.log(mode_number_vector)
@@ -118,7 +131,7 @@ def get_decay_fit_matrix(mode_number_vector, ignored_modes, weight_vector):
     return la.pinv(a)
 
 
-def skyline_pessimize(modal_values):
+def skyline_pessimize(modal_values: np.ndarray) -> np.ndarray:
     nelements, nmodes = modal_values.shape
 
     result = np.empty_like(modal_values)
@@ -136,37 +149,33 @@ def skyline_pessimize(modal_values):
     return result
 
 
-def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
+def fit_modal_decay(
+        coeffs: np.ndarray, dims: int, n: int,
+        ignored_modes: int = 1) -> Tuple[np.ndarray, np.ndarray]:
     """Fit a curve to the modal decay on each element.
 
-    :arg coeffs: a array of shape *(num_elements, num_modes)* containing modal
-        coefficients of the functions to be analyzed
-    :arg dims: number of dimensions
+    :arg coeffs: an array of shape ``(num_elements, num_modes)`` containing modal
+        coefficients of the functions to be analyzed.
+    :arg dims: number of dimensions.
     :arg ignored_modes: the number of modal coefficients to ignore at the
         beginning. The default value of '1' ignores the constant.
-    :returns: a tuple *(expn, constant)* of arrays of length *num_elements*,
+
+    :returns: a tuple ``(expn, constant)`` of arrays of length *num_elements*,
         where the modal decay is fit to the curve
-        ``constant * total_degree**exponent``.
-
-    ``-exponent-1`` can be used as a rough indicator of how many continuous
-    derivatives the underlying function possesses.
+        ``constant * total_degree**exponent``. ``-exponent-1`` can be used as
+        a rough indicator of how many continuous derivatives the underlying
+        function possesses.
     """
-
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
-
-    mode_order_tuples = list(gnitstam(n, dims))
-
-    coeffs_squared = skyline_pessimize(coeffs**2)
-
-    mode_number_vector_int = make_mode_number_vector(
-            mode_order_tuples, ignored_modes)
-    mode_number_vector = mode_number_vector_int.astype(np.float64)
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+    mode_number_vector = make_mode_number_vector(
+            tuple(gnitstam(n, dims)), ignored_modes
+            ).astype(np.float64)
     weight_vector = np.ones_like(mode_number_vector)
 
-    fit_mat = get_decay_fit_matrix(mode_number_vector, ignored_modes,
-            weight_vector)
+    fit_mat = get_decay_fit_matrix(mode_number_vector, ignored_modes, weight_vector)
 
+    coeffs_squared = skyline_pessimize(coeffs**2)
     el_norm_squared = np.sum(coeffs_squared, axis=-1)
     scaled_baseline = (
             create_decay_baseline(mode_number_vector, n)
@@ -198,7 +207,9 @@ def fit_modal_decay(coeffs, dims, n, ignored_modes=1):
     return exponent, const
 
 
-def estimate_relative_expansion_residual(coeffs, dims, n, ignored_modes=1):
+def estimate_relative_expansion_residual(
+        coeffs: np.ndarray, dims: int, n: int,
+        ignored_modes: int = 1) -> np.ndarray:
     """Use the modal fit to estimate the relative residual of the expansion.
     The arguments to this function exactly match :func:`fit_modal_decay`.
 
