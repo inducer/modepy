@@ -54,20 +54,24 @@ def simplex_interp_error_coefficient_estimator_matrix(
 
     .. versionadded:: 2018.1
     """
-
-    from modepy.matrices import vandermonde
-    from modepy.modes import simplex_onb_with_mode_ids
-
     dim, nunit_nodes = unit_nodes.shape
 
-    mode_ids, basis = simplex_onb_with_mode_ids(dim, order)
-    vdm = vandermonde(basis, unit_nodes)
+    from modepy.shapes import Simplex
+    from modepy.spaces import space_for_shape
+    shape = Simplex(dim)
+    space = space_for_shape(shape, order)
+
+    from modepy.modes import orthonormal_basis_for_space
+    basis = orthonormal_basis_for_space(space, shape)
+
+    from modepy.matrices import vandermonde
+    vdm = vandermonde(basis.functions, unit_nodes)
     vdm_inv = la.inv(vdm)
 
     if dim > 1:
-        order_vector = np.array([sum(mode_id) for mode_id in mode_ids])
+        order_vector = np.array([sum(mode_id) for mode_id in basis.mode_ids])
     else:
-        order_vector = mode_ids
+        order_vector = basis.mode_ids
 
     max_order = np.max(order_vector)
     assert max_order == order
