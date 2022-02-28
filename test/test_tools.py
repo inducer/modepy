@@ -562,6 +562,106 @@ def test_tensor_product_shapes():
 # }}}
 
 
+# {{{ tensor product reshape
+
+@pytest.mark.parametrize("dim", [2, 3])
+def test_tensor_product_reshape(dim):
+    interval = mp.Simplex(1)
+    shape = mp.TensorProductShape((interval,) * dim)
+    space = mp.TensorProductSpace(tuple([mp.PN(1, 4+i) for i in range(dim)]))
+    basis = mp.basis_for_space(space, shape)
+
+    from modepy.tools import reshape_array_for_tensor_product_space
+
+    tol = 1e-13
+
+    for nodes_func in [
+            mp.edge_clustered_nodes_for_space,
+            mp.equispaced_nodes_for_space,
+            ]:
+        np.set_printoptions(linewidth=200)
+
+        nodes = nodes_func(space, shape)
+        nodes_r = reshape_array_for_tensor_product_space(space, nodes)
+
+        assert nodes_r.shape[1:] == tuple(5+i for i in range(dim))
+
+        vdm = mp.vandermonde(basis.functions, nodes)
+        _, sing_values, _ = la.svd(vdm)
+        assert min(sing_values) > 1e-10
+
+        for i in range(dim):
+            # ensure that node_ids are valid indices into the nodal array
+            for nid in mp.node_tuples_for_space(space):
+                nodes_r[0][nid]
+
+            for j in range(dim):
+                varies_along_axis_j = np.diff(nodes_r[i], axis=j).any()
+                assert varies_along_axis_j == (j == i)
+
+            f_ax = np.exp(nodes[i])
+            f_ax_modal_r = reshape_array_for_tensor_product_space(space,
+                    la.solve(vdm, f_ax))
+
+            # ensure that mode_ids are valid indices into the modal array
+            for mid in basis.mode_ids:
+                f_ax_modal_r[mid]
+
+            for j in range(dim):
+                # constant <=> all but the first coefficient is zero
+                constant_along_axis_j = np.max(np.abs(
+                    f_ax_modal_r[(slice(None),) * (j) + (slice(1, None),)]
+                    )) < tol
+
+                assert constant_along_axis_j == (j != i)
+
+# }}}
+
+
+# {{{ test_tensor_product_vdm_dim_by_dim
+
+@pytest.mark.parametrize("dim", [2, 3])
+def test_tensor_product_vdm_dim_by_dim(dim):
+    """Apply tensor product Vandermonde one dimension at a time, check that the
+    result matches what's obtained via the whole-space Vandermonde.
+    """
+
+    interval = mp.Simplex(1)
+    shape = mp.TensorProductShape((interval,) * dim)
+    space = mp.TensorProductSpace(tuple([mp.PN(1, 4+i) for i in range(dim)]))
+    basis = mp.basis_for_space(space, shape)
+
+    nodes = mp.edge_clustered_nodes_for_space(space, shape)
+    vdm = mp.vandermonde(basis.functions, nodes)
+
+    x = np.random.randn(space.space_dim)
+    vdm_x = vdm @ x
+
+    from modepy.tools import (reshape_array_for_tensor_product_space,
+            unreshape_array_for_tensor_product_space)
+    x_r = reshape_array_for_tensor_product_space(space, x)
+    vdm_dimbydim_x_r = x_r
+
+    for i, (subspace, subshape) in enumerate(zip(space.bases, shape.bases)):
+        subnodes = mp.edge_clustered_nodes_for_space(subspace, subshape)
+        subbasis = mp.basis_for_space(subspace, subshape)
+        subvdm = mp.vandermonde(subbasis.functions, subnodes)
+
+        pre_dims = "kl"[:i]
+        post_dims = "mn"[:dim-i-1]
+        vdm_dimbydim_x_r = np.einsum(
+                f"ij,{pre_dims}j{post_dims}->{pre_dims}i{post_dims}",
+                subvdm, vdm_dimbydim_x_r)
+
+    vdm_dimbydim_x = unreshape_array_for_tensor_product_space(
+            space, vdm_dimbydim_x_r)
+
+    err = la.norm(vdm_x - vdm_dimbydim_x)
+    assert err < 1e-12, err
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 

@@ -366,6 +366,11 @@ def tensor_product_nodes(
 
         *dims_or_nodes* can contain nodes of general size ``(dims, nnodes)``,
         not only one dimensional nodes.
+
+    .. versionchanged:: 2022.1
+
+        The node ordering changed once again, and it is now accessible, via
+        :func:`modepy.tools.reshape_array_for_tensor_product_space`.
     """
     if isinstance(dims_or_nodes, int):
         if nodes_1d is None:

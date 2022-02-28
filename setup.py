@@ -44,6 +44,7 @@ def main():
               "pymbolic",
 
               "dataclasses; python_version<'3.7'",
+              "typing_extensions; python_version<'3.8'",
               ],
           package_data={"modepy": ["py.typed"]},
           )
