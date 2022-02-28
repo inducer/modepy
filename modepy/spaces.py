@@ -99,6 +99,10 @@ class TensorProductSpace(FunctionSpace):
         tensor product.
 
     .. automethod:: __init__
+
+    To recover the tensor product structure of degree-of-freedom arrays (nodal
+    or modal) associated with this type of space, see
+    :func:`~modepy.tools.reshape_array_for_tensor_product_space`.
     """
 
     bases: Tuple[FunctionSpace, ...]

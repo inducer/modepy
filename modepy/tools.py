@@ -14,6 +14,22 @@ Interpolation quality
 
 .. autofunction:: estimate_lebesgue_constant
 
+DOF arrays of tensor product discretizations
+--------------------------------------------
+
+.. autofunction:: reshape_array_for_tensor_product_space
+.. autofunction:: unreshape_array_for_tensor_product_space
+
+Types used in documentation
+---------------------------
+
+.. class:: ReshapeableT
+
+    An array-like protocol that supports finding the shape and reshaping.
+
+    .. attribute::: shape
+    .. method::: reshape
+
 """
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
@@ -38,6 +54,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from typing import Tuple, TypeVar
+try:
+    # NOTE: only available in >=3.8
+    from typing import Protocol, runtime_checkable
+except ImportError:
+    from typing_extensions import Protocol, runtime_checkable  # type: ignore[misc]
+
 from functools import reduce
 from math import gamma      # noqa: F401
 from math import sqrt
@@ -47,6 +70,7 @@ import numpy.linalg as la
 
 from pytools import memoize_method, MovedFunctionDeprecationWrapper
 import modepy.shapes as shp
+from modepy.spaces import TensorProductSpace
 
 
 class Monomial:
@@ -411,6 +435,77 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
         raise ValueError(f"visualization is not supported in {shape.dim}D")
 
     return lebesgue_constant
+
+# }}}
+
+
+# {{{ tensor product reshaping
+
+@runtime_checkable
+class Reshapeable(Protocol):
+    shape: Tuple[int, ...]
+
+    def reshape(
+            self: "ReshapeableT", *newshape: Tuple[int, ...], order: str
+            ) -> "ReshapeableT":
+        ...
+
+
+ReshapeableT = TypeVar("ReshapeableT", bound=Reshapeable)
+
+
+def reshape_array_for_tensor_product_space(
+        space: TensorProductSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
+    """Return a reshaped view of *ary* that exposes the tensor product nature
+    of the space. Axis number *axis* of *ary* must index coefficients
+    corresponding to a tensor-product-structured basis (e.g. modal or nodal
+    coefficients).
+
+    :arg ary: an array with last dimension having a length matching the
+        :attr:`~modepy.FunctionSpace.space_dim` of *space*.
+    :arg result: *ary* reshaped with axis number *axis* replaced by
+        a tuple of dimensions matching the dimensions of the spaces
+        making up the tensor product. Variation of the represented
+        function along a given dimension will be represented by variation
+        of array entries along the corresponding array axis.
+    """
+    if axis < 0:
+        axis += len(ary.shape)
+    if not (0 <= axis < len(ary.shape)):
+        raise ValueError("invalid axis specified")
+    if ary.shape[axis] != space.space_dim:
+        raise ValueError(f"array's axis {axis} must have length "
+                f"{space.space_dim}, found {ary.shape[axis]} instead")
+    return ary.reshape(
+            (ary.shape[:axis]
+                + tuple([s.space_dim for s in space.bases])
+                + ary.shape[axis+1:]),
+            order="F")
+
+
+def unreshape_array_for_tensor_product_space(
+        space: TensorProductSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
+    """Undoes the effect of :func:`reshape_array_for_tensor_product_space`,
+    given the same *space* and *axis*.
+    """
+
+    n_tp_axes = len(space.bases)
+    naxes = len(ary.shape) - n_tp_axes + 1
+    if axis < 0:
+        axis += naxes
+    if not (0 <= axis < naxes):
+        raise ValueError("invalid axis specified")
+
+    expected_space_dims = tuple([s.space_dim for s in space.bases])
+    if ary.shape[axis:n_tp_axes] != expected_space_dims:
+        raise ValueError(f"array's axes {axis}:{axis+n_tp_axes} must have shape "
+                f"{expected_space_dims}, "
+                f"found {ary.shape[axis:axis+n_tp_axes]} instead")
+    return ary.reshape(
+            (ary.shape[:axis]
+                + (space.space_dim,)
+                + ary.shape[axis+n_tp_axes:]),
+            order="F")
 
 # }}}
 
