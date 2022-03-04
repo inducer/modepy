@@ -1128,10 +1128,10 @@ class TensorProductBasis(Basis):
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
 
-        self._bases = list(reversed(bases))
-        self._grad_bases = list(reversed(grad_bases))
+        self._bases = list(bases)
+        self._grad_bases = list(grad_bases)
         self._orth_weight = orth_weight
-        self._dims_per_basis = tuple(reversed(dims_per_basis))
+        self._dims_per_basis = tuple(dims_per_basis)
 
     def orthonormality_weight(self):
         if self._orth_weight is None:

@@ -20,8 +20,8 @@ Simplices
 Also see :class:`modepy.VioreanuRokhlinSimplexQuadrature` if nodes on the
 boundary are not required.
 
-Hypercubes
-----------
+Tensor-Product Shapes
+---------------------
 
 .. currentmodule:: modepy
 
@@ -64,7 +64,7 @@ from functools import singledispatch, partial
 from modepy.shapes import (
         Shape, TensorProductShape, Simplex,
         unit_vertices_for_shape)
-from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN  # noqa: F401
+from modepy.spaces import FunctionSpace, TensorProductSpace, PN
 
 
 # {{{ equidistant nodes
@@ -368,22 +368,25 @@ def tensor_product_nodes(
         not only one dimensional nodes.
     """
     if isinstance(dims_or_nodes, int):
-        assert nodes_1d is not None
-        nodes: Sequence[np.ndarray] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
+        if nodes_1d is None:
+            raise ValueError("nodes_1d must be supplied if the first argument "
+                    "is the number of dimensions")
+        nodesets: Sequence[np.ndarray] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
         dims = dims_or_nodes
     else:
-        assert nodes_1d is None
-        nodes = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
-        dims = sum(n.shape[0] for n in nodes)
+        if nodes_1d is not None:
+            raise ValueError("nodes_1d must not be supplied if the first argument "
+                    "is a sequence of node arrays")
+        nodesets = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
+        dims = sum(n.shape[0] for n in nodesets)
 
-    nnodes = len(nodes)
-    result = np.empty((dims,) + tuple([n.shape[-1] for n in nodes]))
+    result = np.empty((dims,) + tuple([n.shape[-1] for n in nodesets]))
 
     d = 0
-    for n in range(nnodes):
-        x = nodes[nnodes - 1 - n]
-        result[d:d + x.shape[0]] = x.reshape(x.shape + (1,)*n)
-        d += x.shape[0]
+    for nodes in nodesets:
+        node_dims, _ = nodes.shape
+        result[d:d+node_dims] = nodes.reshape(nodes.shape + (1,)*(dims-node_dims-d))
+        d += node_dims
 
     return result.reshape(dims, -1)
 
@@ -493,15 +496,13 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
 
-    n = len(tuples_for_space)
-
     def concat(tuples):
         return sum(tuples, ())
 
     return tuple([
         concat((
-            tuples_for_space[n - i - 1][j]
-            for i, j in enumerate(tp[::-1])
+            tuples_for_space[i][j]
+            for i, j in enumerate(tp)
             ))
         for tp in gnitb([len(tp) for tp in tuples_for_space])
         ])
