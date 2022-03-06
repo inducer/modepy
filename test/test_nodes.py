@@ -177,7 +177,7 @@ def test_nonhomogeneous_tensor_product_nodes(dim):
 
     assert np.allclose(
             nodes[0],
-            list(range(nnodes[-1])) * int(np.prod(nnodes[:-1]))
+            list(range(nnodes[0])) * int(np.prod(nnodes[1:]))
             )
 
 # }}}
@@ -260,7 +260,7 @@ def test_tensor_product_nodes_vs_tuples():
         space = mp.space_for_shape(shape, order)
         ref_nodes = nd.equispaced_nodes_for_space(space, shape)
         nodes = (np.array(nd.node_tuples_for_space(space), dtype=np.float64)
-                / np.array(order[::-1]) * 2 - 1).T
+                / np.array(order) * 2 - 1).T
 
         assert np.linalg.norm(nodes - ref_nodes) < 1.0e-14
 
