@@ -1128,10 +1128,10 @@ class TensorProductBasis(Basis):
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
 
-        self._bases = list(reversed(bases))
-        self._grad_bases = list(reversed(grad_bases))
+        self._bases = list(bases)
+        self._grad_bases = list(grad_bases)
         self._orth_weight = orth_weight
-        self._dims_per_basis = tuple(reversed(dims_per_basis))
+        self._dims_per_basis = tuple(dims_per_basis)
 
     def orthonormality_weight(self):
         if self._orth_weight is None:
@@ -1150,7 +1150,8 @@ class TensorProductBasis(Basis):
     @property
     def mode_ids(self):
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
-        return tuple(gnitb([len(b) for b in self._bases]))
+        # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
+        return tuple(mid[::-1] for mid in gnitb([len(b) for b in self._bases[::-1]]))
 
     @property
     def functions(self):
