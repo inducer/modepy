@@ -104,19 +104,19 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             Quadrature.__init__(self, nodes, weights)
             return
 
-        from pytools import \
-                generate_decreasing_nonnegative_tuples_summing_to, \
-                generate_unique_permutations, \
-                factorial, \
-                wandering_element
+        import math
+        from pytools import (
+                generate_decreasing_nonnegative_tuples_summing_to,
+                generate_unique_permutations,
+                wandering_element)
 
         points_to_weights = {}
 
         for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
                     * (d + n - 2*i)**d \
-                    / factorial(i) \
-                    / factorial(d + n - i)
+                    / math.factorial(i) \
+                    / math.factorial(d + n - i)
 
             for t in generate_decreasing_nonnegative_tuples_summing_to(s - i, n + 1):
                 for beta in generate_unique_permutations(t):

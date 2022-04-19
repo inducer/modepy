@@ -105,12 +105,12 @@ class Monomial:
     def simplex_integral(self):
         r"""Integral over the simplex
         :math:`\{\mathbf{x} \in [0, 1]^n: \sum x_i \le 1 \}`."""
-        from pytools import factorial
+        import math
         from operator import mul
 
         return (self.factor * 2**len(self.exponents)
-                * reduce(mul, (factorial(alpha) for alpha in self.exponents))
-                / factorial(len(self.exponents)+sum(self.exponents)))
+                * reduce(mul, (math.factorial(alpha) for alpha in self.exponents))
+                / math.factorial(len(self.exponents) + sum(self.exponents)))
 
     def hypercube_integral(self):
         """Integral over the hypercube :math:`[0, 1]^n`."""
