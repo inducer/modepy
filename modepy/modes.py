@@ -821,7 +821,9 @@ def tensor_product_basis(dims, basis_1d):
     mode_ids = node_tuples_for_space(QN(dims, len(basis_1d) - 1))
 
     return tuple(
-            _TensorProductBasisFunction(order, [basis_1d[i] for i in order])
+            _TensorProductBasisFunction(
+                order, [basis_1d[i] for i in order],
+                dims_per_function=(1,) * len(order))
             for order in mode_ids)
 
 
@@ -848,7 +850,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
             _TensorProductGradientBasisFunction(order, [
                 [func[i][k] for i, k in zip(iderivative, order)]
                 for iderivative in wandering_element(dims)
-                ])
+                ], dims_per_function=(1,) * len(order))
             for order in mode_ids)
 
 
