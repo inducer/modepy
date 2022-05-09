@@ -199,7 +199,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     """
 
     def __init__(self, alpha, N, backend=None, force_dim_axis=False):  # noqa: N803
-        super().__init__(self, alpha, alpha, N,
+        super().__init__(alpha, alpha, N,
                 backend=backend, force_dim_axis=force_dim_axis)
 
 

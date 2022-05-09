@@ -168,7 +168,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
             if ref_norm > 1e-13:
                 err = err/ref_norm
 
-            logger.info("error: %.5", err)
+            logger.info("error: %.5e", err)
             eoc_rec.add_data_point(h, err)
 
         tol = 1e-8
