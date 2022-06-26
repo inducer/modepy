@@ -134,7 +134,7 @@ class TensorProductSpace(FunctionSpace):
 
     @property
     def space_dim(self) -> int:
-        return np.prod([space.space_dim for space in self.bases])
+        return int(np.prod([space.space_dim for space in self.bases]))
 
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
