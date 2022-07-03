@@ -58,7 +58,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
 
     for i, fi in enumerate(jac_f):
         for j, fj in enumerate(jac_f):
-            result = quad(lambda x: fi(x)*fj(x))
+            result = quad(lambda x: fi(x)*fj(x))  # noqa: B023
             true_result = 1.0 if i == j else 0.0
 
             err = abs(result-true_result)
@@ -102,7 +102,7 @@ def test_basis_orthogonality(shape, order, ebound):
                 true_result = 1
             else:
                 true_result = 0
-            result = cub(lambda x: f(x)*g(x))
+            result = cub(lambda x: f(x)*g(x))  # noqa: B023
             err = abs(result-true_result)
             logger.info("error %.5e max %.5e", err, maxerr)
             maxerr = max(maxerr, err)

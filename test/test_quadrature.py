@@ -68,7 +68,7 @@ def test_gauss_quadrature(backend):
         quad = LegendreGaussQuadrature(s, backend, force_dim_axis=True)
         for deg in range(quad.exact_to + 1):
             def f(x):
-                return np.sum(x**deg, axis=0)
+                return np.sum(x**deg, axis=0)  # noqa: B023
 
             i_f = quad(f)
             i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
@@ -83,7 +83,7 @@ def test_clenshaw_curtis_quadrature():
         quad = ClenshawCurtisQuadrature(s, force_dim_axis=True)
         for deg in range(quad.exact_to + 1):
             def f(x):
-                return x**deg
+                return x**deg  # noqa: B023
 
             i_f = quad(f)
             i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
@@ -100,7 +100,7 @@ def test_fejer_quadrature(kind):
         quad = FejerQuadrature(s, kind, force_dim_axis=True)
 
         def f(x):
-            return x**deg
+            return x**deg  # noqa: B023
 
         i_f = quad(f)
         i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
