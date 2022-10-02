@@ -36,15 +36,12 @@ def main():
               ],
 
           packages=find_packages(),
-          python_requires="~=3.6",
+          python_requires="~=3.8",
           install_requires=[
               "numpy",
               "pytools>=2013.1",
               "pytest>=2.3",
               "pymbolic",
-
-              "dataclasses; python_version<'3.7'",
-              "typing_extensions; python_version<'3.8'",
               ],
           package_data={"modepy": ["py.typed"]},
           )
