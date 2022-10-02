@@ -55,11 +55,7 @@ THE SOFTWARE.
 """
 
 from typing import Tuple, TypeVar
-try:
-    # NOTE: only available in >=3.8
-    from typing import Protocol, runtime_checkable
-except ImportError:
-    from typing_extensions import Protocol, runtime_checkable  # type: ignore[misc]
+from typing import Protocol, runtime_checkable
 
 from functools import reduce
 from math import gamma      # noqa: F401
