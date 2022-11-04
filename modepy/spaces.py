@@ -192,16 +192,8 @@ class PN(FunctionSpace):
 
     @property
     def space_dim(self) -> int:
-        spdim = self.spatial_dim
-        order = self.order
-        try:
-            from math import comb       # comb is v3.8+
-            return comb(order + spdim, spdim)
-        except ImportError:
-            from functools import reduce
-            from operator import mul
-            return reduce(mul, range(order + 1, order + spdim + 1), 1) \
-                    // reduce(mul, range(1, spdim + 1), 1)
+        from math import comb
+        return comb(self.order + self.spatial_dim, self.spatial_dim)
 
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
