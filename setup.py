@@ -40,9 +40,11 @@ def main():
           install_requires=[
               "numpy",
               "pytools>=2013.1",
-              "pytest>=2.3",
               "pymbolic",
               ],
+          extras_require={
+              "test": ["pytest>=2.3"],
+          },
           package_data={"modepy": ["py.typed"]},
           )
 
