@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
     (0, 0, 5e-14),              # Gauss-Legendre
-    (-0.5, -0.5, 6e-15),        # Chebyshev-Gauss (first kind)
-    (0.5, 0.5, 6e-15),          # Chebyshev-Gauss (second kind)
+    (-0.5, -0.5, 7e-15),        # Chebyshev-Gauss (first kind)
+    (0.5, 0.5, 9e-15),          # Chebyshev-Gauss (second kind)
     (1, 0, 4e-14),
     (3, 2, 3e-14),
     (0, 2, 3e-13),
@@ -76,7 +76,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
 
 @pytest.mark.parametrize(("order", "ebound"), [
     (1, 2e-15),
-    (2, 5e-15),
+    (2, 7e-15),
     (3, 1e-14),
     # (4, 3e-14),
     # (7, 3e-14),
