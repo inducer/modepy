@@ -73,7 +73,7 @@ def test_gauss_quadrature(backend):
             i_f = quad(f)
             i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
             err = abs(i_f - i_f_true)
-            assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
+            assert err < 3.0e-15, (s, deg, err, i_f, i_f_true)
 
 
 def test_clenshaw_curtis_quadrature():
