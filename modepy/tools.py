@@ -493,7 +493,7 @@ def unreshape_array_for_tensor_product_space(
         raise ValueError("invalid axis specified")
 
     expected_space_dims = tuple([s.space_dim for s in space.bases])
-    if ary.shape[axis:n_tp_axes] != expected_space_dims:
+    if ary.shape[axis:axis+n_tp_axes] != expected_space_dims:
         raise ValueError(f"array's axes {axis}:{axis+n_tp_axes} must have shape "
                 f"{expected_space_dims}, "
                 f"found {ary.shape[axis:axis+n_tp_axes]} instead")
