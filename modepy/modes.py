@@ -1108,10 +1108,7 @@ class TensorProductBasis(Basis):
     """
 
     def __init__(self,
-            bases: Sequence[Sequence[
-                Callable[[np.ndarray], np.ndarray]]],
-            grad_bases: Sequence[Sequence[
-                Callable[[np.ndarray], Tuple[np.ndarray, ...]]]],
+            bases: Sequence[Basis],
             orth_weight: Optional[float],
             dims_per_basis: Optional[Tuple[int, ...]] = None) -> None:
         """
@@ -1134,8 +1131,7 @@ class TensorProductBasis(Basis):
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
 
-        self._bases = list(bases)
-        self._grad_bases = list(grad_bases)
+        self._bases = tuple(bases)
         self._orth_weight = orth_weight
         self._dims_per_basis = tuple(dims_per_basis)
 
@@ -1144,6 +1140,10 @@ class TensorProductBasis(Basis):
             raise BasisNotOrthonormal
         else:
             return self._orth_weight
+
+    @property
+    def bases(self) -> Sequence[Basis]:
+        return self._bases
 
     @property
     def _dim(self):
@@ -1157,13 +1157,16 @@ class TensorProductBasis(Basis):
     def mode_ids(self):
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
-        return tuple(mid[::-1] for mid in gnitb([len(b) for b in self._bases[::-1]]))
+        # FIXME (for review): should this change?
+        return tuple(mid[::-1]
+                     for mid in gnitb([len(b.functions)
+                                       for b in self._bases[::-1]]))
 
     @property
     def functions(self):
         return tuple(
                 _TensorProductBasisFunction(mid, tuple([
-                    self._bases[ibasis][mid_i]
+                    self.bases[ibasis].functions[mid_i]
                     for ibasis, mid_i in enumerate(mid)
                     ]),
                     dims_per_function=self._dims_per_basis)
@@ -1214,8 +1217,7 @@ def _orthonormal_basis_for_tp(
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=_get_orth_weight(bases),
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
@@ -1230,8 +1232,7 @@ def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
 
     bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=_get_orth_weight(bases),
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
@@ -1246,8 +1247,7 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape)
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=None,
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
