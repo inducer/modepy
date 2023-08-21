@@ -1120,13 +1120,13 @@ class TensorProductBasis(Basis):
             be the normalizing weight. If *None*, then the basis is assumed to
             not be orthogonal (this is not checked).
         """
-        if len(bases) != len(grad_bases):
-            raise ValueError("'bases' and 'grad_bases' must have the same length")
+        # if len(bases) != len(grad_bases):
+        #     raise ValueError("'bases' and 'grad_bases' must have the same length")
 
-        for i, (b, gb) in enumerate(zip(bases, grad_bases)):
-            if len(b) != len(gb):
-                raise ValueError(
-                        f"bases[{i}] and grad_bases[{i}] must have the same length")
+        # for i, (b, gb) in enumerate(zip(bases, grad_bases)):
+        #     if len(b) != len(gb):
+        #         raise ValueError(
+        #                 f"bases[{i}] and grad_bases[{i}] must have the same length")
 
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
@@ -1175,7 +1175,9 @@ class TensorProductBasis(Basis):
     @property
     def gradients(self):
         from pytools import wandering_element
-        func = (self._bases, self._grad_bases)
+        bases = [b.functions for b in self._bases]
+        grad_bases = [b.gradients for b in self._bases]
+        func = (bases, grad_bases)
         return tuple(
                 _TensorProductGradientBasisFunction(mid, tuple([
                     tuple([
@@ -1212,8 +1214,7 @@ def _orthonormal_basis_for_tp(
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    bases = [
-            orthonormal_basis_for_space(b, s)
+    bases = [orthonormal_basis_for_space(b, s)
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
