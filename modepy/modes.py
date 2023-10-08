@@ -1112,21 +1112,12 @@ class TensorProductBasis(Basis):
             orth_weight: Optional[float],
             dims_per_basis: Optional[Tuple[int, ...]] = None) -> None:
         """
-        :param bases: a sequence of sequences (representing the basis) of
-            functions representing the approximation basis.
-        :param grad_bases: a sequence of sequences representing the
-            derivatives of *bases*.
+        :param bases: a sequence of 1D bases used to construct the tensor
+            product approximation basis.
         :param orth_weight: if *bases* forms an orthogonal basis, this should
             be the normalizing weight. If *None*, then the basis is assumed to
             not be orthogonal (this is not checked).
         """
-        # if len(bases) != len(grad_bases):
-        #     raise ValueError("'bases' and 'grad_bases' must have the same length")
-
-        # for i, (b, gb) in enumerate(zip(bases, grad_bases)):
-        #     if len(b) != len(gb):
-        #         raise ValueError(
-        #                 f"bases[{i}] and grad_bases[{i}] must have the same length")
 
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
