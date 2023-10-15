@@ -39,17 +39,21 @@ if TYPE_CHECKING:
     import pymbolic.primitives
 
 RealValueT = TypeVar("RealValueT",
-        np.ndarray, "pymbolic.primitives.Expression", float)
+                     np.ndarray, "pymbolic.primitives.Expression", float)
 
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
 
+.. class:: RealValue
+
+    A real number, represented as :class:`numpy.ndarray`,
+    :class:`pymbolic.primitives.Expression` or a :class:`numbers.Number`.
+
 .. class:: RealValueT
 
-    :class:`~typing.TypeVar` for basis function inputs and outputs, can be one
-    of :class:`numpy.ndarray`, :class:`pymbolic.primitives.Expression` or a
-    :class:`numbers.Number`.
+    :class:`~typing.TypeVar` for basis function inputs and outputs, based on the
+    same types as :class:`RealValue`.
 
 .. currentmodule:: modepy
 
@@ -231,7 +235,7 @@ def _rstoab(
     return a, b
 
 
-def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> RealValueT:
+def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -323,7 +327,7 @@ def _rsttoabc(
     return a, b, c
 
 
-def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> RealValueT:
+def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -418,7 +422,7 @@ def grad_pkdo_3d(
 
 # {{{ monomials
 
-def monomial(order: Tuple[int, ...], rst: np.ndarray) -> RealValueT:
+def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     """Evaluate the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
