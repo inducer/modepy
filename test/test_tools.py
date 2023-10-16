@@ -132,8 +132,8 @@ def test_residual_estimation(case_name, test_func, dims, n):
         return estimate_relative_expansion_residual(
                 coeffs.reshape(1, -1), dims, inner_n)
 
-    resid = estimate_resid(n)
-    resid2 = estimate_resid(2*n)
+    resid = estimate_resid(n)[0]
+    resid2 = estimate_resid(2*n)[0]
     print(f"{case_name}: {float(resid):g} -> {float(resid2):g}")
     assert resid2 < resid
 
