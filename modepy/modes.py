@@ -27,8 +27,8 @@ from warnings import warn
 from abc import ABC, abstractmethod
 from functools import singledispatch, partial
 from typing import (
-        Callable, Optional, Sequence, TypeVar, Tuple, Union, Hashable,
-        TYPE_CHECKING)
+        Callable, Iterable, List, Optional, Sequence, TypeVar, Tuple, Union,
+        Hashable, TYPE_CHECKING)
 
 import numpy as np
 
@@ -1104,38 +1104,30 @@ def _monomial_basis_for_pn(space: PN, shape: Simplex):
 class TensorProductBasis(Basis):
     """Adapts multiple bases into a tensor product basis.
 
+    .. attribute:: bases
+
+        A sequence of :class:`Basis` objects that are being composed into
+        a tensor-product basis in a higher-dimensional space.
+
     .. automethod:: __init__
     """
 
     def __init__(self,
-            bases: Sequence[Sequence[
-                Callable[[np.ndarray], np.ndarray]]],
-            grad_bases: Sequence[Sequence[
-                Callable[[np.ndarray], Tuple[np.ndarray, ...]]]],
+            bases: Sequence[Basis],
             orth_weight: Optional[float],
             dims_per_basis: Optional[Tuple[int, ...]] = None) -> None:
         """
-        :param bases: a sequence of sequences (representing the basis) of
-            functions representing the approximation basis.
-        :param grad_bases: a sequence of sequences representing the
-            derivatives of *bases*.
+        :param bases: a sequence of 1D bases used to construct the tensor
+            product approximation basis.
         :param orth_weight: if *bases* forms an orthogonal basis, this should
             be the normalizing weight. If *None*, then the basis is assumed to
             not be orthogonal (this is not checked).
         """
-        if len(bases) != len(grad_bases):
-            raise ValueError("'bases' and 'grad_bases' must have the same length")
-
-        for i, (b, gb) in enumerate(zip(bases, grad_bases)):
-            if len(b) != len(gb):
-                raise ValueError(
-                        f"bases[{i}] and grad_bases[{i}] must have the same length")
 
         if dims_per_basis is None:
             dims_per_basis = (1,) * len(bases)
 
-        self._bases = list(bases)
-        self._grad_bases = list(grad_bases)
+        self._bases = tuple(bases)
         self._orth_weight = orth_weight
         self._dims_per_basis = tuple(dims_per_basis)
 
@@ -1146,6 +1138,10 @@ class TensorProductBasis(Basis):
             return self._orth_weight
 
     @property
+    def bases(self) -> Sequence[Basis]:
+        return self._bases
+
+    @property
     def _dim(self):
         return sum(self._dims_per_basis)
 
@@ -1154,25 +1150,57 @@ class TensorProductBasis(Basis):
         return len(self._bases)
 
     @property
-    def mode_ids(self):
+    def _mode_index_tuples(self) -> Tuple[Tuple[int, ...], ...]:
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
-        return tuple(mid[::-1] for mid in gnitb([len(b) for b in self._bases[::-1]]))
+        return tuple(mid[::-1]
+                     for mid in gnitb([len(b.functions)
+                                       for b in self._bases[::-1]]))
+
+    @property
+    def mode_ids(self) -> Tuple[Hashable, ...]:
+        underlying_mode_id_lists = [basis.mode_ids for basis in self._bases]
+        is_all_singletons_with_int = [
+                all(isinstance(mid, tuple) and len(mid) == 1
+                    and isinstance(mid[0], int)
+                    for mid in mode_id_list)
+                for mode_id_list in underlying_mode_id_lists]
+
+        def part_flat_tuple(iterable: Iterable[Tuple[bool, Hashable]]
+                            ) -> Tuple[Hashable, ...]:
+            result: List[Hashable] = []
+            for flatten, item in iterable:
+                if flatten:
+                    assert isinstance(item, tuple)
+                    result.extend(item)
+                else:
+                    result.append(item)
+
+            return tuple(result)
+
+        return tuple(
+                part_flat_tuple((flatten, umid[mid_index_i])
+                      for flatten, umid, mid_index_i in zip(
+                          is_all_singletons_with_int,
+                          underlying_mode_id_lists, mode_index_tuple))
+                for mode_index_tuple in self._mode_index_tuples)
 
     @property
     def functions(self):
         return tuple(
                 _TensorProductBasisFunction(mid, tuple([
-                    self._bases[ibasis][mid_i]
+                    self.bases[ibasis].functions[mid_i]
                     for ibasis, mid_i in enumerate(mid)
                     ]),
                     dims_per_function=self._dims_per_basis)
-                for mid in self.mode_ids)
+                for mid in self._mode_index_tuples)
 
     @property
     def gradients(self):
         from pytools import wandering_element
-        func = (self._bases, self._grad_bases)
+        bases = [b.functions for b in self._bases]
+        grad_bases = [b.gradients for b in self._bases]
+        func = (bases, grad_bases)
         return tuple(
                 _TensorProductGradientBasisFunction(mid, tuple([
                     tuple([
@@ -1183,7 +1211,7 @@ class TensorProductBasis(Basis):
                     for deriv_indicator_vec in wandering_element(self._nbases)
                     ]),
                     dims_per_function=self._dims_per_basis)
-                for mid in self.mode_ids)
+                for mid in self._mode_index_tuples)
 
 
 def _get_orth_weight(bases: Sequence[Basis]) -> Optional[float]:
@@ -1209,13 +1237,11 @@ def _orthonormal_basis_for_tp(
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    bases = [
-            orthonormal_basis_for_space(b, s)
+    bases = [orthonormal_basis_for_space(b, s)
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=_get_orth_weight(bases),
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
@@ -1230,8 +1256,7 @@ def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
 
     bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=_get_orth_weight(bases),
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
@@ -1246,8 +1271,7 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape)
             for b, s in zip(space.bases, shape.bases)]
 
     return TensorProductBasis(
-            [b.functions for b in bases],
-            [b.gradients for b in bases],
+            bases,
             orth_weight=None,
             dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
 
