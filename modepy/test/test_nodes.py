@@ -24,8 +24,9 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 import pytest
-import modepy.shapes as shp
+
 import modepy.nodes as nd
+import modepy.shapes as shp
 
 
 # {{{ test_barycentric_coordinate_map
@@ -34,10 +35,8 @@ import modepy.nodes as nd
 def test_barycentric_coordinate_map(dims):
     n = 100
     from modepy.tools import (
-            unit_to_barycentric,
-            barycentric_to_unit,
-            barycentric_to_equilateral,
-            equilateral_to_unit,)
+        barycentric_to_equilateral, barycentric_to_unit, equilateral_to_unit,
+        unit_to_barycentric)
 
     rng = np.random.Generator(np.random.PCG64(17))
     unit = nd.random_nodes_for_shape(shp.Simplex(dims), n, rng=rng)
@@ -87,8 +86,8 @@ def test_tri_face_node_distribution():
     """
 
     n = 8
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
     node_tuples = list(gnitstam(n, 2))
 
     unodes = nd.warp_and_blend_nodes(2, n, node_tuples)

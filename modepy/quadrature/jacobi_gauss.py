@@ -23,6 +23,7 @@ THE SOFTWARE.
 
 import numpy as np
 import numpy.linalg as la
+
 from modepy.quadrature import Quadrature
 
 
@@ -146,8 +147,9 @@ class JacobiGaussQuadrature(Quadrature):
 
         assert la.norm(np.dot(T, eigvec) - np.dot(eigvec, np.diag(eigval))) < 1e-12
 
-        from modepy.modes import jacobi
         from functools import partial
+
+        from modepy.modes import jacobi
         p0 = partial(jacobi, alpha, beta, 0)  # that's a constant, sure
         nodes = eigval
         weights = np.array(

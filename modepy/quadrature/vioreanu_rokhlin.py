@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 
 import numpy as np
+
 from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 
 

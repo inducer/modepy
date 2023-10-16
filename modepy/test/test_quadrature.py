@@ -21,12 +21,14 @@ THE SOFTWARE.
 """
 
 
+import logging
+
 import numpy as np
 import pytest
 
 import modepy as mp
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -116,8 +118,9 @@ def test_fejer_quadrature(kind):
 @pytest.mark.parametrize("dim", [2, 3])
 def test_simplex_quadrature(quad_class, highest_order, dim):
     """Check that quadratures on simplices works as advertised"""
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+
     from modepy.tools import Monomial
 
     order = 1
@@ -155,8 +158,9 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
     (mp.LegendreGaussTensorProductQuadrature, 6),
     ])
 def test_hypercube_quadrature(dim, quad_class, max_order):
-    from pytools import \
-            generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+
     from modepy.tools import Monomial
 
     def _check_monomial(quad, comb):

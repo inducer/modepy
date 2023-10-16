@@ -54,17 +54,14 @@ THE SOFTWARE.
 
 # }}}
 
-from typing import Sequence, Optional, Tuple, Union
+from functools import partial, singledispatch
+from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.linalg as la
 
-from functools import singledispatch, partial
-
-from modepy.shapes import (
-        Shape, TensorProductShape, Simplex,
-        unit_vertices_for_shape)
-from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN  # noqa: F401
+from modepy.shapes import Shape, Simplex, TensorProductShape, unit_vertices_for_shape
+from modepy.spaces import PN, QN, FunctionSpace, TensorProductSpace  # noqa: F401
 
 
 # {{{ equidistant nodes
@@ -184,9 +181,7 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
     unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
     from modepy.tools import (
-            unit_to_barycentric,
-            barycentric_to_equilateral,
-            equilateral_to_unit)
+        barycentric_to_equilateral, equilateral_to_unit, unit_to_barycentric)
     bary = unit_to_barycentric(unit_nodes)
 
     return equilateral_to_unit(
@@ -220,10 +215,8 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
     unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
 
     from modepy.tools import (
-            unit_to_barycentric,
-            barycentric_to_equilateral,
-            equilateral_to_unit,
-            EQUILATERAL_VERTICES)
+        EQUILATERAL_VERTICES, barycentric_to_equilateral, equilateral_to_unit,
+        unit_to_barycentric)
     bary = unit_to_barycentric(unit_nodes)
     equi = barycentric_to_equilateral(bary)
 
@@ -440,8 +433,8 @@ def random_nodes_for_shape(
 
 @node_tuples_for_space.register(PN)
 def _node_tuples_for_pn(space: PN):
-    from pytools import \
-            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam)
     return tuple(gnitsam(space.order, space.spatial_dim))
 
 

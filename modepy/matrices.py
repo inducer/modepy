@@ -24,8 +24,8 @@ THE SOFTWARE.
 import numpy as np
 import numpy.linalg as la
 
-from modepy.shapes import Face
 from modepy.quadrature import Quadrature
+from modepy.shapes import Face
 
 
 __doc__ = r"""
