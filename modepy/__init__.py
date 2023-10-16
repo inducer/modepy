@@ -53,7 +53,6 @@ from modepy.matrices import (vandermonde,
         resampling_matrix, differentiation_matrices,
         diff_matrix_permutation,
         inverse_mass_matrix, mass_matrix,
-        modal_face_mass_matrix, nodal_face_mass_matrix,
         modal_mass_matrix_for_face, nodal_mass_matrix_for_face,
         nodal_quad_mass_matrix_for_face)
 from modepy.quadrature import (
@@ -106,7 +105,6 @@ __all__ = [
         "vandermonde", "resampling_matrix", "differentiation_matrices",
         "diff_matrix_permutation",
         "inverse_mass_matrix", "mass_matrix",
-        "modal_face_mass_matrix", "nodal_face_mass_matrix",
         "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
         "nodal_quad_mass_matrix_for_face",
 
