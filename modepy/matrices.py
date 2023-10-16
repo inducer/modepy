@@ -21,12 +21,10 @@ THE SOFTWARE.
 """
 
 
-from warnings import warn
 import numpy as np
 import numpy.linalg as la
 
-from modepy.shapes import Face, Simplex
-from modepy.spaces import PN
+from modepy.shapes import Face
 from modepy.quadrature import Quadrature
 
 
