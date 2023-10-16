@@ -1145,13 +1145,21 @@ class TensorProductBasis(Basis):
         return len(self._bases)
 
     @property
-    def mode_ids(self):
+    def _mode_index_tuples(self):
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
-        # FIXME (for review): should this change?
         return tuple(mid[::-1]
                      for mid in gnitb([len(b.functions)
                                        for b in self._bases[::-1]]))
+
+    @property
+    def mode_ids(self):
+        from pytools import generate_nonnegative_integer_tuples_below as gnitb
+        underlying_mode_ids = [basis.mode_ids for basis in self._bases]
+        return tuple(
+                tuple(umid[mid_index_i] for umid, mid_index_i in zip(
+                    underlying_mode_ids, mode_index_tuple))
+                for mode_index_tuple in self._mode_index_tuples)
 
     @property
     def functions(self):
@@ -1161,7 +1169,7 @@ class TensorProductBasis(Basis):
                     for ibasis, mid_i in enumerate(mid)
                     ]),
                     dims_per_function=self._dims_per_basis)
-                for mid in self.mode_ids)
+                for mid in self._mode_index_tuples)
 
     @property
     def gradients(self):
@@ -1179,7 +1187,7 @@ class TensorProductBasis(Basis):
                     for deriv_indicator_vec in wandering_element(self._nbases)
                     ]),
                     dims_per_function=self._dims_per_basis)
-                for mid in self.mode_ids)
+                for mid in self._mode_index_tuples)
 
 
 def _get_orth_weight(bases: Sequence[Basis]) -> Optional[float]:
