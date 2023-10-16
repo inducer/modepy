@@ -1104,6 +1104,11 @@ def _monomial_basis_for_pn(space: PN, shape: Simplex):
 class TensorProductBasis(Basis):
     """Adapts multiple bases into a tensor product basis.
 
+    .. attribute:: bases
+
+        A sequence of :class:`Basis` objects that are being composed into
+        a tensor-product basis in a higher-dimensional space.
+
     .. automethod:: __init__
     """
 
@@ -1154,7 +1159,6 @@ class TensorProductBasis(Basis):
 
     @property
     def mode_ids(self):
-        from pytools import generate_nonnegative_integer_tuples_below as gnitb
         underlying_mode_ids = [basis.mode_ids for basis in self._bases]
         return tuple(
                 tuple(umid[mid_index_i] for umid, mid_index_i in zip(
