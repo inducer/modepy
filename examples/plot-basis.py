@@ -1,6 +1,8 @@
 import numpy as np
-from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-        as gnitstam
+
+from pytools import (
+    generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+
 
 # prepare plot and eval nodes on triangle
 dims = 2
@@ -11,6 +13,8 @@ eval_nodes = 2*(plot_nodes - 0.5).T
 
 # get triangle submesh
 from modepy.tools import submesh
+
+
 tri_subtriangles = np.array(submesh(node_tuples))
 
 # evaluate each basis function, build global tri mesh
@@ -20,6 +24,7 @@ all_triangles = []
 all_values = []
 
 from modepy.modes import simplex_onb
+
 
 p = 3
 stretch_factor = 1.5
@@ -40,6 +45,8 @@ all_values = np.hstack(all_values)
 
 # plot
 import mayavi.mlab as mlab
+
+
 fig = mlab.figure(bgcolor=(1, 1, 1))
 mlab.triangular_mesh(
         all_nodes[:, 0],

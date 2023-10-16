@@ -46,11 +46,11 @@ class WitherdenVincentQuadrature(Quadrature):
     # argument order convention.
     def __init__(self, order, dims):
         if dims == 2:
-            from modepy.quadrature.witherden_vincent_quad_data import \
-                    quad_data as table
+            from modepy.quadrature.witherden_vincent_quad_data import (
+                quad_data as table)
         elif dims == 3:
-            from modepy.quadrature.witherden_vincent_quad_data import \
-                    hex_data as table
+            from modepy.quadrature.witherden_vincent_quad_data import (
+                hex_data as table)
         else:
             raise QuadratureRuleUnavailable(f"invalid domension: '{dims}'")
 

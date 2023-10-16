@@ -20,14 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import logging
+from functools import partial
+
 import numpy as np
 import numpy.linalg as la
-import modepy as mp
-
-from functools import partial
 import pytest
 
-import logging
+import modepy as mp
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -269,8 +271,8 @@ def test_diff_matrix_permutation(dims):
     order = 5
     space = mp.PN(dims, order)
 
-    from pytools import \
-            generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
     node_tuples = list(gnitstam(order, dims))
 
     simplex_onb = mp.orthonormal_basis_for_space(space, mp.Simplex(dims))
@@ -329,8 +331,8 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     volume_nodes = mp.edge_clustered_nodes_for_space(vol_space, vol_shape)
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
-    from modepy.matrices import (nodal_mass_matrix_for_face,
-        nodal_quad_mass_matrix_for_face)
+    from modepy.matrices import (
+        nodal_mass_matrix_for_face, nodal_quad_mass_matrix_for_face)
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
         face_basis = mp.basis_for_space(face_space, face)
@@ -568,8 +570,9 @@ def test_tensor_product_vdm_dim_by_dim(dim):
     x = np.random.randn(space.space_dim)
     vdm_x = vdm @ x
 
-    from modepy.tools import (reshape_array_for_tensor_product_space,
-            unreshape_array_for_tensor_product_space)
+    from modepy.tools import (
+        reshape_array_for_tensor_product_space,
+        unreshape_array_for_tensor_product_space)
     x_r = reshape_array_for_tensor_product_space(space, x)
     vdm_dimbydim_x_r = x_r
 

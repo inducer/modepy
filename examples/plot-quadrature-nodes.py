@@ -1,13 +1,13 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 import modepy as mp
 
 
 def get_reference_element_nodes(name, dims):
     if dims == 2:
-        from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         if name == "simplex":
             poly = Polygon([
@@ -91,7 +91,7 @@ def plot_quadrature_rule_nodes(name, order, dims, show=False):
     # {{{ plot
 
     if dims == 3:
-        from mpl_toolkits.mplot3d import Axes3D     # noqa: F401
+        from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
         projection = "3d"
     else:
         projection = None

@@ -25,6 +25,7 @@ from typing import Tuple
 import numpy as np
 import numpy.linalg as la
 
+
 __doc__ = """Estimate the smoothness of a function represented in a basis
 returned by :func:`modepy.orthonormal_basis_for_space`.
 

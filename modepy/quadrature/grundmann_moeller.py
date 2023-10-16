@@ -23,6 +23,7 @@ THE SOFTWARE.
 from functools import reduce
 
 import numpy as np
+
 from modepy.quadrature import Quadrature
 
 
@@ -105,10 +106,10 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             return
 
         import math
+
         from pytools import (
-                generate_decreasing_nonnegative_tuples_summing_to,
-                generate_unique_permutations,
-                wandering_element)
+            generate_decreasing_nonnegative_tuples_summing_to,
+            generate_unique_permutations, wandering_element)
 
         points_to_weights = {}
 

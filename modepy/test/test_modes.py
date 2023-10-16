@@ -21,15 +21,19 @@ THE SOFTWARE.
 """
 
 
+import logging
+
 import numpy as np
 import numpy.linalg as la
 import pytest
-import modepy as mp
-from pymbolic.mapper.stringifier import (
-        CSESplittingStringifyMapperMixin, StringifyMapper)
-from pymbolic.mapper.evaluator import EvaluationMapper
 
-import logging
+from pymbolic.mapper.evaluator import EvaluationMapper
+from pymbolic.mapper.stringifier import (
+    CSESplittingStringifyMapperMixin, StringifyMapper)
+
+import modepy as mp
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,8 +153,8 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
     rng = np.random.Generator(np.random.PCG64(17))
     basis = basis_getter(mp.space_for_shape(shape, order), shape)
 
-    from pytools.convergence import EOCRecorder
     from pytools import wandering_element
+    from pytools.convergence import EOCRecorder
     for bf, gradbf in zip(basis.functions, basis.gradients):
         eoc_rec = EOCRecorder()
         for h in [1e-2, 1e-3]:

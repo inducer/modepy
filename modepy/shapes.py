@@ -206,11 +206,11 @@ THE SOFTWARE.
 """
 
 from abc import ABC, abstractmethod
-import numpy as np
-from typing import Any, Callable, Sequence, Tuple, Dict
-
-from functools import singledispatch, partial
 from dataclasses import dataclass
+from functools import partial, singledispatch
+from typing import Any, Callable, Dict, Sequence, Tuple
+
+import numpy as np
 
 
 # {{{ interface
@@ -290,9 +290,10 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
 
     # Compute the outer product of the vectors spanning the surface, obtaining
     # the surface pseudoscalar.
-    from pymbolic.geometric_algebra import MultiVector
-    from operator import xor as outerprod
     from functools import reduce
+    from operator import xor as outerprod
+
+    from pymbolic.geometric_algebra import MultiVector
     surface_ps = reduce(outerprod, [
         MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
         for i in range(face.dim)])
@@ -540,7 +541,7 @@ def submesh_for_shape(
 
 @submesh_for_shape.register(Simplex)
 def _submesh_for_simplex(shape: Simplex, node_tuples):
-    from pytools import single_valued, add_tuples
+    from pytools import add_tuples, single_valued
     dims = single_valued(len(nt) for nt in node_tuples)
 
     node_dict = {

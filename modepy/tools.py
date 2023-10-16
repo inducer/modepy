@@ -54,17 +54,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from typing import Tuple, TypeVar
-from typing import Protocol, runtime_checkable
-
 from functools import reduce
-from math import gamma      # noqa: F401
+from math import gamma  # noqa: F401
 from math import sqrt
+from typing import Protocol, Tuple, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.linalg as la
 
-from pytools import memoize_method, MovedFunctionDeprecationWrapper
+from pytools import MovedFunctionDeprecationWrapper, memoize_method
+
 import modepy.shapes as shp
 from modepy.spaces import TensorProductSpace
 
@@ -295,8 +294,8 @@ def plot_element_values(n, nodes, values, resample_n=None,
         nodes = fine_nodes
         n = resample_n
 
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
 
     if dims == 1:
         import matplotlib.pyplot as pt
@@ -323,9 +322,9 @@ def plot_element_values(n, nodes, values, resample_n=None,
 def _evaluate_lebesgue_function(n, nodes, shape):
     huge_n = 30*n
 
-    from modepy.spaces import space_for_shape
     from modepy.modes import basis_for_space
     from modepy.nodes import node_tuples_for_space
+    from modepy.spaces import space_for_shape
     space = space_for_shape(shape, n)
     huge_space = space_for_shape(shape, huge_n)
 

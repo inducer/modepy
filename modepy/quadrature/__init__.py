@@ -33,8 +33,9 @@ THE SOFTWARE.
 from functools import singledispatch
 
 import numpy as np
+
 from modepy.shapes import Shape, Simplex, TensorProductShape
-from modepy.spaces import FunctionSpace, TensorProductSpace, PN
+from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 
 class QuadratureRuleUnavailable(RuntimeError):

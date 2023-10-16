@@ -3,6 +3,7 @@
 # http://dx.doi.org/10.1016/j.camwa.2009.10.027
 import numpy
 
+
 triangle_table = {  # noqa
     1: {
         "points": [[-5.55111512312578e-17, 2.22044604925031e-16]],

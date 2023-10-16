@@ -22,18 +22,18 @@ THE SOFTWARE.
 """
 
 import math
-
-from warnings import warn
 from abc import ABC, abstractmethod
-from functools import singledispatch, partial
+from functools import partial, singledispatch
 from typing import (
-        Callable, Iterable, List, Optional, Sequence, TypeVar, Tuple, Union,
-        Hashable, TYPE_CHECKING)
+    TYPE_CHECKING, Callable, Hashable, Iterable, List, Optional, Sequence, Tuple,
+    TypeVar, Union)
+from warnings import warn
 
 import numpy as np
 
-from modepy.spaces import FunctionSpace, TensorProductSpace, PN, QN
-from modepy.shapes import Shape, TensorProductShape, Simplex
+from modepy.shapes import Shape, Simplex, TensorProductShape
+from modepy.spaces import PN, QN, FunctionSpace, TensorProductSpace
+
 
 if TYPE_CHECKING:
     import pymbolic.primitives
@@ -130,7 +130,7 @@ def _cse(expr, prefix):
 
 
 def _where(op_a, comp, op_b, then, else_):
-    from pymbolic.primitives import If, Comparison, Expression
+    from pymbolic.primitives import Comparison, Expression, If
     if isinstance(op_a, Expression) or isinstance(op_b, Expression):
         return If(Comparison(op_a, comp, op_b), then, else_)
 
@@ -561,8 +561,8 @@ def grad_simplex_onb(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
 
     if dims == 1:
         return tuple(partial(grad_jacobi, 0, 0, i) for i in range(n+1))
@@ -634,8 +634,8 @@ def grad_simplex_monomial_basis(dims, n):
             "This function will go away in 2022.",
             DeprecationWarning, stacklevel=2)
 
-    from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-            as gnitstam
+    from pytools import (
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
     return tuple(partial(grad_monomial, order) for order in gnitstam(n, dims))
 
 
@@ -846,6 +846,7 @@ def grad_tensor_product_basis(dims, basis_1d, grad_basis_1d):
             DeprecationWarning, stacklevel=2)
 
     from pytools import wandering_element
+
     from modepy.nodes import node_tuples_for_space
     mode_ids = node_tuples_for_space(QN(dims, len(basis_1d) - 1))
 
@@ -1021,8 +1022,8 @@ class _SimplexBasis(Basis):
 
     @property
     def mode_ids(self):
-        from pytools import \
-                generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam
+        from pytools import (
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam)
         return tuple(gnitsam(self._order, self._dim))
 
 
@@ -1152,6 +1153,7 @@ class TensorProductBasis(Basis):
     @property
     def _mode_index_tuples(self) -> Tuple[Tuple[int, ...], ...]:
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
+
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
         return tuple(mid[::-1]
                      for mid in gnitb([len(b.functions)

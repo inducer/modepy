@@ -1,6 +1,8 @@
 import matplotlib.pyplot as pt
 import numpy as np
+
 import modepy as mp
+
 
 dims = 3
 n = 10
@@ -11,7 +13,9 @@ if 0:
     from modepy.tools import estimate_lebesgue_constant
     lebesgue = estimate_lebesgue_constant(n, unit, visualize=True)
 
-from modepy.tools import unit_to_barycentric, barycentric_to_equilateral
+from modepy.tools import barycentric_to_equilateral, unit_to_barycentric
+
+
 equi = barycentric_to_equilateral(unit_to_barycentric(unit))
 
 if dims == 2:

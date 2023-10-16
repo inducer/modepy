@@ -3,6 +3,7 @@
 
 import numpy as np
 
+
 points = "points"
 weights = "weights"
 quad_degree = "quad_degree"
