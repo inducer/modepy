@@ -27,8 +27,8 @@ from warnings import warn
 from abc import ABC, abstractmethod
 from functools import singledispatch, partial
 from typing import (
-        Callable, Iterable, Optional, Sequence, TypeVar, Tuple, Union, Hashable,
-        TYPE_CHECKING)
+        Callable, Iterable, List, Optional, Sequence, TypeVar, Tuple, Union,
+        Hashable, TYPE_CHECKING)
 
 import numpy as np
 
@@ -1150,7 +1150,7 @@ class TensorProductBasis(Basis):
         return len(self._bases)
 
     @property
-    def _mode_index_tuples(self):
+    def _mode_index_tuples(self) -> Tuple[Tuple[int, ...], ...]:
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
         return tuple(mid[::-1]
@@ -1158,7 +1158,7 @@ class TensorProductBasis(Basis):
                                        for b in self._bases[::-1]]))
 
     @property
-    def mode_ids(self):
+    def mode_ids(self) -> Tuple[Hashable, ...]:
         underlying_mode_id_lists = [basis.mode_ids for basis in self._bases]
         is_all_singletons_with_int = [
                 all(isinstance(mid, tuple) and len(mid) == 1
@@ -1168,7 +1168,7 @@ class TensorProductBasis(Basis):
 
         def part_flat_tuple(iterable: Iterable[Tuple[bool, Hashable]]
                             ) -> Tuple[Hashable, ...]:
-            result = []
+            result: List[Hashable] = []
             for flatten, item in iterable:
                 if flatten:
                     assert isinstance(item, tuple)
