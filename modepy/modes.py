@@ -27,7 +27,7 @@ from warnings import warn
 from abc import ABC, abstractmethod
 from functools import singledispatch, partial
 from typing import (
-        Callable, Optional, Sequence, TypeVar, Tuple, Union, Hashable,
+        Callable, Iterable, Optional, Sequence, TypeVar, Tuple, Union, Hashable,
         TYPE_CHECKING)
 
 import numpy as np
@@ -1159,10 +1159,30 @@ class TensorProductBasis(Basis):
 
     @property
     def mode_ids(self):
-        underlying_mode_ids = [basis.mode_ids for basis in self._bases]
+        underlying_mode_id_lists = [basis.mode_ids for basis in self._bases]
+        is_all_singletons_with_int = [
+                all(isinstance(mid, tuple) and len(mid) == 1
+                    and isinstance(mid[0], int)
+                    for mid in mode_id_list)
+                for mode_id_list in underlying_mode_id_lists]
+
+        def part_flat_tuple(iterable: Iterable[Tuple[bool, Hashable]]
+                            ) -> Tuple[Hashable, ...]:
+            result = []
+            for flatten, item in iterable:
+                if flatten:
+                    assert isinstance(item, tuple)
+                    result.extend(item)
+                else:
+                    result.append(item)
+
+            return tuple(result)
+
         return tuple(
-                tuple(umid[mid_index_i] for umid, mid_index_i in zip(
-                    underlying_mode_ids, mode_index_tuple))
+                part_flat_tuple((flatten, umid[mid_index_i])
+                      for flatten, umid, mid_index_i in zip(
+                          is_all_singletons_with_int,
+                          underlying_mode_id_lists, mode_index_tuple))
                 for mode_index_tuple in self._mode_index_tuples)
 
     @property
