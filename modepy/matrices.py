@@ -292,13 +292,9 @@ def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
 
     nface_nodes, nface_funcs = face_vdm.shape
     if nface_nodes != nface_funcs:
-        from warnings import warn
-        warn("nodal_mass_matrix_for_face received a different number of facial "
-                "nodes than facial trial_functions. This used to be accepted, "
-                "but it is not well-defined. This usage will be rejected starting "
-                "in 2022.x.", DeprecationWarning, stacklevel=2)
-
-        face_vdm_inv = la.pinv(face_vdm)
+        raise ValueError(
+                "nodal_mass_matrix_for_face received a different number of facial "
+                "nodes than facial trial_functions.")
     else:
         face_vdm_inv = la.inv(face_vdm)
 
