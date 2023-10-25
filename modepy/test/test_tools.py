@@ -626,6 +626,7 @@ def test_tensor_product_pickling():
 
 # }}}
 
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
