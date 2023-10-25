@@ -596,6 +596,36 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 # }}}
 
 
+# {{{ test_tensor_product_pickle
+
+def test_tensor_product_pickling():
+    import pickle
+
+    hc = mp.Hypercube(3)
+    tp_space = mp.space_for_shape(hc, 1)
+
+    file = open(b"hypercube-shape.obj", "wb")
+    pickle.dump(hc, file)
+    file.close()
+
+    file = open(b"tp-space.obj", "wb")
+    pickle.dump(tp_space, file)
+    file.close()
+
+    file = open(b"hypercube-shape.obj", "rb")
+    pickle.load(file)
+    file.close()
+
+    file = open(b"tp-space.obj", "rb")
+    pickle.load(file)
+    file.close()
+
+    import os
+    os.remove("./hypercube-shape.obj")
+    os.remove("./tp-space.obj")
+
+# }}}
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
