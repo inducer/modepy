@@ -120,6 +120,10 @@ class TensorProductSpace(FunctionSpace):
             for space in bases
             ], ())
 
+    def __getnewargs__(self):
+        # Ensures TensorProductSpace is picklable
+        return (self.bases,)
+
     @property
     def order(self):
         from pytools import is_single_valued
