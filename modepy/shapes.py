@@ -453,6 +453,10 @@ class Hypercube(TensorProductShape):
     def __init__(self, dim: int) -> None:
         super().__init__((Simplex(1),) * dim)
 
+    def __getnewargs__(self):
+        # Ensures TensorProductSpace is picklable
+        return (self.dim,)
+
 
 @dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):

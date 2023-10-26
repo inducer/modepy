@@ -596,6 +596,28 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 # }}}
 
 
+# {{{ test_shape_pickling
+
+@pytest.mark.parametrize("dims", [1, 2, 3])
+@pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
+def test_shape_pickling(dims, shape_cls):
+    import pickle
+
+    shape = shape_cls(dims)
+    tp_space = mp.space_for_shape(shape, 1)
+
+    pkl = pickle.dumps(shape)
+    reloaded_shape = pickle.loads(pkl)
+    assert shape == reloaded_shape
+
+    pkl2 = pickle.dumps(tp_space)
+    reloaded_tp_space = pickle.loads(pkl2)
+    assert tp_space.spatial_dim == reloaded_tp_space.spatial_dim
+    assert tp_space.space_dim == reloaded_tp_space.space_dim
+
+# }}}
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 
