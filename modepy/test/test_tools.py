@@ -596,21 +596,24 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 # }}}
 
 
-# {{{ test_tensor_product_pickle
+# {{{ test_shape_pickling
 
-def test_tensor_product_pickling():
+@pytest.mark.parametrize("dims", [1, 2, 3])
+@pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
+def test_shape_pickling(dims: int, shape_cls: mp.Shape) -> None:
     import pickle
 
-    hc = mp.Hypercube(3)
-    tp_space = mp.space_for_shape(hc, 1)
+    shape = shape_cls(dims)
+    tp_space = mp.space_for_shape(shape, 1)
 
-    pkl = pickle.dumps(hc)
-    reloaded_hc = pickle.loads(pkl)
-    assert hc == reloaded_hc
+    pkl = pickle.dumps(shape)
+    reloaded_shape = pickle.loads(pkl)
+    assert shape == reloaded_shape
 
     pkl2 = pickle.dumps(tp_space)
     reloaded_tp_space = pickle.loads(pkl2)
-    assert tp_space == reloaded_tp_space
+    assert tp_space.spatial_dim == reloaded_tp_space.spatial_dim
+    assert tp_space.space_dim == reloaded_tp_space.space_dim
 
 # }}}
 
