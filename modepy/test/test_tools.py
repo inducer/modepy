@@ -600,7 +600,7 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_shape_pickling(dims: int, shape_cls: mp.Shape) -> None:
+def test_shape_pickling(dims, shape_cls):
     import pickle
 
     shape = shape_cls(dims)
