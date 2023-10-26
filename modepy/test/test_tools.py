@@ -604,25 +604,13 @@ def test_tensor_product_pickling():
     hc = mp.Hypercube(3)
     tp_space = mp.space_for_shape(hc, 1)
 
-    file = open(b"hypercube-shape.obj", "wb")
-    pickle.dump(hc, file)
-    file.close()
+    pkl = pickle.dumps(hc)
+    reloaded_hc = pickle.loads(pkl)
+    assert hc == reloaded_hc
 
-    file = open(b"tp-space.obj", "wb")
-    pickle.dump(tp_space, file)
-    file.close()
-
-    file = open(b"hypercube-shape.obj", "rb")
-    pickle.load(file)
-    file.close()
-
-    file = open(b"tp-space.obj", "rb")
-    pickle.load(file)
-    file.close()
-
-    import os
-    os.remove("./hypercube-shape.obj")
-    os.remove("./tp-space.obj")
+    pkl2 = pickle.dumps(tp_space)
+    reloaded_tp_space = pickle.loads(pkl2)
+    assert tp_space == reloaded_tp_space
 
 # }}}
 
