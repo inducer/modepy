@@ -57,7 +57,7 @@ THE SOFTWARE.
 from functools import reduce
 from math import gamma  # noqa: F401
 from math import sqrt
-from typing import Protocol, Tuple, TypeVar, runtime_checkable
+from typing import Dict, Protocol, Tuple, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.linalg as la
@@ -158,7 +158,7 @@ class AffineMap:
 
 # {{{ simplex coordinate mapping
 
-EQUILATERAL_TO_UNIT_MAP = {
+EQUILATERAL_TO_UNIT_MAP: Dict[int, AffineMap] = {
         1: AffineMap([[1]], [0]),
         2: AffineMap([
             [1, -1/sqrt(3)],

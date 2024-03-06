@@ -20,22 +20,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from typing import Tuple
+
 import numpy as np
 
 from modepy.quadrature import Quadrature
 
 
-def _fejer(n, rule):
+def _fejer(n: int, rule: str) -> Tuple[np.ndarray, np.ndarray]:
     r"""Nodes and weights of the Fejer2, Clenshaw-Curtis and Fejer1
     quadratures by DFTs.
 
     Nodes: x_k = cos(k * pi / n).
 
     The algorithm follows:
-    Jörg Waldvogel,
-    Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules,
-    BIT Numerical Mathematics, 2003, Vol. 43, No. 1, pp. 001-018,
-    https://doi.org/10.1007/s10543-006-0045-4
 
     :arg n: the scheme's order. n is related to the number of quadrature
             nodes as follows:
@@ -46,16 +44,16 @@ def _fejer(n, rule):
 
     :arg rule: any of ``"cc"``, ``"f1"`` or ``"f2"``.
     """
-    N = np.arange(1, n, 2)  # noqa
-    l = len(N)  # noqa
-    m = n - l
-    K = np.arange(0, m)  # noqa
-
     if not n >= 1:
-        raise RuntimeError("Invalid n = %d (must be n >= 1)" % n)
+        raise RuntimeError(f"Invalid n = {n} (must be n >= 1)")
 
-    if rule not in ["f1", "f2", "cc"]:
-        raise NotImplementedError("Invalide rule: %s" % rule)
+    if rule not in {"f1", "f2", "cc"}:
+        raise NotImplementedError(f"Invalide rule: {rule}")
+
+    N = np.arange(1, n, 2)  # noqa: N806
+    r = len(N)
+    m = n - r
+    K = np.arange(0, m)  # noqa: N806
 
     if rule == "f2" or rule == "cc":
 
@@ -78,7 +76,7 @@ def _fejer(n, rule):
             if n == 1:
                 return np.array([-1, 1]), np.array([1, 1])
             g0 = -np.ones(n)
-            g0[l] = g0[l] + n
+            g0[r] = g0[r] + n
             g0[m] = g0[m] + n
             g = g0 / (n**2 - 1 + (n % 2))
             wcc = np.fft.ifft(v2 + g)
@@ -91,7 +89,7 @@ def _fejer(n, rule):
         # Fejer1 nodes: k=1/2,3/2,...,n-1/2; vector of weights: wf1
         v0 = np.concatenate(
                 [2 * np.exp(1j * np.pi * K / n) / (1 - 4 * (K**2)),
-                 np.zeros(l+1)])
+                 np.zeros(r + 1)])
         v1 = v0[:-1] + np.conj(v0[-1:0:-1])
         wf1 = np.fft.ifft(v1)
         assert np.allclose(wf1.imag, 0)
@@ -99,20 +97,26 @@ def _fejer(n, rule):
         xf1 = np.cos((np.arange(0, n) + 0.5) * np.pi / n)
         return xf1, wf1
 
+    raise AssertionError
+
 
 class ClenshawCurtisQuadrature(Quadrature):
-    r"""Clenshaw-Curtis quadrature of order *N* (having *N + 1* points).
+    r"""Clenshaw-Curtis quadrature of order *N* with *N + 1* points.
 
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
+    The quadrature rule is exact up to degree :math:`N` and can be nested.
+    Its performance for differentiable functions is comparable with the classic
+    Gauss-Legendre quadrature, which is exact for polynomials of degree up
+    to :math:`2N + 1`. Implementation is based on [Waldvogel2003]_.
 
     Integrates on the interval :math:`(-1, 1)`.
-    The quadrature rule is exact up to degree :math:`N`; however, its
-    performance for differentiable functions is comparable with the classic
-    Gauss-Legendre quadrature which is exact for polynomials of degree up
-    to :math:`2N + 1`.
+
+    .. [Waldvogel2003] Jörg Waldvogel,
+        *Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules*,
+        BIT Numerical Mathematics, 2003, Vol. 43, No. 1, pp. 001-018.
+        `DOI <https://doi.org/10.1007/s10543-006-0045-4>`__
     """
-    def __init__(self, N, force_dim_axis=False):  # noqa: N803
+
+    def __init__(self, N: int, force_dim_axis: bool = False) -> None:  # noqa: N803
         if not force_dim_axis:
             from warnings import warn
             warn("setting 'force_dim_axis' to 'False' is deprecated and "
@@ -129,23 +133,23 @@ class ClenshawCurtisQuadrature(Quadrature):
 
 
 class FejerQuadrature(Quadrature):
-    r"""Fejér's quadrature rules of order *N*, categorized in two kinds.
-    The Fejér's quadrature rule of first kind has *N* points; while the
-    second kind has *N - 1* points.
+    r"""Fejér quadrature rules of order *N*.
 
-    The first kind uses Chebyshev nodes, i.e. roots of the Chebyshev
-    polynomials. The second kind uses the interior extrema of the Chebyshev
-    polynomials, i.e. the true stationary points.
+    * Fejér quadrature of the first kind has *N* points and uses Chebyshev
+      nodes, i.e. the roots of Chebyshev polynomials.
 
-    The second-kind Fejér's quadrature rule is nearly identical to
-    Clenshaw-Curtis. Both can also be nested.
+    * Fejér quadrature of the second kind has *N - 1* points and uses only the
+      interior extrema of the Chebyshev nodes, i.e. the true stationary points.
+      This rule is alsmost identical to Clenshaw-Curtis and can be nested.
 
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
-
-    Integrates on the interval :math:`(-1, 1)`.
+    Integrates on the interval :math:`(-1, 1)`. Implementation is based on
+    [Waldvogel2003]_.
     """
-    def __init__(self, N, kind=1, force_dim_axis=False):  # noqa
+
+    def __init__(self,
+                 N: int,  # noqa: N803
+                 kind: int = 1,
+                 force_dim_axis: bool = False) -> None:
         if not force_dim_axis:
             from warnings import warn
             warn("setting 'force_dim_axis' to 'False' is deprecated and "
@@ -165,7 +169,7 @@ class FejerQuadrature(Quadrature):
 
         super().__init__(x, w)
 
-    @property
-    def exact_to(self):
-        raise AttributeError("%s has no known exact_to information"
-                         % type(self).__name__)
+        self.kind: int = kind
+        """Kind of the Fejér quadrature, either first-kind or second-kind."""
+
+# }}}
