@@ -5,9 +5,20 @@ Function Spaces
 ---------------
 
 .. autoclass:: FunctionSpace
-.. autoclass:: PN
-.. autoclass:: QN
+    :members:
+
 .. autoclass:: TensorProductSpace
+    :members:
+    :show-inheritance:
+
+.. autoclass:: PN
+    :members:
+    :show-inheritance:
+
+.. autoclass:: QN
+    :members:
+    :show-inheritance:
+
 .. autofunction:: space_for_shape
 """
 
@@ -48,26 +59,24 @@ from modepy.shapes import Shape, Simplex, TensorProductShape
 class FunctionSpace(ABC):
     r"""An opaque object representing a finite-dimensional function space
     of functions :math:`\mathbb{R}^n \to \mathbb{R}`.
-
-    .. attribute:: spatial_dim
-
-        :math:`n` in the above definition, the number of spatial dimensions
-        in which the functions in the space operate.
-
-    .. attribute:: space_dim
-
-        The number of dimensions of the function space.
     """
+
+    @property
+    def order(self) -> int:
+        """Polynomial degree of the function space, if any."""
+        raise AttributeError(f"{type(self).__name__} has no attribute 'order'")
 
     @property
     @abstractmethod
     def spatial_dim(self) -> int:
-        pass
+        """The number of spatial dimensions in which the functions in the space
+        operate (:math:`n` in the above definition).
+        """
 
     @property
     @abstractmethod
     def space_dim(self) -> int:
-        pass
+        """The number of dimensions of the function space."""
 
 
 @singledispatch
@@ -92,13 +101,7 @@ def space_for_shape(
 # # {{{ generic tensor product space
 
 class TensorProductSpace(FunctionSpace):
-    """
-    .. attribute:: bases
-
-        A :class:`tuple` of the base spaces that take part in the
-        tensor product.
-
-    .. automethod:: __init__
+    """A function space defined as the tensor product of lower dimensional spaces.
 
     To recover the tensor product structure of degree-of-freedom arrays (nodal
     or modal) associated with this type of space, see
@@ -106,6 +109,7 @@ class TensorProductSpace(FunctionSpace):
     """
 
     bases: Tuple[FunctionSpace, ...]
+    """A :class:`tuple` of the base spaces that take part in the tensor product."""
 
     # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> Any:
@@ -125,7 +129,9 @@ class TensorProductSpace(FunctionSpace):
         return (self.bases,)
 
     @property
-    def order(self):
+    def order(self) -> int:
+        """Polynomial degree of the functions in the space, if any."""
+
         from pytools import is_single_valued
         if is_single_valued([space.order for space in self.bases]):
             return self.bases[0].order
@@ -179,16 +185,18 @@ class PN(FunctionSpace):
     .. math::
 
         P^N:=\operatorname{span}\left\{\prod_{i=1}^d x_i^{n_i}:\sum n_i\le N\right\}.
-
-    .. attribute:: order
-
-    .. automethod:: __init__
     """
 
     def __init__(self, spatial_dim: int, order: int) -> None:
         super().__init__()
+
+        self._order = order
         self._spatial_dim = spatial_dim
-        self.order = order
+
+    @property
+    def order(self) -> int:
+        """Total degree of the polynomials in the space."""
+        return self._order
 
     @property
     def spatial_dim(self) -> int:
@@ -223,10 +231,6 @@ class QN(TensorProductSpace):
 
         Q^N:=\operatorname{span}
         \left \{\prod_{i=1}^d x_i^{n_i}:\max n_i\le N\right\}.
-
-    .. attribute:: order
-
-    .. automethod:: __init__
     """
 
     # NOTE: https://github.com/python/mypy/issues/1020
@@ -241,6 +245,7 @@ class QN(TensorProductSpace):
 
     @property
     def order(self):
+        """Maximum degree of the polynomials in the space."""
         return self.bases[0].order
 
     def __repr__(self) -> str:
