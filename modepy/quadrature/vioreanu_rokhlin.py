@@ -29,42 +29,32 @@ from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 class VioreanuRokhlinSimplexQuadrature(Quadrature):
     """Simplicial quadratures with symmetric node sets and positive weights
     suitable for well-conditioned interpolation.
-    The integration domain is the unit simplex. (see :ref:`tri-coords`
-    and :ref:`tet-coords`)
 
-    Raises :exc:`modepy.QuadratureRuleUnavailable` if no quadrature rule for the
-    requested parameters is available.
-
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
-
-    .. attribute:: exact_to
-
-        The total degree up to which the quadrature is exact.
-
-    When using these nodes, please acknowledge Zydrunas Gimbutas,
-    who generated them as follows:
+    The integration domain is the unit simplex (see :ref:`tri-coords`
+    and :ref:`tet-coords`). When using these nodes, please acknowledge Zydrunas
+    Gimbutas, who generated them as follows:
 
     * The 2D nodes are based on the interpolation node set derived
-      in the article
+      in the article [Vioreanu2011]_.
 
-          B. Vioreanu and V. Rokhlin, "Spectra of Multiplication Operators as a
-          Numerical Tool,"
-          `Yale CS Tech Report 1443
-          <http://www.cs.yale.edu/publications/techreports/tr1443.pdf>`_
-
-      Note that in Vioreanu's tables, only orders 5,6,9, and 12 are rotationally
+      Note that in Vioreanu's tables, only orders 5, 6, 9, and 12 are rotationally
       symmetric, which gives one extra order for integration and better
       interpolation conditioning. Also note that since the tables have been
       re-generated independently, the nodes and weights may be different.
 
     * The 3D nodes were derived from the :func:`modepy.warp_and_blend_nodes`.
 
-    * A tightening algorithm was then applied, as described in
+    * A tightening algorithm was then applied, as described in [Vioreanu2012]_.
 
-          B. Vioreanu, "Spectra of Multiplication Operators as a Numerical
-          Tool", Yale University, 2012.
-          `Dissertation <http://gradworks.umi.com/3525285.pdf>`_
+    .. [Vioreanu2011] B. Vioreanu and V. Rokhlin,
+        *Spectra of Multiplication Operators as a Numerical Tool*,
+        Yale CS Tech Report 1443.
+        `PDF <http://www.cs.yale.edu/publications/techreports/tr1443.pdf>`__
+
+    .. [Vioreanu2012] B. Vioreanu,
+        *Spectra of Multiplication Operators as a Numerical Tool*,
+        Yale University, 2012.
+        `PDF <http://gradworks.umi.com/3525285.pdf>`__
 
     .. versionadded :: 2013.3
 
@@ -74,17 +64,20 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
 
     # FIXME: most other functionality in modepy uses 'dims, order' as the
     # argument order convention.
-    def __init__(self, order, dims):
+    def __init__(self, order: int, dims: int) -> None:
         """
         :arg order: The total degree to which the quadrature rule is exact
             for *interpolation*.
         :arg dims: The number of dimensions for the quadrature rule.
             2 for quadrature on triangles and 3 for tetrahedra.
+
+        :raises: :exc:`modepy.QuadratureRuleUnavailable` if no quadrature rule
+            for the requested parameters is available.
         """
 
         if dims == 2:
             from modepy.quadrature.vr_quad_data_tri import triangle_data as table
-            ref_volume = 2
+            ref_volume = 2.0
         elif dims == 3:
             from modepy.quadrature.vr_quad_data_tet import tetrahedron_data as table
             ref_volume = 4/3

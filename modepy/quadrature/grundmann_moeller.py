@@ -21,13 +21,14 @@ THE SOFTWARE.
 """
 
 from functools import reduce
+from typing import Dict, List, Tuple
 
 import numpy as np
 
 from modepy.quadrature import Quadrature
 
 
-def _extended_euclidean(q, r):
+def _extended_euclidean(q: int, r: int) -> Tuple[int, int, int]:
     """Return a tuple (p, a, b) such that p = aq + br,
     where p is the greatest common divisor.
     """
@@ -38,8 +39,8 @@ def _extended_euclidean(q, r):
         p, a, b = _extended_euclidean(r, q)
         return p, b, a
 
-    Q = 1, 0  # noqa: N806
-    R = 0, 1  # noqa: N806
+    Q = (1, 0)  # noqa: N806
+    R = (0, 1)  # noqa: N806
 
     while r:
         quot, t = divmod(q, r)
@@ -50,36 +51,28 @@ def _extended_euclidean(q, r):
     return q, Q[0], Q[1]
 
 
-def _gcd(q, r):
+def _gcd(q: int, r: int) -> int:
     return _extended_euclidean(q, r)[0]
 
 
-def _simplify_fraction(xxx_todo_changeme):
+def _simplify_fraction(xxx_todo_changeme: Tuple[int, int]) -> Tuple[int, int]:
     (a, b) = xxx_todo_changeme
     gcd = _gcd(a, b)
     return (a//gcd, b//gcd)
 
 
 class GrundmannMoellerSimplexQuadrature(Quadrature):
-    r"""Cubature on an *n*-simplex.
+    r"""Cubature on an *n*-simplex from [Grundmann1978]_.
 
-    This cubature rule has both negative and positive weights.
-    It is exact for polynomials up to order :math:`2s + 1`, where
-    :math:`s` is given as *order*.
+    This cubature rule has both negative and positive weights. It is exact for
+    polynomials up to order :math:`2s + 1`, where :math:`s` is given as *order*.
+    The integration domain is the unit simplex (see :ref:`tri-coords`
+    and :ref:`tet-coords`).
 
-    The integration domain is the unit simplex. (see :ref:`tri-coords`
-    and :ref:`tet-coords`)
-
-    .. attribute:: exact_to
-
-        The total degree up to which the quadrature is exact.
-
-    See
-
-    * A. Grundmann and H.M. Moeller,
-      Invariant integration formulas for the n-simplex by combinatorial methods,
-      SIAM J. Numer. Anal. 15 (1978), 282--290.
-      http://dx.doi.org/10.1137/0715019
+    .. [Grundmann1978] A. Grundmann and H.M. Moeller,
+        *Invariant integration formulas for the n-simplex by combinatorial methods*,
+        SIAM J. Numer. Anal. 15 (1978), 282--290.
+        `DOI <http://dx.doi.org/10.1137/0715019>`__
 
     .. automethod:: __init__
     .. automethod:: __call__
@@ -87,22 +80,19 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
     # FIXME: most other functionality in modepy uses 'dims, order' as the
     # argument order convention.
-    def __init__(self, order, dimension):
+    def __init__(self, order: int, dimension: int) -> None:
         """
-        :arg order: A parameter correlated with the total degree of polynomials
-            that are integrated exactly. (See also :attr:`exact_to`.)
-        :arg dimension: The number of dimensions for the quadrature rule.
-            Any positive integer.
+        :arg order: a parameter correlated with the total degree of polynomials
+            that are integrated exactly (see also
+            :attr:`~modepy.Quadrature.exact_to`).
+        :arg dimension: the number of dimensions for the quadrature rule.
         """
         s = order
         n = dimension
         d = 2*s + 1
 
         if dimension == 0:
-            nodes = np.zeros((dimension, 1))
-            weights = np.ones(1)
-
-            Quadrature.__init__(self, nodes, weights)
+            super().__init__(np.zeros((dimension, 1)), np.ones(1))
             return
 
         import math
@@ -111,7 +101,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             generate_decreasing_nonnegative_tuples_summing_to,
             generate_unique_permutations, wandering_element)
 
-        points_to_weights = {}
+        points_to_weights: Dict[Tuple[Tuple[int, int], ...], np.ndarray] = {}
 
         for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
@@ -135,8 +125,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
                 + [np.array(x)
                     for x in wandering_element(n, landscape=-1, wanderer=1)])
 
-        nodes = []
-        weights = []
+        nodes: List[np.ndarray] = []
+        weights: List[np.ndarray] = []
 
         dim_factor = 2**n
         for p, w in points_to_weights.items():

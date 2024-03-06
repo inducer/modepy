@@ -48,7 +48,7 @@ def test_transformed_quadrature():
     sigma = 12
     tq = Transformed1DQuadrature(
             LegendreGaussQuadrature(20, force_dim_axis=True),
-            mu - 6*sigma, mu + 6*sigma)
+            left=mu - 6*sigma, right=mu + 6*sigma)
 
     result = tq(lambda x: gaussian_density(x, mu, sigma))
     assert abs(result - 1) < 1.0e-9

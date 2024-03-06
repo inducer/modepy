@@ -25,28 +25,17 @@ from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 
 
 class XiaoGimbutasSimplexQuadrature(Quadrature):
-    """A (nearly) Gaussian simplicial quadrature with very few quadrature nodes,
-    available for low-to-moderate orders.
+    """A (nearly) Gaussian simplicial quadrature with very few quadrature nodes
+    from [Xiao2010]_.
 
-    Raises :exc:`modepy.QuadratureRuleUnavailable` if no quadrature rule for the
-    requested parameters is available.
+    This rule is available for low-to-moderate orders. The integration domain is
+    the unit simplex (see :ref:`tri-coords` and :ref:`tet-coords`).
 
-    The integration domain is the unit simplex. (see :ref:`tri-coords`
-    and :ref:`tet-coords`)
-
-    Inherits from :class:`modepy.Quadrature`. See there for the interface
-    to obtain nodes and weights.
-
-    .. attribute:: exact_to
-
-        The total degree up to which the quadrature is exact.
-
-    See
-
-        H. Xiao and Z. Gimbutas, "A numerical algorithm for the construction of
-        efficient quadrature rules in two and higher dimensions," Computers &
-        Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
-        http://dx.doi.org/10.1016/j.camwa.2009.10.027
+    .. [Xiao2010] H. Xiao and Z. Gimbutas,
+        *A numerical algorithm for the construction of efficient quadrature rules
+        in two and higher dimensions*,
+        Computers & Mathematics with Applications, vol. 59, no. 2, pp. 663-676, 2010.
+        `DOI <http://dx.doi.org/10.1016/j.camwa.2009.10.027>`__
 
     .. automethod:: __init__
     .. automethod:: __call__
@@ -54,11 +43,13 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
 
     # FIXME: most other functionality in modepy uses 'dims, order' as the
     # argument order convention.
-    def __init__(self, order, dims):
+    def __init__(self, order: int, dims: int) -> None:
         """
-        :arg order: The total degree to which the quadrature rule is exact.
-        :arg dims: The number of dimensions for the quadrature rule.
+        :arg order: the total degree to which the quadrature rule is exact.
+        :arg dims: the number of dimensions for the quadrature rule.
             2 for quadrature on triangles and 3 for tetrahedra.
+        :raises: :exc:`modepy.QuadratureRuleUnavailable` if no quadrature rule
+            for therequested parameters is available.
         """
 
         if dims == 2:

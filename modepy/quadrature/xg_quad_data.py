@@ -4,7 +4,7 @@
 import numpy
 
 
-triangle_table = {  # noqa
+triangle_table_orig = {
     1: {
         "points": [[-5.55111512312578e-17, 2.22044604925031e-16]],
         "weights": [1.73205080756888],
@@ -16406,11 +16406,11 @@ triangle_table = {  # noqa
 
 triangle_table = {
     order: {name: numpy.array(ary) for name, ary in rule.items()}
-    for order, rule in triangle_table.items()
+    for order, rule in triangle_table_orig.items()
 }
 
 
-tetrahedron_table = {  # noqa
+tetrahedron_table_orig = {
     1: {"points": [[0.0, 0.0, 0.0]], "weights": [0.942809041582063]},
     2: {
         "points": [
@@ -18537,5 +18537,5 @@ tetrahedron_table = {  # noqa
 
 tetrahedron_table = {
     order: {name: numpy.array(ary) for name, ary in rule.items()}
-    for order, rule in tetrahedron_table.items()
+    for order, rule in tetrahedron_table_orig.items()
 }

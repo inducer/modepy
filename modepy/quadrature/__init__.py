@@ -2,7 +2,11 @@
 .. currentmodule:: modepy
 
 .. autoclass:: Quadrature
+    :members:
+    :special-members: __call__
+
 .. autoclass:: ZeroDimensionalQuadrature
+    :show-inheritance:
 
 .. autofunction:: quadrature_for_space
 """
@@ -31,6 +35,7 @@ THE SOFTWARE.
 """
 
 from functools import singledispatch
+from typing import Callable, Iterable, Optional
 
 import numpy as np
 
@@ -46,48 +51,55 @@ class QuadratureRuleUnavailable(RuntimeError):
 
 
 class Quadrature:
-    """The basic interface for a quadrature rule.
+    """The basic interface for a quadrature rule."""
 
-    .. attribute :: nodes
-
-        An array of shape *(d, nnodes)*, where *d* is the dimension
-        of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
-
-    .. attribute :: weights
-
-        A vector of length *nnodes*.
-
-    .. attribute :: exact_to
-
-        Summed polynomial degree up to which the quadrature is exact.
-        In higher-dimensions, the quadrature is supposed to be exact on (at least)
-        :math:`P^N`, where :math:`N` = :attr:`exact_to`. If the quadrature
-        accuracy is not known, attr:`exact_to` will *not* be set, and
-        an `AttributeError` will be raised when attempting to access this
-        information.
-
-    .. automethod:: __init__
-
-    .. automethod:: __call__
-    """
-
-    def __init__(self, nodes, weights, exact_to=None):
+    def __init__(self,
+                 nodes: np.ndarray,
+                 weights: np.ndarray,
+                 exact_to: Optional[int] = None) -> None:
         """
         :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
             of the qudrature rule.
         :arg weights: an array of length *nnodes*.
-        :arg exact_to: an optional argument denoting the symmed polynomial
+        :arg exact_to: an optional argument denoting the summed polynomial
             degree to which the quadrature is exact. By default, `exact_to`
             is `None` and will *not* be set as an attribute.
         """
-        self.nodes = nodes
-        self.weights = weights
-        # TODO: May be revamped/addressed later;
-        # see https://github.com/inducer/modepy/issues/31
-        if exact_to is not None:
-            self.exact_to = exact_to
 
-    def __call__(self, f):
+        self.nodes: np.ndarray = nodes
+        """An array of shape *(dim, nnodes)*, where *dim* is the dimension
+        of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
+        """
+        self.weights: np.ndarray = weights
+        """A vector of length *nnodes* that contains the quadrature weights."""
+        self._exact_to = exact_to
+
+    @property
+    def dim(self) -> int:
+        """Dimension of the space on which the quadrature rule applies."""
+        return 1 if self.nodes.ndim == 1 else self.nodes.shape[0]
+
+    @property
+    def exact_to(self) -> int:
+        """Summed polynomial degree up to which the quadrature is exact.
+
+        In higher-dimensions, the quadrature is supposed to be exact on (at least)
+        :math:`P^N`, where :math:`N` = :attr:`exact_to`. If the quadrature
+        accuracy is not known, :attr:`exact_to` will *not* be set, and
+        an :exc:`AttributeError` will be raised when attempting to access this
+        information.
+        """
+
+        # TODO: May be revamped/addressed later:
+        # see https://github.com/inducer/modepy/issues/31
+        if self._exact_to is not None:
+            return self._exact_to
+
+        raise AttributeError(
+            f"'{type(self).__name__}' rule does not define an exact order"
+            )
+
+    def __call__(self, f: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
         """Evaluate the callable *f* at the quadrature nodes and return its
         integral.
 
@@ -98,48 +110,51 @@ class Quadrature:
 
 
 class ZeroDimensionalQuadrature(Quadrature):
-    """A quadrature rule that should be used for 0d domains (i.e. points).
+    """A quadrature rule that should be used for 0d domains (i.e. points)."""
 
-    Inherits from :class:`Quadrature`.
-    """
-
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(np.empty((0, 1), dtype=np.float64),
                          np.ones((1,), dtype=np.float64),
-                         exact_to=np.inf)
+                         # NOTE: exact_to is expected to be an int
+                         exact_to=np.inf)   # type: ignore[arg-type]
 
 
 class Transformed1DQuadrature(Quadrature):
-    """A quadrature rule on an arbitrary interval :math:`(a, b)`."""
+    """A quadrature rule on an arbitrary interval :math:`[a, b]`."""
 
-    def __init__(self, quad, left, right):
-        """Transform a given 1D quadrature rule *quad* onto the
-        interval (left, right).
-        """
+    def __init__(self, quad: Quadrature, left: float, right: float) -> None:
         self.left = left
+        """Left bound of the transformed interval."""
         self.right = right
+        """Right bound of the transformed interval."""
 
         length = right - left
-        half_length = length / 2
-        assert length > 0
+        if length <= 0:
+            raise ValueError(
+                f"Transformed interval cannot be empty: [{left}, {right}]"
+                )
 
-        Quadrature.__init__(self,
-                left + (quad.nodes+1) / 2 * length,
-                quad.weights * half_length)
+        super().__init__(
+            left + (quad.nodes + 1) / 2 * length,
+            length / 2 * quad.weights,
+            exact_to=quad._exact_to)
 
 
 class TensorProductQuadrature(Quadrature):
-    """
+    r"""A tensor product quadrature of one-dimensional :class:`Quadrature`\ s.
+
     .. automethod:: __init__
     """
 
-    def __init__(self, quads):
+    def __init__(self, quads: Iterable[Quadrature]) -> None:
         """
-        :arg quad: a :class:`tuple` of :class:`Quadrature` for one-dimensional
+        :arg quad: a iterable of :class:`Quadrature` objects for one-dimensional
             intervals, one for each dimension of the tensor product.
         """
 
         from modepy.nodes import tensor_product_nodes
+
+        quads = list(quads)
         x = tensor_product_nodes([quad.nodes for quad in quads])
         w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
         assert w.size == x.shape[1]
@@ -154,7 +169,13 @@ class TensorProductQuadrature(Quadrature):
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
-    def __init__(self, N, dims, backend=None):      # noqa: N803
+    """A tensor product using only :class:`~modepy.LegendreGaussQuadrature`
+    one-dimenisonal rules.
+    """
+
+    def __init__(self,
+                 N: int, dims: int,  # noqa: N803
+                 backend: Optional[str] = None) -> None:
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
         super().__init__([
             LegendreGaussQuadrature(N, backend=backend, force_dim_axis=True)

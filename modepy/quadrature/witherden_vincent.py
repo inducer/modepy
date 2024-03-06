@@ -25,16 +25,16 @@ from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 
 class WitherdenVincentQuadrature(Quadrature):
     """Symmetric quadrature rules with positive weights for rectangles and
-    hexahedra.
+    hexahedra from [Witherden2015]_.
 
     The integration domain is the unit hypercube :math:`[-1, 1]^d`, where :math:`d`
-    is the dimension. The quadrature rules are adapted from:
+    is the dimension.
 
-        F. D. Witherden, P. E. Vincent,
-        On the Identification of Symmetric Quadrature Rules for Finite
-        Element Methods,
-        Computers & Mathematics with Applications, Vol. 69, pp. 1232--1241, 2015,
-        `DOI <http://dx.doi.org/10.1016/j.camwa.2015.03.017>`_.
+    .. [Witherden2015] F. D. Witherden, P. E. Vincent,
+        *On the Identification of Symmetric Quadrature Rules for Finite
+        Element Methods*,
+        Computers & Mathematics with Applications, Vol. 69, pp. 1232--1241, 2015.
+        `DOI <http://dx.doi.org/10.1016/j.camwa.2015.03.017>`__
 
     .. versionadded: 2020.3
 
@@ -44,7 +44,7 @@ class WitherdenVincentQuadrature(Quadrature):
 
     # FIXME: most other functionality in modepy uses 'dims, order' as the
     # argument order convention.
-    def __init__(self, order, dims):
+    def __init__(self, order: int, dims: int) -> None:
         if dims == 2:
             from modepy.quadrature.witherden_vincent_quad_data import (
                 quad_data as table)

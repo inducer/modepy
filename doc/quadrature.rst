@@ -14,12 +14,17 @@ Jacobi-Gauss quadrature in one dimension
 .. currentmodule:: modepy
 
 .. autoclass:: JacobiGaussQuadrature
+    :members:
+    :show-inheritance:
 
 .. autoclass:: LegendreGaussQuadrature
+    :show-inheritance:
 
 .. autoclass:: ChebyshevGaussQuadrature
+    :show-inheritance:
 
 .. autoclass:: GaussGegenbauerQuadrature
+    :show-inheritance:
 
 .. currentmodule:: modepy.quadrature.jacobi_gauss
 
@@ -35,8 +40,11 @@ Clenshaw-Curtis and Fejér quadrature in one dimension
 .. currentmodule:: modepy
 
 .. autoclass:: ClenshawCurtisQuadrature
+    :show-inheritance:
 
 .. autoclass:: FejerQuadrature
+    :members:
+    :show-inheritance:
 
 Quadratures on the simplex
 --------------------------
@@ -46,10 +54,16 @@ Quadratures on the simplex
 .. autoexception:: QuadratureRuleUnavailable
 
 .. autoclass:: GrundmannMoellerSimplexQuadrature
+    :members:
+    :show-inheritance:
 
 .. autoclass:: XiaoGimbutasSimplexQuadrature
+    :members:
+    :show-inheritance:
 
 .. autoclass:: VioreanuRokhlinSimplexQuadrature
+    :members:
+    :show-inheritance:
 
 
 Quadratures on the hypercube
@@ -58,8 +72,12 @@ Quadratures on the hypercube
 .. currentmodule:: modepy
 
 .. autoclass:: WitherdenVincentQuadrature
+    :members:
+    :show-inheritance:
 
 .. autoclass:: TensorProductQuadrature
+    :show-inheritance:
 .. autoclass:: LegendreGaussTensorProductQuadrature
+    :show-inheritance:
 
 .. vim: sw=4
