@@ -7,16 +7,27 @@ r"""
 .. currentmodule:: modepy
 
 .. autoclass:: Shape
+    :members:
 .. autoclass:: Face
+    :members:
 
 .. autofunction:: unit_vertices_for_shape
 .. autofunction:: faces_for_shape
 .. autofunction:: face_normal
 
+Tensor Product Shapes
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TensorProductShape
+    :members:
+    :show-inheritance:
+
 Simplices
 ^^^^^^^^^
 
 .. autoclass:: Simplex
+    :members:
+    :show-inheritance:
 
 .. _tri-coords:
 
@@ -101,6 +112,8 @@ Hypercubes
 ^^^^^^^^^^
 
 .. autoclass:: Hypercube
+    :members:
+    :show-inheritance:
 
 .. _square-coords:
 
@@ -168,11 +181,6 @@ The order of the vertices in the hypercubes follows binary counting
 in ``tsr`` (i.e. in reverse axis order).
 For example, in 3D, ``A, B, C, D, ...`` is ``000, 001, 010, 011, ...``.
 
-Tensor Product Shapes
----------------------
-
-.. autoclass:: TensorProductShape
-
 Submeshes
 ---------
 .. autofunction:: submesh_for_shape
@@ -218,22 +226,18 @@ import numpy as np
 @dataclass(frozen=True)  # type: ignore[misc]
 # https://github.com/python/mypy/issues/11868
 class Shape(ABC):
-    """
-    .. attribute :: dim
-    .. attribute :: nfaces
-    .. attribute :: nvertices
-    """
     dim: int
+    """Spatial dimension of the shape."""
 
     @property
     @abstractmethod
-    def nvertices(self):
-        pass
+    def nvertices(self) -> int:
+        """Number of vertices."""
 
     @property
     @abstractmethod
-    def nfaces(self):
-        pass
+    def nfaces(self) -> int:
+        """Number of faces."""
 
 
 @singledispatch
@@ -248,30 +252,21 @@ def unit_vertices_for_shape(shape: Shape) -> np.ndarray:
 class Face:
     """Mix-in to be used with a concrete :class:`Shape` subclass to represent
     geometry information about a face of a shape.
-
-    .. attribute:: volume_shape
-
-        The volume :class:`Shape` from which this face descends.
-
-    .. attribute:: face_index
-
-        The face index in :attr:`volume_shape` of this face.
-
-    .. attribute:: volume_vertex_indices
-
-        A tuple of indices into the vertices returned by
-        :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
-
-    .. attribute:: map_to_volume
-
-        A :class:`~collections.abc.Callable` that takes an array of
-        size `(dim, nnodes)` of unit nodes on the face represented by
-        *face_vertices* and maps them to the :attr:`volume_shape`.
     """
+
     volume_shape: Shape
+    """The volume :class:`Shape` to which the face belongs."""
     face_index: int
+    """The face index in :attr:`volume_shape` of this face."""
     volume_vertex_indices: Tuple[int, ...]
+    """A tuple of indices into the vertices returned by
+    :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
+    """
     map_to_volume: Callable[[np.ndarray], np.ndarray]
+    """A :class:`~collections.abc.Callable` that takes an array of
+    size `(dim, nnodes)` of unit nodes on the face represented by
+    *face_vertices* and maps them to the :attr:`volume_shape`.
+    """
 
 
 def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
@@ -319,15 +314,14 @@ def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
 
 @dataclass(frozen=True, init=False)
 class TensorProductShape(Shape):
-    """
-    .. attribute:: bases
+    """A shape formed as a tensor product of other shapes.
 
-        A :class:`tuple` of base shapes that form the tensor product.
-
-    .. automethod:: __init__
+    For example, the tensor product of a line segment and a triangle (2D simplex)
+    results in a prism shape. Special cases include the :class:`Hypercube`.
     """
 
     bases: Tuple[Shape, ...]
+    """A :class:`tuple` of base shapes that form the tensor product."""
 
     # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, bases: Tuple[Shape, ...]) -> Any:
@@ -356,7 +350,7 @@ class TensorProductShape(Shape):
 
     @property
     def nvertices(self) -> int:
-        return np.prod([s.nvertices for s in self.bases])
+        return int(np.prod([s.nvertices for s in self.bases]))
 
     @property
     def nfaces(self) -> int:
@@ -379,12 +373,14 @@ def _unit_vertices_for_tp(shape: TensorProductShape):
 
 @dataclass(frozen=True)
 class Simplex(Shape):
+    """An n-dimensional simplex (lines, triangle, tetrahedron, etc.)."""
+
     @property
-    def nfaces(self):
+    def nfaces(self) -> int:
         return self.dim + 1
 
     @property
-    def nvertices(self):
+    def nvertices(self) -> int:
         return self.dim + 1
 
 
@@ -443,6 +439,8 @@ def _faces_for_simplex(shape: Simplex):
 
 @dataclass(frozen=True)
 class Hypercube(TensorProductShape):
+    """An n-dimensional hypercube (line, square, hexahedron, etc.)."""
+
     # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, dim: int) -> Any:
         if dim == 1:
@@ -454,7 +452,7 @@ class Hypercube(TensorProductShape):
         super().__init__((Simplex(1),) * dim)
 
     def __getnewargs__(self):
-        # Ensures TensorProductSpace is picklable
+        # NOTE: ensures Hypercube is picklable
         return (self.dim,)
 
 
