@@ -27,77 +27,35 @@ import numpy as np
 from modepy.quadrature import Quadrature
 
 
-def _fejer(n: int, rule: str) -> Tuple[np.ndarray, np.ndarray]:
-    r"""Nodes and weights of the Fejer2, Clenshaw-Curtis and Fejer1
-    quadratures by DFTs.
+# {{{ Clenshaw-Curtis
 
-    Nodes: x_k = cos(k * pi / n).
+def _make_clenshaw_curtis_nodes_and_weights(n: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Nodes and weights of the Clenshaw-Curtis quadrature."""
+    if n < 1:
+        raise ValueError(f"Clenshaw-Curtis order must be at least 1: n = {n}")
 
-    The algorithm follows:
-
-    :arg n: the scheme's order. n is related to the number of quadrature
-            nodes as follows:
-            - for f1, n_1_nodes = n,     n >= 1
-            - for f2, n_q_nodes = n - 1, n >= 2
-            - for cc, n_q_nodes = n + 1, n >= 1
-              (a minimal cc rule must include the end points)
-
-    :arg rule: any of ``"cc"``, ``"f1"`` or ``"f2"``.
-    """
-    if not n >= 1:
-        raise RuntimeError(f"Invalid n = {n} (must be n >= 1)")
-
-    if rule not in {"f1", "f2", "cc"}:
-        raise NotImplementedError(f"Invalide rule: {rule}")
+    if n == 1:
+        return np.array([-1, 1]), np.array([1, 1])
 
     N = np.arange(1, n, 2)  # noqa: N806
     r = len(N)
     m = n - r
-    K = np.arange(0, m)  # noqa: N806
 
-    if rule == "f2" or rule == "cc":
+    # Clenshaw-Curtis nodes
+    x = np.cos(np.arange(0, n + 1) * np.pi / n)
 
-        v0 = np.concatenate([2 / N / (N - 2), 1 / N[-1:], np.zeros(m)])
-        v2 = 0 - v0[:-1] - v0[-1:0:-1]
+    # Clenshaw-Curtis weights
+    w = np.concatenate([2 / N / (N - 2), 1 / N[-1:], np.zeros(m)])
+    w = 0 - w[:-1] - w[-1:0:-1]
+    g0 = -np.ones(n)
+    g0[r] = g0[r] + n
+    g0[m] = g0[m] + n
+    g0 = g0 / (n**2 - 1 + (n % 2))
+    w = np.fft.ifft(w + g0)
+    assert np.allclose(w.imag, 0)
 
-        if rule == "f2":
-            # Fejer2 nodes: k=0,1,...,n; weights: wf2, wf2_n=wf2_0=0
-            # nodes with zero weights are not included in the return values
-            if n == 1:
-                raise RuntimeError("Fejer1 does not exist for n=1")
-            wf2 = np.fft.ifft(v2)
-            assert np.allclose(wf2.imag, 0)
-            wf2 = wf2.real[1:]
-            xf2 = np.cos(np.arange(1, n) * np.pi / n)
-            return xf2, wf2
-
-        if rule == "cc":
-            # Clenshaw-Curtis nodes: k=0,1,...,n; weights: wcc, wcc_n=wcc_0
-            if n == 1:
-                return np.array([-1, 1]), np.array([1, 1])
-            g0 = -np.ones(n)
-            g0[r] = g0[r] + n
-            g0[m] = g0[m] + n
-            g = g0 / (n**2 - 1 + (n % 2))
-            wcc = np.fft.ifft(v2 + g)
-            assert np.allclose(wcc.imag, 0)
-            wcc = np.concatenate([wcc, wcc[:1]]).real
-            xcc = np.cos(np.arange(0, n + 1) * np.pi / n)
-            return xcc, wcc
-
-    if rule == "f1":
-        # Fejer1 nodes: k=1/2,3/2,...,n-1/2; vector of weights: wf1
-        v0 = np.concatenate(
-                [2 * np.exp(1j * np.pi * K / n) / (1 - 4 * (K**2)),
-                 np.zeros(r + 1)])
-        v1 = v0[:-1] + np.conj(v0[-1:0:-1])
-        wf1 = np.fft.ifft(v1)
-        assert np.allclose(wf1.imag, 0)
-        wf1 = wf1.real
-        xf1 = np.cos((np.arange(0, n) + 0.5) * np.pi / n)
-        return xf1, wf1
-
-    raise AssertionError
+    wr = w.real
+    return x, np.concatenate([wr, wr[:1]])
 
 
 class ClenshawCurtisQuadrature(Quadrature):
@@ -124,12 +82,61 @@ class ClenshawCurtisQuadrature(Quadrature):
                     "This option will go away in 2022",
                     DeprecationWarning, stacklevel=2)
 
-        x, w = _fejer(N, "cc")
+        x, w = _make_clenshaw_curtis_nodes_and_weights(N)
 
         if force_dim_axis:
             x = x.reshape(1, -1)
 
         super().__init__(x, w, exact_to=N)
+
+# }}}
+
+
+# {{{ Fejer
+
+def _make_fejer1_nodes_and_weights(n: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Nodes and weights of the Fejer quadrature of the first kind."""
+    if n < 1:
+        raise ValueError(f"Fejer1 order must be at least 1: n = {n}")
+
+    N = np.arange(1, n, 2)  # noqa: N806
+    r = len(N)
+    m = n - r
+    K = np.arange(0, m)  # noqa: N806
+
+    # Fejer1 nodes: k = 1/2, 3/2, ..., n-1/2
+    x = np.cos((np.arange(0, n) + 0.5) * np.pi / n)
+
+    # Fejer1 weights
+    w = np.concatenate([
+        2 * np.exp(1j * np.pi * K / n) / (1 - 4 * (K**2)), np.zeros(r + 1)
+        ])
+    w = w[:-1] + np.conj(w[-1:0:-1])
+    w = np.fft.ifft(w)
+
+    assert np.allclose(w.imag, 0)
+    return x, w.real
+
+
+def _make_fejer2_nodes_and_weights(n: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Nodes and weights of the Fejer quadrature of the second kind."""
+    if n < 2:
+        raise ValueError(f"Fejer2 order must be at least 2: n = {n}")
+
+    N = np.arange(1, n, 2)  # noqa: N806
+    r = len(N)
+    m = n - r
+
+    # Fejer2 nodes: k=0, 1, ..., n
+    x = np.cos(np.arange(1, n) * np.pi / n)
+
+    # Fejer2 weights
+    w = np.concatenate([2 / N / (N - 2), 1 / N[-1:], np.zeros(m)])
+    w = 0 - w[:-1] - w[-1:0:-1]
+    w = np.fft.ifft(w)[1:]
+
+    assert np.allclose(w.imag, 0)
+    return x, w.real
 
 
 class FejerQuadrature(Quadrature):
@@ -158,9 +165,9 @@ class FejerQuadrature(Quadrature):
                     DeprecationWarning, stacklevel=2)
 
         if kind == 1:
-            x, w = _fejer(N, "f1")
+            x, w = _make_fejer1_nodes_and_weights(N)
         elif kind == 2:
-            x, w = _fejer(N, "f2")
+            x, w = _make_fejer2_nodes_and_weights(N)
         else:
             raise ValueError("kind must be either 1 or 2")
 
