@@ -40,20 +40,12 @@ if TYPE_CHECKING:
 
 RealValueT = TypeVar("RealValueT",
                      np.ndarray, "pymbolic.primitives.Expression", float)
-
+""":class:`~typing.TypeVar` for basis function inputs and outputs."""
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
 
-.. class:: RealValue
-
-    A real number, represented as :class:`numpy.ndarray`,
-    :class:`pymbolic.primitives.Expression` or a :class:`numbers.Number`.
-
-.. class:: RealValueT
-
-    :class:`~typing.TypeVar` for basis function inputs and outputs, based on the
-    same types as :class:`RealValue`.
+.. autoclass:: RealValueT
 
 .. currentmodule:: modepy
 
@@ -62,6 +54,7 @@ Basis Retrieval
 
 .. autoexception:: BasisNotOrthonormal
 .. autoclass:: Basis
+    :members:
 
 .. autofunction:: basis_for_space
 .. autofunction:: orthonormal_basis_for_space
@@ -84,6 +77,8 @@ Tensor product adapter
 ----------------------
 
 .. autoclass:: TensorProductBasis
+    :members:
+    :show-inheritance:
 
 PKDO basis functions
 --------------------
@@ -921,18 +916,15 @@ def symbolicize_function(
 
 # {{{ basis interface
 
+BasisFunctionType = Callable[[np.ndarray], np.ndarray]
+BasisGradientType = Callable[[np.ndarray], Tuple[np.ndarray, ...]]
+
+
 class BasisNotOrthonormal(Exception):
-    pass
+    """Exception raised when a :class:`Basis` is expected to be orthonormal."""
 
 
 class Basis(ABC):
-    """
-    .. automethod:: orthonormality_weight
-    .. autoattribute:: mode_ids
-    .. autoattribute:: functions
-    .. autoattribute:: gradients
-    """
-
     @abstractmethod
     def orthonormality_weight(self) -> float:
         """
@@ -955,7 +947,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def functions(self) -> Tuple[Callable[[np.ndarray], np.ndarray], ...]:
+    def functions(self) -> Tuple[BasisFunctionType, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
@@ -963,8 +955,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def gradients(
-            self) -> Tuple[Callable[[np.ndarray], Tuple[np.ndarray, ...]], ...]:
+    def gradients(self) -> Tuple[BasisGradientType, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
@@ -1104,15 +1095,7 @@ def _monomial_basis_for_pn(space: PN, shape: Simplex):
 # {{{ generic tensor product bases
 
 class TensorProductBasis(Basis):
-    """Adapts multiple bases into a tensor product basis.
-
-    .. attribute:: bases
-
-        A sequence of :class:`Basis` objects that are being composed into
-        a tensor-product basis in a higher-dimensional space.
-
-    .. automethod:: __init__
-    """
+    """Adapts multiple bases into a tensor product basis."""
 
     def __init__(self,
             bases: Sequence[Basis],
@@ -1136,6 +1119,9 @@ class TensorProductBasis(Basis):
 
     @property
     def bases(self) -> Sequence[Basis]:
+        """A sequence of :class:`Basis` objects that are being composed into
+        a tensor-product basis in a higher-dimensional space.
+        """
         return self._bases
 
     @property
@@ -1184,7 +1170,7 @@ class TensorProductBasis(Basis):
                 for mode_index_tuple in self._mode_index_tuples)
 
     @property
-    def functions(self):
+    def functions(self) -> Tuple[BasisFunctionType, ...]:
         return tuple(
                 _TensorProductBasisFunction(mid, tuple([
                     self.bases[ibasis].functions[mid_i]
@@ -1194,7 +1180,7 @@ class TensorProductBasis(Basis):
                 for mid in self._mode_index_tuples)
 
     @property
-    def gradients(self):
+    def gradients(self) -> Tuple[BasisGradientType, ...]:
         from pytools import wandering_element
         bases = [b.functions for b in self._bases]
         grad_bases = [b.gradients for b in self._bases]
