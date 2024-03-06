@@ -20,3 +20,5 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "pytools": ("https://documen.tician.de/pytools", None),
 }
+
+autodoc_member_order = "bysource"
