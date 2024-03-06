@@ -82,7 +82,7 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
             from modepy.quadrature.vr_quad_data_tet import tetrahedron_data as table
             ref_volume = 4/3
         else:
-            raise QuadratureRuleUnavailable(f"invalid domension: '{dims}'")
+            raise QuadratureRuleUnavailable(f"invalid dimension: '{dims}'")
 
         from modepy.tools import EQUILATERAL_TO_UNIT_MAP
         e2u = EQUILATERAL_TO_UNIT_MAP[dims]

@@ -46,7 +46,7 @@ point interpolants:
 
 .. math::
 
-    V^T [\text{interpolation coefficents to point $x$}] = \phi_i(x),
+    V^T [\text{interpolation coefficients to point $x$}] = \phi_i(x),
 
 where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 

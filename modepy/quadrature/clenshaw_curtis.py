@@ -147,7 +147,7 @@ class FejerQuadrature(Quadrature):
 
     * Fejér quadrature of the second kind has *N - 1* points and uses only the
       interior extrema of the Chebyshev nodes, i.e. the true stationary points.
-      This rule is alsmost identical to Clenshaw-Curtis and can be nested.
+      This rule is almost identical to Clenshaw-Curtis and can be nested.
 
     Integrates on the interval :math:`(-1, 1)`. Implementation is based on
     [Waldvogel2003]_.

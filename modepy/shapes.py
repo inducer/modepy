@@ -528,7 +528,7 @@ def submesh_for_shape(
         shape: Shape, node_tuples: Sequence[Tuple[int, ...]]
         ) -> Sequence[Tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
-    generate a tesselation of the reference element.
+    generate a tessellation of the reference element.
 
     :arg node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
@@ -583,7 +583,7 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
 
         # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
-            # this is a tesselation of a square into two triangles.
+            # this is a tessellation of a square into two triangles.
             # subtriangles that fall outside of the master triangle are
             # simply not added.
 
@@ -611,7 +611,7 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         result = []
         # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
-            # this is a tesselation of a cube into six tets.
+            # this is a tessellation of a cube into six tets.
             # subtets that fall outside of the master tet are simply not added.
 
             # positively oriented

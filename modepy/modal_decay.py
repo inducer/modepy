@@ -53,7 +53,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
     yields the coeffiicients belonging to the basis functions of the *n_tail_orders*
     highest orders.
 
-    The 2-norm of the resulting coefficents can be used as an estimate of the
+    The 2-norm of the resulting coefficients can be used as an estimate of the
     interpolation error.
 
     .. versionadded:: 2018.1

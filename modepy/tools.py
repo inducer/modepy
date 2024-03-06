@@ -235,7 +235,7 @@ def barycentric_to_equilateral(bary):
 
 def simplex_submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
-    generate a tesselation of the reference element.
+    generate a tessellation of the reference element.
 
     :arg node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
@@ -252,7 +252,7 @@ submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
 
 def hypercube_submesh(node_tuples):
     """Return a list of tuples of indices into the node list that
-    generate a tesselation of the reference element.
+    generate a tessellation of the reference element.
 
     :arg node_tuples: A list of tuples *(i, j, ...)* of integers
         indicating node positions inside the unit element. The
