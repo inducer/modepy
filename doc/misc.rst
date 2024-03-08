@@ -5,19 +5,23 @@ This command should install :mod:`modepy`::
 
     pip install modepy
 
-You may need to run this with :command:`sudo`.
-If you don't already have `pip <https://pypi.python.org/pypi/pip>`_,
-run this beforehand::
+If you are instaling :mod:`modepy` into a global environment, you may need
+additional permissions (e.g. :command:`sudo`). If you do not have
+`pip <https://pypi.python.org/pypi/pip>`__ installed, you can easily get it
+using::
 
-    curl -O https://raw.github.com/pypa/pip/master/contrib/get-pip.py
-    python get-pip.py
+    python -m ensurepip
 
-For a more manual installation, download the source, unpack it,
-and say::
+For a more manual installation: download the source, unpack it, and run::
 
-    python setup.py install
+    python -m pip install .
 
-In addition, you need to have :mod:`numpy` installed.
+or (for development purposes)::
+
+    python -m pip install --editable .
+
+This will also install any required dependencies like :mod:`numpy` if they are
+not available already.
 
 User-visible Changes
 ====================
