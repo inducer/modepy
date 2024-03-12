@@ -109,7 +109,7 @@ def test_tri_face_node_distribution():
 
     first_points = projected_face_points[0]
     for points in projected_face_points[1:]:
-        error = la.norm(points-first_points, np.Inf)
+        error = la.norm(points-first_points, np.inf)
         assert error < 1e-15
 
 # }}}
