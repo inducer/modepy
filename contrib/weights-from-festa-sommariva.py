@@ -15,6 +15,7 @@ These rules are licensed under the GPL and are not included by default.
 import re
 
 import numpy as np
+
 from pytools import download_from_web_if_not_present
 
 
@@ -53,7 +54,7 @@ square_data = process_rules(%s)"""
 
 
 def generate_festa_sommariva_quadrature_rules(outfile):
-    filename = f"set_amr_square.m"
+    filename = "set_amr_square.m"
     download_from_web_if_not_present(
             url=f"{_URL}",
             local_name=filename)

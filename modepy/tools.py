@@ -123,6 +123,19 @@ class Monomial:
         diff_exp[coordinate] = orig_exp-1
         return Monomial(diff_exp, self.factor*orig_exp)
 
+    def __str__(self) -> str:
+        return "{} ({})".format(
+            self.factor,
+            " + ".join(f"x_{i}^{n}" for i, n in enumerate(self.exponents))
+            )
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            f"factor={self.factor}, "
+            f"exponents={self.exponents})"
+            )
+
 
 # {{{ coordinate mapping
 

@@ -4,7 +4,7 @@ import numpy as np
 import modepy as mp
 
 
-def get_reference_element_nodes(name, dims):
+def get_reference_element_nodes(name: str, dims: int):
     if dims == 2:
         from matplotlib.collections import PatchCollection
         from matplotlib.patches import Polygon
@@ -59,7 +59,11 @@ def get_reference_element_nodes(name, dims):
     return patches
 
 
-def plot_quadrature_rule_nodes(name, order, dims, show=False):
+def plot_quadrature_rule_nodes(
+        name: str,
+        order: int,
+        dims: int, *,
+        show: bool = False) -> None:
     # {{{ nodes
 
     if name == "cc":
@@ -67,6 +71,9 @@ def plot_quadrature_rule_nodes(name, order, dims, show=False):
         ref_nodes = get_reference_element_nodes("line", 1)
     elif name == "gm":
         quad_nodes = mp.GrundmannMoellerSimplexQuadrature(order, dims).nodes
+        ref_nodes = get_reference_element_nodes("simplex", dims)
+    elif name == "js":
+        quad_nodes = mp.JaskowiecSukumarQuadrature(order, dims).nodes
         ref_nodes = get_reference_element_nodes("simplex", dims)
     elif name == "vr":
         quad_nodes = mp.VioreanuRokhlinSimplexQuadrature(order, dims).nodes
@@ -90,14 +97,8 @@ def plot_quadrature_rule_nodes(name, order, dims, show=False):
 
     # {{{ plot
 
-    if dims == 3:
-        from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-        projection = "3d"
-    else:
-        projection = None
-
-    fig = plt.figure()
-    ax = fig.gca(projection=projection)
+    subplot_kw = {"projection": "3d"} if dims == 3 else {}
+    fig, ax = plt.subplots(1, 1, subplot_kw=subplot_kw)
     ax.grid()
 
     if ref_nodes is not None:
@@ -122,9 +123,10 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", default="vr")
+    parser.add_argument("--name", choices=["cc", "gm", "js", "vr", "wv", "xg"])
     parser.add_argument("--order", type=int, default=4)
     parser.add_argument("--dims", type=int, default=2)
+    parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
-    plot_quadrature_rule_nodes(args.name, args.order, args.dims)
+    plot_quadrature_rule_nodes(args.name, args.order, args.dims, show=args.show)
