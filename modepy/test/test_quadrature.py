@@ -112,6 +112,7 @@ def test_fejer_quadrature(kind):
 
 @pytest.mark.parametrize(("quad_class", "highest_order"), [
     (mp.XiaoGimbutasSimplexQuadrature, None),
+    (mp.JaskowiecSukumarQuadrature, None),
     (mp.VioreanuRokhlinSimplexQuadrature, None),
     (mp.GrundmannMoellerSimplexQuadrature, 3),
     ])
@@ -134,6 +135,9 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
         if isinstance(quad_class, mp.VioreanuRokhlinSimplexQuadrature):
             assert (quad.weights > 0).all()
 
+        if isinstance(quad_class, mp.JaskowiecSukumarQuadrature):
+            assert (quad.weights > 0).all()
+
         if 0:
             import matplotlib.pyplot as pt
             pt.plot(quad.nodes[0], quad.nodes[1])
@@ -145,6 +149,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
             i_f = quad(f)
             ref = f.simplex_integral()
             err = abs(i_f - ref)
+            print(order, repr(f), err)
             assert err < 6e-15, (err, comb, i_f, ref)
 
         order += 1

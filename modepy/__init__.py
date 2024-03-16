@@ -47,6 +47,7 @@ from modepy.quadrature.grundmann_moeller import GrundmannMoellerSimplexQuadratur
 from modepy.quadrature.jacobi_gauss import (
     ChebyshevGaussQuadrature, GaussGegenbauerQuadrature, JacobiGaussQuadrature,
     LegendreGaussQuadrature)
+from modepy.quadrature.jaskowiec_sukumar import JaskowiecSukumarQuadrature
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.witherden_vincent import WitherdenVincentQuadrature
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
@@ -103,6 +104,7 @@ __all__ = [
         "XiaoGimbutasSimplexQuadrature", "GrundmannMoellerSimplexQuadrature",
         "VioreanuRokhlinSimplexQuadrature",
         "ClenshawCurtisQuadrature", "FejerQuadrature",
+        "JaskowiecSukumarQuadrature",
 
         "WitherdenVincentQuadrature",
         ]
