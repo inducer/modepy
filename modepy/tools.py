@@ -57,7 +57,8 @@ THE SOFTWARE.
 from functools import reduce
 from math import gamma  # noqa: F401
 from math import sqrt
-from typing import Dict, Protocol, Tuple, TypeVar, runtime_checkable
+from typing import Dict, Optional, Protocol, Tuple, TypeVar, runtime_checkable
+from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
@@ -177,7 +178,6 @@ def equilateral_to_unit(equi):
 
 
 def unit_vertices(dim):
-    from warnings import warn
     warn("unit_vertices is deprecated. "
             "Use modepy.unit_vertices_for_shape instead. "
             "unit_vertices will go away in 2022.",
@@ -265,7 +265,6 @@ def hypercube_submesh(node_tuples):
 
     .. versionadded:: 2020.2
     """
-    from warnings import warn
     warn("hypercube_submesh is deprecated. "
             "Use submesh_for_shape instead. "
             "hypercube_submesh will go away in 2022.",
@@ -278,10 +277,27 @@ def hypercube_submesh(node_tuples):
 
 # {{{ plotting helpers
 
-def plot_element_values(n, nodes, values, resample_n=None,
-        node_tuples=None, show_nodes=False):
-    dims = len(nodes)
+def plot_element_values(
+        n: int,
+        nodes: np.ndarray,
+        values: np.ndarray,
+        resample_n: Optional[int] = None,
+        node_tuples: Optional[Tuple[int, ...]] = None,
+        show_nodes: bool = False) -> None:
+    """
+    :arg n: order of the polynomial basis.
+    :arg nodes: nodes at which to evaluate the basis.
+    :arg values: values at the given nodes.
+    :arg resample_n: an order to use to resample the given nodes and values.
+    :arg node_tuples: *UNUSED*.
+    :arg show_nodes: if *True*, the original nodes (before resampling) are also
+        shown. This is only useful when resampling is used.
+    """
+    if node_tuples is not None:
+        warn("Passing in 'node_tuples' is deprecated.",
+             DeprecationWarning, stacklevel=2)
 
+    dims = len(nodes)
     orig_nodes = nodes
     orig_values = values
 
@@ -299,18 +315,24 @@ def plot_element_values(n, nodes, values, resample_n=None,
 
     if dims == 1:
         import matplotlib.pyplot as pt
+
         pt.plot(nodes[0], values)
         if show_nodes:
             pt.plot(orig_nodes[0], orig_values, "x")
         pt.show()
     elif dims == 2:
-        import mayavi.mlab as mlab
-        mlab.triangular_mesh(
-                nodes[0], nodes[1], values, submesh(list(gnitstam(n, 2))))
+        import matplotlib.pyplot as pt
+        import matplotlib.tri as tri
+
+        triangulation = tri.Triangulation(
+            nodes[0], nodes[1], triangles=submesh(list(gnitstam(n, 2)))
+            )
+
+        ax = pt.subplot(1, 1, 1, projection="3d")
+        ax.plot_trisurf(triangulation, values)  # type: ignore[attr-defined]
         if show_nodes:
-            mlab.points3d(orig_nodes[0], orig_nodes[1], orig_values,
-                    scale_factor=0.05)
-        mlab.show()
+            ax.plot(orig_nodes[0], orig_nodes[1], orig_values, "ko", ms=5)
+        pt.show()
     else:
         raise RuntimeError("unsupported dimensionality %d" % dims)
 
@@ -320,7 +342,7 @@ def plot_element_values(n, nodes, values, resample_n=None,
 # {{{ lebesgue constant
 
 def _evaluate_lebesgue_function(n, nodes, shape):
-    huge_n = 30*n
+    huge_n = (30 if shape.dim == 2 else 10) * n
 
     from modepy.modes import basis_for_space
     from modepy.nodes import node_tuples_for_space
@@ -344,7 +366,12 @@ def _evaluate_lebesgue_function(n, nodes, shape):
     return lebesgue_worst, equi_node_tuples, equi_nodes
 
 
-def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
+def estimate_lebesgue_constant(
+        n: int,
+        nodes: np.ndarray,
+        shape: Optional[shp.Shape] = None,
+        *,
+        visualize: bool = False) -> float:
     """Estimate the
     `Lebesgue constant
     <https://en.wikipedia.org/wiki/Lebesgue_constant_(interpolation)>`_
@@ -394,38 +421,19 @@ def estimate_lebesgue_constant(n, nodes, shape=None, visualize=False):
         print(f"Lebesgue constant: {lebesgue_constant}")
         triangles = shp.submesh_for_shape(shape, equi_node_tuples)
 
-        try:
-            import mayavi.mlab as mlab
-            mlab.figure(bgcolor=(1, 1, 1))
-            mlab.triangular_mesh(
-                    equi_nodes[0], equi_nodes[1], lebesgue_worst / lebesgue_constant,
-                    triangles)
+        import matplotlib.pyplot as plt
 
-            x, y = np.mgrid[-1:1:20j, -1:1:20j]
-            mlab.mesh(x, y, 0*x,
-                    representation="wireframe",
-                    color=(0.4, 0.4, 0.4),
-                    line_width=0.6)
-            cb = mlab.colorbar()
-            cb.label_text_property.color = (0, 0, 0)
-
-            mlab.show()
-        except ImportError:
-            import matplotlib.pyplot as plt
-
-            fig = plt.figure()
-            ax = fig.gca()
-            ax.grid()
-            ax.plot(nodes[0], nodes[1], "ko")
-            # NOTE: might be tempted to use `plot_trisurf` here to get a plot
-            # like mayavi, but that will be horrendously slow
-            p = ax.tricontourf(
-                    equi_nodes[0], equi_nodes[1], lebesgue_worst / lebesgue_constant,
-                    triangles=triangles,
-                    levels=16)
-            fig.colorbar(p)
-            ax.set_aspect("equal")
-            plt.show()
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.grid()
+        ax.plot(nodes[0], nodes[1], "ko")
+        p = ax.tricontourf(
+                equi_nodes[0], equi_nodes[1], lebesgue_worst / lebesgue_constant,
+                triangles=triangles,
+                levels=16)
+        fig.colorbar(p)
+        ax.set_aspect("equal")
+        plt.show()
     else:
         raise ValueError(f"visualization is not supported in {shape.dim}D")
 

@@ -98,10 +98,9 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     f = test_func(nodes[0])
     coeffs = la.solve(vdm, f)
 
-    if 0:
+    if False:
         from modepy.tools import plot_element_values
-        plot_element_values(n, nodes, f, resample_n=70,
-                show_nodes=True)
+        plot_element_values(n, nodes, f, resample_n=70, show_nodes=True)
 
     from modepy.modal_decay import fit_modal_decay
     expn, _ = fit_modal_decay(coeffs.reshape(1, -1), dims, n)
