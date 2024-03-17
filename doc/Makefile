@@ -17,3 +17,11 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+
+generate-images:
+	MPLBACKEND=AGG python ../examples/plot-basis.py
+	convert plot-basis-pkdo-2d.png -crop 1414x475+0+344 images/pkdo-2d.png
+	@rm plot-basis-pkdo-2d.png
+
+.PHONY: generate-images

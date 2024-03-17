@@ -17,6 +17,9 @@ The basic objects that :mod:`modepy` manipulates are functions on a simplex.
 For example, it supplies an orthonormal basis on triangles (shown here) and tetrahedra.
 
 .. image:: images/pkdo-2d.png
+    :width: 100%
+    :align: center
+    :alt: Proriol-Koornwinder-Dubiner orthogonal (PKDO) basis functions of order 3
 
 The file that created this plot is included in the :mod:`modepy` distribution
 as :download:`examples/plot-basis.py <../examples/plot-basis.py>`.
