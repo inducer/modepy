@@ -1,7 +1,11 @@
+import matplotlib.pyplot as pt
 import numpy as np
 
 from pytools import (
     generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+
+from modepy.modes import simplex_onb
+from modepy.tools import submesh
 
 
 # prepare plot and eval nodes on triangle
@@ -12,9 +16,6 @@ plot_nodes = np.array(node_tuples, dtype=np.float64) / node_n
 eval_nodes = 2*(plot_nodes - 0.5).T
 
 # get triangle submesh
-from modepy.tools import submesh
-
-
 tri_subtriangles = np.array(submesh(node_tuples))
 
 # evaluate each basis function, build global tri mesh
@@ -22,9 +23,6 @@ node_count = 0
 all_nodes = []
 all_triangles = []
 all_values = []
-
-from modepy.modes import simplex_onb
-
 
 p = 3
 stretch_factor = 1.5
@@ -44,20 +42,23 @@ all_triangles = np.vstack(all_triangles)
 all_values = np.hstack(all_values)
 
 # plot
-import mayavi.mlab as mlab
-
-
-fig = mlab.figure(bgcolor=(1, 1, 1))
-mlab.triangular_mesh(
-        all_nodes[:, 0],
-        all_nodes[:, 1],
-        0.2*all_values,
-        all_triangles)
-
 x, y = np.mgrid[-1:p*stretch_factor + 1:20j, -1:p*stretch_factor + 1:20j]
-mlab.mesh(x, y, 0*x, representation="wireframe", color=(0.4, 0.4, 0.4),
-        line_width=0.6)
 
-mlab.view(-153, 58, 10, np.array([1.61,  2.49, -0.59]))
+ax = pt.subplot(1, 1, 1, projection="3d")
+ax.view_init(azim=-150, elev=25, roll=0)
 
-mlab.show()
+ax.plot_wireframe(x, y, 0 * x, color="k", alpha=0.15, lw=0.5)
+ax.plot_trisurf(all_nodes[:, 0], all_nodes[:, 1], 0.25 * all_values,
+                triangles=all_triangles,
+                cmap="jet",
+                antialiased=False,
+                edgecolor="none")
+
+ax.set_axis_off()
+ax.set_aspect("equal")
+pt.savefig("plot-basis-pkdo-2d.png",
+           transparent=True,
+           dpi=300,
+           pad_inches=0,
+           bbox_inches="tight")
+pt.show()
