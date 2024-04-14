@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from pytools import MovedFunctionDeprecationWrapper
 
 from modepy.matrices import (
     diff_matrix_permutation, differentiation_matrices, inverse_mass_matrix,
@@ -37,7 +38,8 @@ from modepy.modes import (
 from modepy.nodes import (
     edge_clustered_nodes_for_space, equidistant_nodes, equispaced_nodes_for_space,
     legendre_gauss_lobatto_tensor_product_nodes, node_tuples_for_space,
-    random_nodes_for_shape, tensor_product_nodes, warp_and_blend_nodes)
+    padua_jacobi_nodes, padua_nodes, random_nodes_for_shape, tensor_product_nodes,
+    warp_and_blend_nodes)
 from modepy.quadrature import (
     LegendreGaussTensorProductQuadrature, Quadrature, QuadratureRuleUnavailable,
     TensorProductQuadrature, ZeroDimensionalQuadrature, quadrature_for_space)
@@ -83,6 +85,7 @@ __all__ = [
 
         "equidistant_nodes", "warp_and_blend_nodes",
         "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
+        "padua_jacobi_nodes", "padua_nodes",
         "node_tuples_for_space",
         "edge_clustered_nodes_for_space", "equispaced_nodes_for_space",
         "random_nodes_for_shape",
@@ -108,9 +111,6 @@ __all__ = [
 
         "WitherdenVincentQuadrature",
         ]
-
-from pytools import MovedFunctionDeprecationWrapper
-
 
 get_simplex_onb = MovedFunctionDeprecationWrapper(simplex_onb)
 get_grad_simplex_onb = MovedFunctionDeprecationWrapper(grad_simplex_onb)
