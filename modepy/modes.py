@@ -506,7 +506,17 @@ class _TensorProductBasisFunction:
         assert x.shape[0] == self.ndim
 
         n = 0
-        result = 1
+
+        if x.shape[1:]:
+            # This ensures the result has the right shape even
+            # if we're in zero dimensions.
+            # The dtype gymnastics are intended as a way to coerce the
+            # dtype to be floating point without changing the accuracy.
+            result = np.ones(x.shape[1:], dtype=(x+np.float32(1)).dtype)
+        else:
+            # Likely we're evaluating symbolically.
+            result = 1
+
         for d, function in zip(self.dims_per_function, self.functions):
             result *= function(x[n:n + d])
             n += d

@@ -283,6 +283,19 @@ def test_random_nodes_for_tensor_product():
 # }}}
 
 
+def test_tp_0d():
+    import modepy as mp
+    shape = mp.Hypercube(0)
+    space = mp.QN(0, 5)
+
+    for node_func in [
+        mp.equispaced_nodes_for_space,
+        mp.edge_clustered_nodes_for_space,
+    ]:
+        nodes = node_func(space, shape)
+        assert nodes.shape == (0, 1)
+
+
 # You can test individual routines by typing
 # $ python test_nodes.py 'test_routine()'
 

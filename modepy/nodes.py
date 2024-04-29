@@ -386,7 +386,10 @@ def tensor_product_nodes(
         result[d:d+node_dims] = nodes.reshape(nodes.shape + (1,)*(dims-node_dims-d))
         d += node_dims
 
-    return result.reshape((dims, -1), order="F").copy(order="C")
+    if dims == 0:
+        return result.reshape(dims, 1)
+    else:
+        return result.reshape((dims, -1), order="F").copy(order="C")
 
 
 def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:

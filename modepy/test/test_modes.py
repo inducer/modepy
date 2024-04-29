@@ -308,6 +308,18 @@ def test_modal_coeffs_by_projection(dim):
 # }}}
 
 
+def test_tp_0d():
+    basis = mp.TensorProductBasis([])
+    nodes = np.zeros((0, 15))
+    for f in basis.functions:
+        res = f(nodes)
+        assert res.shape == (15,)
+
+    for f in basis.gradients:
+        res = f(nodes)
+        assert len(res) == 0
+
+
 # You can test individual routines by typing
 # $ python test_modes.py 'test_routine()'
 
