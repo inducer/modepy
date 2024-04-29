@@ -28,12 +28,8 @@ from modepy.matrices import (
     nodal_quad_mass_matrix_for_face, resampling_matrix, vandermonde)
 from modepy.modes import (
     Basis, BasisNotOrthonormal, TensorProductBasis, basis_for_space, grad_jacobi,
-    grad_legendre_tensor_product_basis, grad_simplex_best_available_basis,
-    grad_simplex_monomial_basis, grad_simplex_onb, grad_tensor_product_basis, jacobi,
-    legendre_tensor_product_basis, monomial_basis_for_space,
-    orthonormal_basis_for_space, simplex_best_available_basis,
-    simplex_monomial_basis, simplex_monomial_basis_with_mode_ids, simplex_onb,
-    simplex_onb_with_mode_ids, symbolicize_function, tensor_product_basis)
+    jacobi, monomial_basis_for_space, orthonormal_basis_for_space,
+    symbolicize_function)
 from modepy.nodes import (
     edge_clustered_nodes_for_space, equidistant_nodes, equispaced_nodes_for_space,
     legendre_gauss_lobatto_tensor_product_nodes, node_tuples_for_space,
@@ -112,6 +108,4 @@ __all__ = [
 from pytools import MovedFunctionDeprecationWrapper
 
 
-get_simplex_onb = MovedFunctionDeprecationWrapper(simplex_onb)
-get_grad_simplex_onb = MovedFunctionDeprecationWrapper(grad_simplex_onb)
 get_warp_and_blend_nodes = MovedFunctionDeprecationWrapper(warp_and_blend_nodes)
