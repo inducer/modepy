@@ -316,7 +316,7 @@ def plot_element_values(
 
     if resample_n is not None:
         import modepy as mp
-        basis = mp.simplex_onb(dims, n)
+        basis = mp.orthonormal_basis_for_space(mp.PN(dims, n), mp.Simplex(dims))
         fine_nodes = mp.equidistant_nodes(dims, resample_n)
 
         values = np.dot(mp.resampling_matrix(basis, fine_nodes, nodes), values)
