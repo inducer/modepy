@@ -253,8 +253,8 @@ def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
 
         \displaystyle {(M_f)}_{ij} \approx \int_F \phi_i(r) \psi_j(r) dr,
 
-    where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
-    *test_functions* at *volume_nodes*, and :math:`\psi_j` are the (surface)
+    where :math:`\phi_i` are the (volume) basis functions
+    *test_functions*, and :math:`\psi_j` are the (surface)
     *trial_functions*.
 
     .. versionadded:: 2020.3
