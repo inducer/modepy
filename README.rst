@@ -10,6 +10,9 @@ modepy: Basis Functions and Node Sets for Interpolation
 .. image:: https://badge.fury.io/py/modepy.png
     :alt: Python Package Index Release Page
     :target: https://pypi.org/project/modepy/
+.. image:: https://zenodo.org/badge/9846038.svg
+    :alt: Zenodo DOI for latest release
+    :target: https://zenodo.org/doi/10.5281/zenodo.11105051
 
 ``modepy`` helps you create well-behaved high-order discretizations on
 simplices (i.e. segments, triangles and tetrahedra) and tensor products of
