@@ -17,7 +17,7 @@ authors:
 
 title: "modepy"
 version: 2024.1
-# doi: 10.5281/zenodo.XXXXXXX
+doi: 10.5281/zenodo.11105052
 date-released: 2024-05-02
 url: "https://github.com/inducer/modepy"
 license: MIT
