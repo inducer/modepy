@@ -21,9 +21,13 @@ THE SOFTWARE.
 """
 
 
+from typing import Callable, Sequence, Tuple, Union
+from warnings import warn
+
 import numpy as np
 import numpy.linalg as la
 
+from modepy.modes import Basis, BasisNotOrthonormal
 from modepy.quadrature import Quadrature
 from modepy.shapes import Face
 
@@ -32,6 +36,8 @@ __doc__ = r"""
 .. currentmodule:: modepy
 
 .. autofunction:: vandermonde
+
+.. autofunction:: multi_vandermonde
 
 Vandermonde matrices are very useful to concisely express interpolation. For
 instance, one may use the inverse :math:`V^{-1}` of a Vandermonde matrix
@@ -66,16 +72,57 @@ of the basis to return to nodal values.
 """
 
 
-def vandermonde(functions, nodes):
+def vandermonde(
+            functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            nodes: np.ndarray
+        ) -> np.ndarray:
     """Return a (generalized) Vandermonde matrix.
 
     The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
     where *functions* is the list of :math:`f_j` and nodes is
     the array of :math:`x_i`, shaped as *(d, npts)*, where *d*
     is the number of dimensions and *npts* is the number of nodes.
+    """
 
-    *functions* are allowed to return :class:`tuple` instances.
-    In this case, a tuple of matrices is returned--i.e. this function
+    nnodes = nodes.shape[-1]
+    nfunctions = len(functions)
+
+    if not functions:
+        return np.empty((nnodes, nfunctions), nodes.dtype)
+
+    f_iter = iter(functions)
+    f_first = next(f_iter)
+
+    f_first_values = f_first(nodes)
+
+    if isinstance(f_first_values, tuple):
+        warn("Calling vandermonde on tuple-returning functions is deprecated. "
+             "This will stop working in 2025. "
+             "Call multi_vandermonde instead.",
+             DeprecationWarning, stacklevel=2)
+        return multi_vandermonde(functions, nodes)
+
+    result = np.empty((nnodes, nfunctions), f_first_values.dtype)
+    result[:, 0] = f_first_values
+
+    for j, f in enumerate(f_iter):
+        result[:, j + 1] = f(nodes)
+
+    return result
+
+
+def multi_vandermonde(
+            functions: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
+            nodes: np.ndarray
+        ) -> Tuple[np.ndarray, ...]:
+    """Evaluate multiple (generalized) Vandermonde matrices.
+
+    The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
+    where *functions* is the list of :math:`f_j` and nodes is
+    the array of :math:`x_i`, shaped as *(d, npts)*, where *d*
+    is the number of dimensions and *npts* is the number of nodes.
+    *functions* must return :class:`tuple` instances.
+    A sequence of matrices is returned--i.e. this function
     works directly on :func:`modepy.Basis.gradients` and returns
     a tuple of matrices.
     """
@@ -83,24 +130,23 @@ def vandermonde(functions, nodes):
     nnodes = nodes.shape[-1]
     nfunctions = len(functions)
 
+    if not nfunctions:
+        raise ValueError("empty functions is not allowed")
+
     result = None
     for j, f in enumerate(functions):
         f_values = f(nodes)
 
         if result is None:
-            if isinstance(f_values, tuple):
-                from pytools import single_valued
-                dtype = single_valued(fi.dtype for fi in f_values)
-                result = tuple(np.empty((nnodes, nfunctions), dtype)
-                        for i in range(len(f_values)))
-            else:
-                result = np.empty((nnodes, nfunctions), f_values.dtype)
+            from pytools import single_valued
+            dtype = single_valued(fi.dtype for fi in f_values)
+            result = tuple(np.empty((nnodes, nfunctions), dtype)
+                    for i in range(len(f_values)))
 
-        if isinstance(f_values, tuple):
-            for i, f_values_i in enumerate(f_values):
-                result[i][:, j] = f_values_i
-        else:
-            result[:, j] = f_values
+        for i, f_values_i in enumerate(f_values):
+            result[i][:, j] = f_values_i
+
+    assert result is not None
 
     return result
 
@@ -181,7 +227,7 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
         from_nodes = nodes
 
     vdm = vandermonde(basis, from_nodes)
-    grad_vdms = vandermonde(grad_basis, nodes)
+    grad_vdms = multi_vandermonde(grad_basis, nodes)
 
     if isinstance(grad_vdms, tuple):
         return tuple(
@@ -216,19 +262,42 @@ def diff_matrix_permutation(node_tuples, ref_axis):
     return permutation
 
 
-def inverse_mass_matrix(basis, nodes):
+def inverse_mass_matrix(
+            basis: Union[Basis, Sequence[Callable[[np.ndarray], np.ndarray]]],
+            nodes: np.ndarray
+        ) -> np.ndarray:
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
-    by :func:`mass_matrix`.
+    by :func:`mass_matrix`. Requires that the basis is orthonormal with weight 1.
 
     .. versionadded:: 2015.1
     """
 
-    vdm = vandermonde(basis, nodes)
+    if isinstance(basis, Basis):
+        try:
+            if basis.orthonormality_weight() != 1:
+                raise NotImplementedError(
+                    "inverse mass matrix of non-orthogonal basis")
+        except BasisNotOrthonormal:
+            raise NotImplementedError("inverse mass matrix of non-orthogonal basis")
+        basis_functions: Sequence[Callable[[np.ndarray], np.ndarray]] = \
+            basis.functions
+    else:
+        basis_functions = basis
+
+        from warnings import warn
+        warn("Passing a sequence of functions to inverse_mass_matrix is deprecated "
+             "and will stop working in 2025. Pass a Basis instead.",
+             DeprecationWarning, stacklevel=2)
+
+    vdm = vandermonde(basis_functions, nodes)
 
     return np.dot(vdm, vdm.T)
 
 
-def mass_matrix(basis, nodes):
+def mass_matrix(
+            basis: Union[Basis, Sequence[Callable[[np.ndarray], np.ndarray]]],
+            nodes: np.ndarray
+        ) -> np.ndarray:
     r"""Return a mass matrix :math:`M`, which obeys
 
     .. math::
