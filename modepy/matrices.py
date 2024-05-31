@@ -417,8 +417,9 @@ def nodal_quad_mass_matrix_for_face(
         \displaystyle (M_f \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
 
     where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
-    *test_functions* at *volume_nodes*, and :math:`w_i` and :math:`r_i` are the
-    weights and nodes from *face_quad*.
+    *test_functions* at *volume_nodes*, :math:`w_j` and :math:`r_j` are the
+    weights and nodes from *face_quad*, and :math:`u_j` are the point
+    values of the trial function at the nodes of *face_quad*.
 
     .. versionadded :: 2021.2
     """
