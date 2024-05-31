@@ -236,17 +236,15 @@ def differentiation_matrices(
     if from_nodes is None:
         from_nodes = nodes
 
+    if len(basis) != from_nodes.shape[-1]:
+        raise ValueError("basis is not unisolvent, cannot interpolate")
+
     vdm = vandermonde(basis, from_nodes)
     grad_vdms = multi_vandermonde(grad_basis, nodes)
 
-    if isinstance(grad_vdms, tuple):
-        return tuple(
-                np.asarray(la.solve(vdm.T, gv.T).T, order="C")
-                for gv in grad_vdms)
-    else:
-        return np.asarray(
-                la.solve(vdm.T, grad_vdms.T).T,
-                order="C")
+    return tuple(
+            np.asarray(la.solve(vdm.T, gv.T).T, order="C")
+            for gv in grad_vdms)
 
 
 def diff_matrix_permutation(
