@@ -60,6 +60,7 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: mass_matrix
 .. autofunction:: modal_mass_matrix_for_face
 .. autofunction:: nodal_mass_matrix_for_face
+.. autofunction:: modal_quad_mass_matrix_for_face
 .. autofunction:: nodal_quad_mass_matrix_for_face
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
@@ -404,6 +405,33 @@ def nodal_mass_matrix_for_face(
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(face_vdm_inv)
 
 
+def modal_quad_mass_matrix_for_face(
+            face: Face, face_quad: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        ) -> np.ndarray:
+    r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
+    satisfies:
+
+    .. math::
+
+        \displaystyle (M_f \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
+
+    where :math:`\phi_i` are the *test_functions*, :math:`w_j` and :math:`r_j` are
+    the weights and nodes from *face_quad*, and :math:`u_j` are the point values of
+    the trial function at the nodes of *face_quad*.
+
+    .. versionadded :: 2024.2
+    """
+    mapped_nodes = face.map_to_volume(face_quad.nodes)
+
+    vol_modal_mass_matrix = np.empty((len(test_functions), len(face_quad.weights)))
+
+    for i, test_f in enumerate(test_functions):
+        vol_modal_mass_matrix[i] = test_f(mapped_nodes) * face_quad.weights
+
+    return vol_modal_mass_matrix
+
+
 def nodal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
@@ -425,14 +453,8 @@ def nodal_quad_mass_matrix_for_face(
     """
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
-    mapped_nodes = face.map_to_volume(face_quad.nodes)
-
-    vol_modal_mass_matrix = np.empty((len(test_functions), len(face_quad.weights)))
-
-    for i, test_f in enumerate(test_functions):
-        vol_modal_mass_matrix[i] = test_f(mapped_nodes) * face_quad.weights
-
-    return la.inv(vol_vdm.T) @ vol_modal_mass_matrix
+    return la.solve(vol_vdm.T,
+                    modal_quad_mass_matrix_for_face(face, face_quad, test_functions))
 
 
 # vim: foldmethod=marker
