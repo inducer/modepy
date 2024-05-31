@@ -21,7 +21,7 @@ THE SOFTWARE.
 """
 
 
-from typing import Callable, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -151,7 +151,12 @@ def multi_vandermonde(
     return result
 
 
-def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
+def resampling_matrix(
+            basis: Sequence[Callable[[np.ndarray], np.ndarray]],
+            new_nodes: np.ndarray,
+            old_nodes: np.ndarray,
+            least_squares_ok: bool = False
+        ) -> np.ndarray:
     """Return a matrix that maps nodal values on *old_nodes* onto nodal
     values on *new_nodes*.
 
@@ -201,7 +206,12 @@ def resampling_matrix(basis, new_nodes, old_nodes, least_squares_ok=False):
                     "do not agree--perhaps use least_squares_ok")
 
 
-def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
+def differentiation_matrices(
+            basis: Sequence[Callable[[np.ndarray], np.ndarray]],
+            grad_basis: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
+            nodes: np.ndarray,
+            from_nodes: Optional[np.ndarray] = None
+        ) -> Tuple[np.ndarray, ...]:
     """Return matrices carrying out differentiation on nodal values in the
     :math:`(r,s,t)` unit directions. (See :ref:`tri-coords` and
     :ref:`tet-coords`.)
@@ -239,7 +249,10 @@ def differentiation_matrices(basis, grad_basis, nodes, from_nodes=None):
                 order="C")
 
 
-def diff_matrix_permutation(node_tuples, ref_axis):
+def diff_matrix_permutation(
+            node_tuples: Sequence[Tuple[int, ...]],
+            ref_axis: int
+        ) -> np.ndarray:
     """Return a :mod:`numpy` array *permutation* of integers so that::
 
         diff_matrices[ref_axis] == diff_matrices[0][permutation][:, permutation]
@@ -255,8 +268,8 @@ def diff_matrix_permutation(node_tuples, ref_axis):
     for i, nt in enumerate(node_tuples):
         swapped = list(nt)
         swapped[0], swapped[ref_axis] = swapped[ref_axis], swapped[0]
-        swapped = tuple(swapped)
-        flipped_idx = ntup_index_lookup[swapped]
+        swapped_t = tuple(swapped)
+        flipped_idx = ntup_index_lookup[swapped_t]
         permutation[i] = flipped_idx
 
     return permutation
@@ -313,8 +326,11 @@ def mass_matrix(
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
-        trial_functions, test_functions):
+def modal_mass_matrix_for_face(
+            face: Face, face_quad: Quadrature,
+            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]]
+        ) -> np.ndarray:
     r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
     satisfies:
 
@@ -341,8 +357,12 @@ def modal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
     return result
 
 
-def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
-        trial_functions, test_functions, volume_nodes, face_nodes):
+def nodal_mass_matrix_for_face(
+            face: Face, face_quad: Quadrature,
+            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            volume_nodes: np.ndarray, face_nodes: np.ndarray
+        ) -> np.ndarray:
     r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
     satisfies:
 
@@ -372,8 +392,11 @@ def nodal_mass_matrix_for_face(face: Face, face_quad: Quadrature,
     return la.inv(vol_vdm.T).dot(modal_fmm).dot(face_vdm_inv)
 
 
-def nodal_quad_mass_matrix_for_face(face: Face, face_quad: Quadrature,
-        test_functions, volume_nodes):
+def nodal_quad_mass_matrix_for_face(
+            face: Face, face_quad: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            volume_nodes: np.ndarray,
+        ) -> np.ndarray:
     r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
     satisfies:
 
