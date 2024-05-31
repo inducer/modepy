@@ -23,8 +23,8 @@ THE SOFTWARE.
 
 
 from modepy.matrices import (
-    diff_matrix_permutation, differentiation_matrices, inverse_mass_matrix,
-    mass_matrix, modal_mass_matrix_for_face, multi_vandermonde,
+    diff_matrices, diff_matrix_permutation, differentiation_matrices,
+    inverse_mass_matrix, mass_matrix, modal_mass_matrix_for_face, multi_vandermonde,
     nodal_mass_matrix_for_face, nodal_quad_mass_matrix_for_face, resampling_matrix,
     vandermonde)
 from modepy.modes import (
@@ -85,7 +85,7 @@ __all__ = [
         "random_nodes_for_shape",
 
         "vandermonde", "multi_vandermonde",
-        "resampling_matrix", "differentiation_matrices",
+        "resampling_matrix", "differentiation_matrices", "diff_matrices",
         "diff_matrix_permutation",
         "inverse_mass_matrix", "mass_matrix",
         "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
