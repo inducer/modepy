@@ -67,6 +67,7 @@ obtain modal values and then using a Vandermonde matrix for the derivatives
 of the basis to return to nodal values.
 
 .. autofunction:: differentiation_matrices
+.. autofunction:: diff_matrices
 
 .. autofunction:: diff_matrix_permutation
 """
@@ -245,6 +246,19 @@ def differentiation_matrices(
     return tuple(
             np.asarray(la.solve(vdm.T, gv.T).T, order="C")
             for gv in grad_vdms)
+
+
+def diff_matrices(
+            basis: Basis,
+            nodes: np.ndarray,
+            from_nodes: Optional[np.ndarray] = None
+        ):
+    """Like :func:`differentiation_matrices`, but for a given :class:`~modepy.Basis`.
+
+    .. versionadded :: 2024.2
+    """
+    return differentiation_matrices(
+                   basis.functions, basis.gradients, nodes, from_nodes)
 
 
 def diff_matrix_permutation(
