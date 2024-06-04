@@ -393,6 +393,9 @@ def tensor_product_nodes(
 
 
 def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
+    """
+    :arg n: the number of points in one dimension.
+    """
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
     return tensor_product_nodes(dims,
         legendre_gauss_lobatto_nodes(n, force_dim_axis=True))
