@@ -319,7 +319,8 @@ def plot_element_values(
         basis = mp.orthonormal_basis_for_space(mp.PN(dims, n), mp.Simplex(dims))
         fine_nodes = mp.equidistant_nodes(dims, resample_n)
 
-        values = np.dot(mp.resampling_matrix(basis, fine_nodes, nodes), values)
+        values = np.dot(mp.resampling_matrix(
+                 basis.functions, fine_nodes, nodes), values)
         nodes = fine_nodes
         n = resample_n
 
