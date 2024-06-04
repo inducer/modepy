@@ -402,7 +402,7 @@ def nodal_mass_matrix_for_face(
 
     modal_fmm = modal_mass_matrix_for_face(
             face, face_quad, trial_functions, test_functions)
-    return la.inv(vol_vdm.T).dot(modal_fmm).dot(face_vdm_inv)
+    return la.solve(vol_vdm.T, modal_fmm @ face_vdm_inv)
 
 
 def modal_quad_mass_matrix_for_face(
