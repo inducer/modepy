@@ -25,7 +25,8 @@ THE SOFTWARE.
 from modepy.matrices import (
     diff_matrices, diff_matrix_permutation, differentiation_matrices,
     inverse_mass_matrix, mass_matrix, modal_mass_matrix_for_face,
-    modal_quad_mass_matrix_for_face, multi_vandermonde, nodal_mass_matrix_for_face,
+    modal_quad_mass_matrix, modal_quad_mass_matrix_for_face, multi_vandermonde,
+    nodal_mass_matrix_for_face, nodal_quad_mass_matrix,
     nodal_quad_mass_matrix_for_face, resampling_matrix, vandermonde)
 from modepy.modes import (
     Basis, BasisNotOrthonormal, TensorProductBasis, basis_for_space, grad_jacobi,
@@ -84,6 +85,7 @@ __all__ = [
         "resampling_matrix", "differentiation_matrices", "diff_matrices",
         "diff_matrix_permutation",
         "inverse_mass_matrix", "mass_matrix",
+        "modal_quad_mass_matrix", "nodal_quad_mass_matrix",
         "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
         "modal_quad_mass_matrix_for_face",
         "nodal_quad_mass_matrix_for_face",

@@ -339,6 +339,63 @@ def mass_matrix(
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
+def modal_quad_mass_matrix(
+            quadrature: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        ) -> np.ndarray:
+    r"""Using the *quadrature*, provide a matrix :math:`M` that
+    satisfies:
+
+    .. math::
+
+        \displaystyle (M \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
+
+    where :math:`\phi_i` are the *test_functions* at the nodes
+    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`.
+
+    .. versionadded :: 2024.2
+    """
+    modal_mass_matrix = np.empty((len(test_functions), len(quadrature.weights)))
+
+    for i, test_f in enumerate(test_functions):
+        modal_mass_matrix[i] = test_f(quadrature.nodes) * quadrature.weights
+
+    return modal_mass_matrix
+
+
+def nodal_quad_mass_matrix(
+            quadrature: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            nodes: Optional[np.ndarray] = None,
+        ) -> np.ndarray:
+    r"""Using the *quadrature*, provide a matrix :math:`M` that
+    satisfies:
+
+    .. math::
+
+        \displaystyle (M \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
+
+    where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
+    *test_functions* at *nodes*, :math:`w_i` and :math:`r_i` are the
+    weights and nodes from *qudarature*, and :math:`u_j` are the point
+    values of the trial function at the nodes of *quadrature*.
+
+    If *nodes* is not provided, use *quadrature*'s nodes.
+
+    .. versionadded :: 2024.2
+    """
+    if nodes is None:
+        nodes = quadrature.nodes
+
+    if len(test_functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with test_functions")
+
+    vdm = vandermonde(test_functions, nodes)
+
+    return la.solve(vdm.T,
+                    modal_quad_mass_matrix(quadrature, test_functions))
+
+
 def modal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
