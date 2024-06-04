@@ -26,6 +26,7 @@ Hypercubes
 .. currentmodule:: modepy
 
 .. autofunction:: tensor_product_nodes
+.. autofunction:: legendre_gauss_tensor_product_nodes
 .. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
 """
 
@@ -61,7 +62,7 @@ import numpy as np
 import numpy.linalg as la
 
 from modepy.shapes import Shape, Simplex, TensorProductShape, unit_vertices_for_shape
-from modepy.spaces import PN, QN, FunctionSpace, TensorProductSpace  # noqa: F401
+from modepy.spaces import PN, FunctionSpace, TensorProductSpace  # noqa: F401
 
 
 # {{{ equidistant nodes
@@ -390,6 +391,19 @@ def tensor_product_nodes(
         return result.reshape(dims, 1)
     else:
         return result.reshape((dims, -1), order="F").copy(order="C")
+
+
+def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
+    """
+    :arg n: the number of points in one dimension.
+
+    .. versionadded:: 2024.2
+    """
+    from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
+    gl_quad = LegendreGaussQuadrature(n)
+    gl_nodes = gl_quad.nodes.reshape(1, -1)
+
+    return tensor_product_nodes(dims, gl_nodes)
 
 
 def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
