@@ -194,7 +194,7 @@ def quadrature_for_space(space: FunctionSpace, shape: Shape) -> Quadrature:
 
 
 @quadrature_for_space.register(PN)
-def _quadrature_for_pn(space: PN, shape: Simplex):
+def _quadrature_for_pn(space: PN, shape: Simplex) -> Quadrature:
     if not isinstance(shape, Simplex):
         raise NotImplementedError((type(space).__name__, type(shape).__name__))
     if space.spatial_dim != shape.dim:
@@ -217,7 +217,10 @@ def _quadrature_for_pn(space: PN, shape: Simplex):
 
 
 @quadrature_for_space.register(TensorProductSpace)
-def _quadrature_for_tp(space: TensorProductSpace, shape: TensorProductShape):
+def _quadrature_for_tp(
+            space: TensorProductSpace,
+            shape: TensorProductShape
+        ) -> Quadrature:
     if not isinstance(shape, TensorProductShape):
         raise NotImplementedError((type(space).__name__, type(shape).__name))
 
