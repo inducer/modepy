@@ -451,6 +451,9 @@ def nodal_quad_mass_matrix_for_face(
 
     .. versionadded :: 2021.2
     """
+    if len(test_functions) != volume_nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with test_functions")
+
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
     return la.solve(vol_vdm.T,
