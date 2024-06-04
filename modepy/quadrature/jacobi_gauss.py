@@ -261,6 +261,7 @@ def legendre_gauss_lobatto_nodes(
         backend: Optional[str] = None,
         force_dim_axis: bool = False) -> np.ndarray:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
+    *N* is the number of points.
 
     Exact to degree :math:`2N - 1`.
     """
