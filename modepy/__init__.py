@@ -33,8 +33,9 @@ from modepy.modes import (
     symbolicize_function)
 from modepy.nodes import (
     edge_clustered_nodes_for_space, equidistant_nodes, equispaced_nodes_for_space,
-    legendre_gauss_lobatto_tensor_product_nodes, node_tuples_for_space,
-    random_nodes_for_shape, tensor_product_nodes, warp_and_blend_nodes)
+    legendre_gauss_lobatto_tensor_product_nodes, legendre_gauss_tensor_product_nodes,
+    node_tuples_for_space, random_nodes_for_shape, tensor_product_nodes,
+    warp_and_blend_nodes)
 from modepy.quadrature import (
     LegendreGaussTensorProductQuadrature, Quadrature, QuadratureRuleUnavailable,
     TensorProductQuadrature, ZeroDimensionalQuadrature, quadrature_for_space)
@@ -72,7 +73,9 @@ __all__ = [
         "basis_for_space", "orthonormal_basis_for_space", "monomial_basis_for_space",
 
         "equidistant_nodes", "warp_and_blend_nodes",
-        "tensor_product_nodes", "legendre_gauss_lobatto_tensor_product_nodes",
+        "tensor_product_nodes",
+        "legendre_gauss_tensor_product_nodes",
+        "legendre_gauss_lobatto_tensor_product_nodes",
         "node_tuples_for_space",
         "edge_clustered_nodes_for_space", "equispaced_nodes_for_space",
         "random_nodes_for_shape",
