@@ -67,14 +67,7 @@ __all__ = [
         "FunctionSpace", "TensorProductSpace", "PN", "QN", "space_for_shape",
 
         "jacobi", "grad_jacobi",
-        "simplex_onb", "grad_simplex_onb", "simplex_onb_with_mode_ids",
-        "simplex_monomial_basis", "grad_simplex_monomial_basis",
-        "simplex_monomial_basis_with_mode_ids",
-        "simplex_best_available_basis", "grad_simplex_best_available_basis",
-        "tensor_product_basis", "grad_tensor_product_basis",
-        "legendre_tensor_product_basis", "grad_legendre_tensor_product_basis",
         "symbolicize_function",
-
         "Basis", "BasisNotOrthonormal", "TensorProductBasis",
         "basis_for_space", "orthonormal_basis_for_space", "monomial_basis_for_space",
 
