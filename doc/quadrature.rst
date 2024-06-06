@@ -11,27 +11,6 @@ Jacobi-Gauss quadrature in one dimension
 
 .. automodule:: modepy.quadrature.jacobi_gauss
 
-.. currentmodule:: modepy
-
-.. autoclass:: JacobiGaussQuadrature
-    :members:
-    :show-inheritance:
-
-.. autoclass:: LegendreGaussQuadrature
-    :show-inheritance:
-
-.. autoclass:: ChebyshevGaussQuadrature
-    :show-inheritance:
-
-.. autoclass:: GaussGegenbauerQuadrature
-    :show-inheritance:
-
-.. currentmodule:: modepy.quadrature.jacobi_gauss
-
-.. autofunction:: jacobi_gauss_lobatto_nodes
-
-.. autofunction:: legendre_gauss_lobatto_nodes
-
 Clenshaw-Curtis and Fejér quadrature in one dimension
 -----------------------------------------------------
 
