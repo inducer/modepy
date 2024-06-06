@@ -46,10 +46,10 @@ def test_nodal_mass_matrix_against_quad(
     if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
         if nodes_on_bdry:
             nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(
-                shape.dim, order + 1,
+                shape.dim, order,
             )
         else:
-            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order + 1)
+            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
     elif isinstance(shape, mp.Simplex):
         if nodes_on_bdry:
             nodes = mp.warp_and_blend_nodes(shape.dim, order)
@@ -58,8 +58,6 @@ def test_nodal_mass_matrix_against_quad(
 
     else:
         raise AssertionError()
-
-    nodes = mp.edge_clustered_nodes_for_space(space, shape)
 
     basis = mp.orthonormal_basis_for_space(space, shape)
 
