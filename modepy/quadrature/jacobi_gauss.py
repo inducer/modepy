@@ -1,3 +1,26 @@
+"""
+.. currentmodule:: modepy
+
+.. autoclass:: JacobiGaussQuadrature
+    :members:
+    :show-inheritance:
+
+.. autoclass:: LegendreGaussQuadrature
+    :show-inheritance:
+
+.. autoclass:: ChebyshevGaussQuadrature
+    :show-inheritance:
+
+.. autoclass:: GaussGegenbauerQuadrature
+    :show-inheritance:
+
+.. currentmodule:: modepy.quadrature.jacobi_gauss
+
+.. autofunction:: jacobi_gauss_lobatto_nodes
+
+.. autofunction:: legendre_gauss_lobatto_nodes
+"""
+
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
 __license__ = """
