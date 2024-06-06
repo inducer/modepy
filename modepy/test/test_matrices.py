@@ -68,3 +68,17 @@ def test_nodal_mass_matrix_against_quad(
 
     err = la.norm(quad_mass_mat@nodes_to_quad - vdm_mass_mat)/la.norm(vdm_mass_mat)
     assert err < 1e-14
+
+
+# You can test individual routines by typing
+# $ python test_modes.py 'test_routine()'
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        exec(sys.argv[1])
+    else:
+        from pytest import main
+        main([__file__])
+
+# vim: fdm=marker
