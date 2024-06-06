@@ -38,7 +38,7 @@ class JacobiGaussQuadrature(Quadrature):
         I[f] = \int_{-1}^1 f(x) (1 - x)^\alpha (1 + x)^\beta\, \mathrm{d}x,
 
     where :math:`\alpha, \beta > -1`. The quadrature rule is exact
-    up to degree :math:`2N + 1`.
+    up to degree :math:`2N + 1`. The quadrature has *N+1* nodes.
 
     .. automethod:: __init__
     """
@@ -167,7 +167,7 @@ class JacobiGaussQuadrature(Quadrature):
 
 
 class LegendreGaussQuadrature(JacobiGaussQuadrature):
-    r"""A Gauss quadrature rule with weight :math:`1`.
+    r"""A Gauss quadrature rule with weight :math:`1` and *N+1* nodes.
 
     Corresponds to a Gauss-Jacobi quadrature rule with
     :math:`\alpha = \beta = 0`.
@@ -183,7 +183,8 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
 
 class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
-    r"""A Gauss quadrature rule with weight :math:`\sqrt{1-x^2}^{\mp 1}`.
+    r"""A Gauss quadrature rule with weight :math:`\sqrt{1-x^2}^{\mp 1}`
+    and *N+1* nodes.
 
     The Chebyshev-Gauss quadrature rules of the first kind and second kind
     correspond to Gauss-Jacobi quadrature rules with
@@ -212,7 +213,7 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
 
 class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     r"""Gauss-Gegenbauer quadrature is a special case of Gauss-Jacobi quadrature
-    with :math:`\alpha = \beta`.
+    with :math:`\alpha = \beta` and *N+1* nodes.
 
     .. versionadded:: 2019.1
     """
@@ -232,7 +233,7 @@ def jacobi_gauss_lobatto_nodes(
         force_dim_axis: bool = False) -> np.ndarray:
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
-    with the same parameters.
+    with the same parameters. There will be *N+1* nodes.
 
     Exact to degree :math:`2N - 3`.
     """
@@ -261,7 +262,7 @@ def legendre_gauss_lobatto_nodes(
         backend: Optional[str] = None,
         force_dim_axis: bool = False) -> np.ndarray:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
-    *N* is the number of points.
+    *N+1* is the number of nodes.
 
     Exact to degree :math:`2N - 1`.
     """

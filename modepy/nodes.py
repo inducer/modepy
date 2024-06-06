@@ -395,7 +395,8 @@ def tensor_product_nodes(
 
 def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     """
-    :arg n: the number of points in one dimension.
+    :arg n: the degree of polynomial exactly interpolated by the nodes.
+        The one-dimensional base quadrature has *n+1* nodes.
 
     .. versionadded:: 2024.2
     """
@@ -408,7 +409,8 @@ def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
 
 def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     """
-    :arg n: the number of points in one dimension.
+    :arg n: the degree of polynomial exactly interpolated by the nodes.
+        The one-dimensional base quadrature has *n+1* nodes.
     """
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
     return tensor_product_nodes(dims,

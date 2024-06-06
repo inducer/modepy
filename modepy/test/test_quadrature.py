@@ -68,6 +68,7 @@ def test_gauss_quadrature(backend):
 
     for s in range(9 + 1):
         quad = LegendreGaussQuadrature(s, backend, force_dim_axis=True)
+        assert quad.nodes.shape[1] == s+1
         for deg in range(quad.exact_to + 1):
             def f(x):
                 return np.sum(x**deg, axis=0)  # noqa: B023
@@ -83,6 +84,7 @@ def test_clenshaw_curtis_quadrature():
 
     for s in range(1, 9 + 1):
         quad = ClenshawCurtisQuadrature(s, force_dim_axis=True)
+        assert quad.nodes.shape[1] == s+1
         for deg in range(quad.exact_to + 1):
             def f(x):
                 return x**deg  # noqa: B023
