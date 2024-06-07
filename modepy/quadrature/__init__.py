@@ -182,6 +182,20 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
             ] * dims)
 
 
+class LegendreGaussLobattoTensorProductQuadrature(TensorProductQuadrature):
+    """A tensor product using only :class:`~modepy.LegendreGaussLobattoQuadrature`
+    one-dimenisonal rules.
+    """
+
+    def __init__(self,
+                 N: int, dims: int,  # noqa: N803
+                 backend: Optional[str] = None) -> None:
+        from modepy.quadrature.jacobi_gauss import LegendreGaussLobattoQuadrature
+        super().__init__([
+            LegendreGaussLobattoQuadrature(N, backend=backend, force_dim_axis=True)
+            ] * dims)
+
+
 # {{{ quadrature
 
 @singledispatch
