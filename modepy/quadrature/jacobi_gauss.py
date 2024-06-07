@@ -144,7 +144,7 @@ class JacobiGaussQuadrature(Quadrature):
         if abs(alpha + 0.5) < 1.0e-14 and abs(beta + 0.5) < 1.0e-14:
             # NOTE: these are hardcoded for two reasons:
             #   * the algorithm below doesn't work for alpha = beta = -0.5
-            #   * and, well, we know them explicitly so why not..
+            #   * and, well, we know them explicitly so why not.
             return (
                     np.cos(np.pi / (2 * (N+1)) * (2*np.arange(N+1, 0, -1) - 1)),
                     np.full(N+1, np.pi / (N + 1))
