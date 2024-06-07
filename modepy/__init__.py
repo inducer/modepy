@@ -38,6 +38,7 @@ from modepy.nodes import (
     node_tuples_for_space, random_nodes_for_shape, tensor_product_nodes,
     warp_and_blend_nodes)
 from modepy.quadrature import (
+    LegendreGaussLobattoTensorProductQuadrature,
     LegendreGaussTensorProductQuadrature, Quadrature, QuadratureRuleUnavailable,
     TensorProductQuadrature, ZeroDimensionalQuadrature, quadrature_for_space)
 from modepy.quadrature.clenshaw_curtis import (
@@ -94,6 +95,7 @@ __all__ = [
         "Quadrature", "QuadratureRuleUnavailable",
         "ZeroDimensionalQuadrature",
         "TensorProductQuadrature", "LegendreGaussTensorProductQuadrature",
+        "LegendreGaussLobattoTensorProductQuadrature",
         "quadrature_for_space",
 
         "JacobiGaussQuadrature", "LegendreGaussQuadrature",
