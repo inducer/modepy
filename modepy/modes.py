@@ -66,6 +66,7 @@ Jacobi polynomials
 
 .. autofunction:: jacobi
 .. autofunction:: grad_jacobi
+.. autofunction:: scaled_jacobi
 
 Conversion to Symbolic
 ----------------------
@@ -208,6 +209,56 @@ def grad_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
         return 0*x
     else:
         return math.sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
+
+
+def binom(x, y):
+    # FIXME This may overflow quickly.
+    # mpmath has clever 'gammaprod' pole handling in case that's ever needed:
+    # https://github.com/mpmath/mpmath/blob/75a2ed37c4f2c576a9d01d360ee4c94ead57c7ff/mpmath/functions/factorials.py#L61-L65
+    from math import gamma
+    return gamma(x + 1) / (gamma(y + 1) * gamma(x - y + 1))
+
+
+def scaled_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
+    r"""
+    Same as :func:`jacobi`, but scaled so that
+
+    .. math::
+
+        P_n^{(\alpha, \beta)}(1) = \binom{ n+\alpha \\ n},
+
+    and
+
+    .. math::
+
+        P_n^{(\alpha, \beta)}(-1) = (-1)^n \binom{ n+\beta \\ n}.
+
+    This is the more conventional definition of the Jacobi polynomials.
+    """
+    from math import factorial, gamma, sqrt
+
+    eps = 100 * np.finfo((np.float32(0) + np.asarray(x)).dtype).eps
+    if n == 0 and abs(alpha + beta + 1) < eps:
+        # maxima claims limit(1/(x*gamma(x)),x, 0) == 1
+        scaling = (
+            # 2**(alpha + beta + 1) \approx 1
+            gamma(n + alpha + 1)
+            * gamma(n + beta + 1)
+            / factorial(n)
+        )
+    else:
+        # source:
+        # https://en.wikipedia.org/w/index.php?title=Jacobi_polynomials&oldid=1219118998
+        scaling = (
+            2**(alpha + beta + 1)
+            / (2*n + alpha + beta + 1)
+            * gamma(n + alpha + 1)
+            * gamma(n + beta + 1)
+            / gamma(n + alpha + beta + 1)
+            / factorial(n)
+        )
+
+    return sqrt(scaling) * jacobi(alpha, beta, n, x)
 
 # }}}
 

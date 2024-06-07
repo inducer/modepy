@@ -37,6 +37,27 @@ import modepy as mp
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.parametrize(("alpha", "beta"), [
+    (0, 0),              # Gauss-Legendre
+    (-0.5, -0.5),        # Chebyshev-Gauss (first kind)
+    (0.5, 0.5),          # Chebyshev-Gauss (second kind)
+    (1, 0),
+    (3, 2),
+    (0, 2),
+    (5, 0),
+    (3, 4)
+    ])
+def test_scaled_jacobi(alpha, beta):
+    from modepy.modes import binom, scaled_jacobi as jacobi
+
+    for n in range(10):
+        err1 = abs(jacobi(alpha, beta, n, 1) - binom(n + alpha, n))
+        errm1 = abs(jacobi(alpha, beta, n, -1) - (-1)**n*binom(n + beta, n))
+
+        assert err1 < 1e-11
+        assert errm1 < 1e-11
+
+
 # {{{ test_orthonormality_jacobi_1d
 
 @pytest.mark.parametrize(("alpha", "beta", "ebound"), [
