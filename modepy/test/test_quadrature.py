@@ -63,11 +63,18 @@ else:
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
-def test_gauss_quadrature(backend):
-    from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
-
+@pytest.mark.parametrize("quad_type", [
+                             mp.LegendreGaussQuadrature,
+                             mp.LegendreGaussLobattoQuadrature,
+                         ])
+def test_gauss_quadrature(backend, quad_type):
     for s in range(9 + 1):
-        quad = LegendreGaussQuadrature(s, backend, force_dim_axis=True)
+        if quad_type == mp.LegendreGaussLobattoQuadrature and s == 0:
+            # no one-node Lobatto rule
+            continue
+
+        quad = quad_type(s, backend=backend, force_dim_axis=True)
+
         assert quad.nodes.shape[1] == s+1
         for deg in range(quad.exact_to + 1):
             def f(x):
