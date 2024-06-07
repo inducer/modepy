@@ -35,7 +35,7 @@ THE SOFTWARE.
 """
 
 from functools import singledispatch
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, Optional, Sequence
 
 import numpy as np
 
@@ -143,7 +143,13 @@ class Transformed1DQuadrature(Quadrature):
 class TensorProductQuadrature(Quadrature):
     r"""A tensor product quadrature of one-dimensional :class:`Quadrature`\ s.
 
+    .. autoattribute:: quadratures
     .. automethod:: __init__
+    """
+
+    quadratures: Sequence[Quadrature]
+    """The lower-dimensional quadratures from which the tensor product quadrature is
+    composed.
     """
 
     def __init__(self, quads: Iterable[Quadrature]) -> None:
@@ -154,7 +160,7 @@ class TensorProductQuadrature(Quadrature):
 
         from modepy.nodes import tensor_product_nodes
 
-        quads = list(quads)
+        quads = tuple(quads)
         x = tensor_product_nodes([quad.nodes for quad in quads])
         w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
         assert w.size == x.shape[1]
@@ -166,6 +172,8 @@ class TensorProductQuadrature(Quadrature):
             exact_to = None
 
         super().__init__(x, w, exact_to=exact_to)
+
+        self.quadratures = quads
 
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):

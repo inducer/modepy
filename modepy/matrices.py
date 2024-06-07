@@ -28,7 +28,7 @@ import numpy as np
 import numpy.linalg as la
 
 from modepy.modes import Basis, BasisNotOrthonormal
-from modepy.quadrature import Quadrature
+from modepy.quadrature import Quadrature, TensorProductQuadrature
 from modepy.shapes import Face
 
 
@@ -62,6 +62,7 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: nodal_mass_matrix_for_face
 .. autofunction:: modal_quad_mass_matrix_for_face
 .. autofunction:: nodal_quad_mass_matrix_for_face
+.. autofunction:: spectral_diag_nodal_mass_matrix
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
