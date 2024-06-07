@@ -19,6 +19,11 @@
 .. autofunction:: jacobi_gauss_lobatto_nodes
 
 .. autofunction:: legendre_gauss_lobatto_nodes
+
+.. currentmodule:: modepy
+
+.. autoclass:: JacobiGaussLobattoQuadrature
+.. autoclass:: LegendreGaussLobattoQuadrature
 """
 
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
@@ -291,3 +296,92 @@ def legendre_gauss_lobatto_nodes(
     """
     return jacobi_gauss_lobatto_nodes(0, 0, N,
             backend=backend, force_dim_axis=force_dim_axis)
+
+
+class JacobiGaussLobattoQuadrature(Quadrature):
+    r"""
+    Compute the Jacobi-Gauss-Lobatto quadrature with respect
+    to the Jacobi weight function
+
+    .. math::
+
+        I[f] = \int_{-1}^1 f(x) (1 - x)^\alpha (1 + x)^\beta\, \mathrm{d}x,
+
+    There will be *N+1* nodes. Exact to degree :math:`2N - 3`.
+
+    .. versionadded:: 2024.2
+    """
+
+    def __init__(self,
+            alpha: float, beta: float, N: int,  # noqa: N803
+            *, backend: Optional[str] = None,
+            force_dim_axis: bool = False) -> None:
+        nodes = jacobi_gauss_lobatto_nodes(alpha, beta, N, backend)
+
+        from math import gamma
+
+        from modepy.modes import binom, scaled_jacobi
+
+        # Formula numbers refer to https://doi.org/10.1023/A:1016689830453
+        if N + 1 < 2:
+            raise ValueError("Lobatto rules must have at least two nodes")
+
+        # Alternate reference via chebfun, using same source paper but
+        # using the beta function in implementation:
+        # https://github.com/chebfun/chebfun/blob/db207bc9f48278ca4def15bf90591bfa44d0801d/lobpts.m
+
+        n = N - 1
+
+        # FIXME: Recurrences might be better than just typing up the formulas.
+
+        # (3.10)
+        common_factor = (
+            2**(alpha + beta + 1)
+            * binom(n + alpha + 1, n)
+            / binom(n + beta + 1, n)
+            / binom(n + alpha + beta + 2, n)
+            * gamma(alpha + 2)
+            / gamma(alpha + beta + 3)
+        )
+        edge_weight = (
+            common_factor
+            * gamma(beta + 1)
+        )
+
+        # (4.7)
+        int_nodes = nodes[1:-1]
+        frac = (
+            4*(n+alpha+1) * (n+beta+1) + (alpha-beta)**2
+        ) / (
+            2*n + alpha + beta + 2
+        )**2
+
+        int_weights = (
+            common_factor
+            * gamma(beta + 2)
+
+            # FIXME: This is part of the paper, but tests only pass without it:
+            # / (n + 1)**2
+
+            / (frac - int_nodes**2)
+            * (1 - int_nodes**2)
+            / scaled_jacobi(alpha, beta, n + 1, int_nodes)**2
+        )
+
+        weights = np.empty_like(nodes)
+        weights[0] = edge_weight
+        weights[-1] = edge_weight
+        weights[1:-1] = int_weights
+
+        if force_dim_axis:
+            nodes = nodes.reshape(1, -1)
+
+        super().__init__(nodes, weights, 2*N - 3)
+
+
+class LegendreGaussLobattoQuadrature(JacobiGaussLobattoQuadrature):
+    def __init__(
+                self, N, *, backend: Optional[str] = None,  # noqa: N803
+                force_dim_axis: bool = False
+            ) -> None:
+        super().__init__(0, 0, N, backend=backend, force_dim_axis=force_dim_axis)
