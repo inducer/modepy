@@ -401,7 +401,7 @@ def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     .. versionadded:: 2024.2
     """
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
-    gl_quad = LegendreGaussQuadrature(n)
+    gl_quad = LegendreGaussQuadrature(n, force_dim_axis=True)
     gl_nodes = gl_quad.nodes.reshape(1, -1)
 
     return tensor_product_nodes(dims, gl_nodes)
