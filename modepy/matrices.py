@@ -397,6 +397,27 @@ def nodal_quad_mass_matrix(
                     modal_quad_mass_matrix(quadrature, test_functions))
 
 
+def spectral_diag_nodal_mass_matrix(
+            quadrature: TensorProductQuadrature
+        ) -> np.ndarray:
+    """Return the diagonal mass matrix for use in the spectral element method.
+    This mass matrix is exact for Lagrange polynomials with respect to
+    Gauss-Legendre (GL) nodes, using GL nodal degrees of freedom.
+    It is approximate for Lagrange polynomials with respect to the
+    Gauss-Lobatto-Legendre (GLL) nodes, using GLL nodal degrees of freedom.
+
+    Returns the vector of diagonal entries.
+
+    .. versionadded:: 2024.2
+    """
+    if not isinstance(quadrature, TensorProductQuadrature):
+        raise ValueError("only applicable to tensor product discretizations")
+    if not all(quad.dim == 1 for quad in quadrature.quadratures):
+        raise ValueError("constituent quadratures of TP quadrature must be 1D")
+
+    return quadrature.weights
+
+
 def modal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],

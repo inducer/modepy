@@ -27,7 +27,8 @@ from modepy.matrices import (
     inverse_mass_matrix, mass_matrix, modal_mass_matrix_for_face,
     modal_quad_mass_matrix, modal_quad_mass_matrix_for_face, multi_vandermonde,
     nodal_mass_matrix_for_face, nodal_quad_mass_matrix,
-    nodal_quad_mass_matrix_for_face, resampling_matrix, vandermonde)
+    nodal_quad_mass_matrix_for_face, resampling_matrix,
+    spectral_diag_nodal_mass_matrix, vandermonde)
 from modepy.modes import (
     Basis, BasisNotOrthonormal, TensorProductBasis, basis_for_space, grad_jacobi,
     jacobi, monomial_basis_for_space, orthonormal_basis_for_space, scaled_jacobi,
@@ -88,6 +89,7 @@ __all__ = [
         "diff_matrix_permutation",
         "inverse_mass_matrix", "mass_matrix",
         "modal_quad_mass_matrix", "nodal_quad_mass_matrix",
+        "spectral_diag_nodal_mass_matrix",
         "modal_mass_matrix_for_face", "nodal_mass_matrix_for_face",
         "modal_quad_mass_matrix_for_face",
         "nodal_quad_mass_matrix_for_face",
