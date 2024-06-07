@@ -30,7 +30,7 @@ from modepy.matrices import (
     nodal_quad_mass_matrix_for_face, resampling_matrix, vandermonde)
 from modepy.modes import (
     Basis, BasisNotOrthonormal, TensorProductBasis, basis_for_space, grad_jacobi,
-    jacobi, monomial_basis_for_space, orthonormal_basis_for_space,
+    jacobi, monomial_basis_for_space, orthonormal_basis_for_space, scaled_jacobi,
     symbolicize_function)
 from modepy.nodes import (
     edge_clustered_nodes_for_space, equidistant_nodes, equispaced_nodes_for_space,
@@ -68,7 +68,7 @@ __all__ = [
 
         "FunctionSpace", "TensorProductSpace", "PN", "QN", "space_for_shape",
 
-        "jacobi", "grad_jacobi",
+        "jacobi", "grad_jacobi", "scaled_jacobi",
         "symbolicize_function",
         "Basis", "BasisNotOrthonormal", "TensorProductBasis",
         "basis_for_space", "orthonormal_basis_for_space", "monomial_basis_for_space",
