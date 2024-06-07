@@ -21,6 +21,9 @@ THE SOFTWARE.
 """
 
 
+from typing import Tuple, cast
+
+import numpy as np
 import numpy.linalg as la
 import pytest
 
@@ -68,6 +71,48 @@ def test_nodal_mass_matrix_against_quad(
 
     err = la.norm(quad_mass_mat@nodes_to_quad - vdm_mass_mat)/la.norm(vdm_mass_mat)
     assert err < 1e-14
+
+
+@pytest.mark.parametrize("shape", [
+                         mp.Hypercube(1),
+                         mp.Hypercube(2),
+                         mp.Hypercube(3),
+                         ])
+def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
+    shape = mp.Simplex(1)
+
+    for order in range(16):
+        space = mp.space_for_shape(shape, order)
+        basis = mp.orthonormal_basis_for_space(space, shape)
+
+        gl_quad = mp.LegendreGaussTensorProductQuadrature(order, shape.dim)
+        gl_ref_mass_mat = mp.mass_matrix(basis, gl_quad.nodes)
+        gl_diag_mass_mat = np.diag(mp.spectral_diag_nodal_mass_matrix(gl_quad))
+
+        gl_err = (
+            la.norm(gl_ref_mass_mat - gl_diag_mass_mat, "fro")
+            / la.norm(gl_ref_mass_mat, "fro")
+        )
+
+        assert gl_err < 1e-14
+
+        if order == 0:
+            # no single-node Lobatto quadratures
+            continue
+
+        gll_quad = mp.LegendreGaussLobattoTensorProductQuadrature(order, shape.dim)
+        gll_ref_mass_mat = mp.mass_matrix(basis, gll_quad.nodes)
+        gll_diag_mass_mat = np.diag(mp.spectral_diag_nodal_mass_matrix(gll_quad))
+
+        # Note that gll_diag_mass_mat is not a good approximation of gll_ref_mass_mat
+        # in the matrix norm sense!
+
+        for mid, func in zip(basis.mode_ids, basis.functions):
+            if max(cast(Tuple[int, ...], mid)) < order - 1:
+                err = np.abs(
+                    gll_ref_mass_mat @ func(gll_quad.nodes)
+                    - gll_diag_mass_mat @ func(gll_quad.nodes))
+                assert np.max(err) < 1e-14
 
 
 # You can test individual routines by typing
