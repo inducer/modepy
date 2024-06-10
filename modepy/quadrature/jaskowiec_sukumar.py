@@ -27,7 +27,7 @@ from modepy.quadrature import Quadrature, QuadratureRuleUnavailable
 
 class JaskowiecSukumarQuadrature(Quadrature):
     """Symmetric quadrature rules with positive weights for tetrahedra from
-    [Joskowiec2021]_.
+    [Jaskowiec2021]_.
 
     The integration domain is the unit tetrahedron.
 

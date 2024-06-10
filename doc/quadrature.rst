@@ -65,6 +65,9 @@ Quadratures on the simplex
     :members:
     :show-inheritance:
 
+.. autoclass::  JaskowiecSukumarQuadrature
+    :members:
+    :show-inheritance:
 
 Quadratures on the hypercube
 ----------------------------
