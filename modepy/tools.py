@@ -62,7 +62,6 @@ from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
-
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
 import modepy.shapes as shp
@@ -154,14 +153,12 @@ class AffineMap:
         # This .T goofiness allows both the nD and the 1D case.
         return (np.dot(self.a, x).T + self.b).T
 
-    # mypy limitation: "Decorated property not supported"
-    @property           # type: ignore[misc]
+    @property
     @memoize_method
     def jacobian(self):
         return la.det(self.a)
 
-    # mypy limitation: "Decorated property not supported"
-    @property           # type: ignore[misc]
+    @property
     @memoize_method
     def inverse(self):
         """The inverse :class:`AffineMap` of *self*."""
@@ -343,7 +340,7 @@ def plot_element_values(
             )
 
         ax = pt.subplot(1, 1, 1, projection="3d")
-        ax.plot_trisurf(triangulation, values)  # type: ignore[attr-defined]
+        ax.plot_trisurf(triangulation, values)  # type: ignore[attr-defined,unused-ignore]
         if show_nodes:
             ax.plot(orig_nodes[0], orig_nodes[1], orig_values, "ko", ms=5)
         pt.show()

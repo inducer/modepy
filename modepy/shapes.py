@@ -223,8 +223,7 @@ import numpy as np
 
 # {{{ interface
 
-@dataclass(frozen=True)  # type: ignore[misc]
-# https://github.com/python/mypy/issues/11868
+@dataclass(frozen=True)
 class Shape(ABC):
     dim: int
     """Spatial dimension of the shape."""
