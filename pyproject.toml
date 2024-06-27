@@ -1,17 +1,19 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=63"]
+requires = [
+    "setuptools>=63",
+]
 
 [project]
 name = "modepy"
 version = "2024.1"
 description = "Modes and nodes for high-order methods"
 readme = "README.rst"
+license = { text = "MIT" }
 authors = [
     { name = "Andreas Kloeckner", email = "inform@tiker.net" },
 ]
 requires-python = ">=3.8"
-license = { text = "MIT" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -20,7 +22,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Scientific/Engineering :: Mathematics",
@@ -35,15 +42,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
-    "mypy",
-    "pytest",
-    "ruff",
-]
 doc = [
     "furo",
     "sphinx>=4",
     "sphinx-copybutton",
+]
+test = [
+    "mypy",
+    "pytest",
+    "ruff",
 ]
 
 [project.urls]
@@ -52,31 +59,35 @@ Homepage = "https://mathema.tician.de/software/modepy"
 Repository = "https://github.com/inducer/modepy"
 
 [tool.setuptools.packages.find]
-include = ["modepy"]
+include = [
+    "modepy*",
+]
 
 [tool.setuptools.package-data]
-modepy = ["py.typed"]
+modepy = [
+    "py.typed",
+]
 
 [tool.ruff]
-preview = true
 target-version = "py38"
 line-length = 85
 
+preview = true
 [tool.ruff.lint]
 extend-select = [
-    "B",    # flake8-bugbear
-    "C",    # flake8-comprehensions
-    "D",    # pydocstyle
-    "E",    # pycodestyle
-    "F",    # pyflakes
-    "I",    # flake8-isort
-    "N",    # pep8-naming
-    "NPY",  # numpy
-    "Q",    # flake8-quotes
-    "W",    # pycodestyle
+    "B",   # flake8-bugbear
+    "C",   # flake8-comprehensions
+    "D",   # pydocstyle
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # flake8-isort
+    "N",   # pep8-naming
+    "NPY", # numpy
+    "Q",   # flake8-quotes
+    "W",   # pycodestyle
 ]
 extend-ignore = [
-    "C90",  # McCabe complexit
+    "C90",  # McCabe complexity
     "D",    # pydocstyle
     "E221", # multiple spaces before operator
     "E226", # missing whitespace around arithmetic operator
@@ -85,17 +96,21 @@ extend-ignore = [
     "E402", # module level import not at the top of file
     "N818", # error suffix in exception names
 ]
-
 [tool.ruff.lint.flake8-quotes]
-inline-quotes = "double"
 docstring-quotes = "double"
+inline-quotes = "double"
 multiline-quotes = "double"
 
 [tool.ruff.lint.isort]
-known-first-party = ["pytools", "pymbolic"]
-known-local-folder = ["modepy"]
-lines-after-imports = 2
 combine-as-imports = true
+known-first-party = [
+    "pytools",
+    "pymbolic",
+]
+known-local-folder = [
+    "modepy",
+]
+lines-after-imports = 2
 
 [tool.mypy]
 warn_unused_ignores = true
