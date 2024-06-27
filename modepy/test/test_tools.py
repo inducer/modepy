@@ -569,7 +569,8 @@ def test_tensor_product_vdm_dim_by_dim(dim):
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
     vdm = mp.vandermonde(basis.functions, nodes)
 
-    x = np.random.randn(space.space_dim)
+    rng = np.random.default_rng(seed=42)
+    x = rng.normal(size=space.space_dim)
     vdm_x = vdm @ x
 
     from modepy.tools import (

@@ -71,9 +71,9 @@ extend-select = [
     "F",    # pyflakes
     "I",    # flake8-isort
     "N",    # pep8-naming
+    "NPY",  # numpy
     "Q",    # flake8-quotes
     "W",    # pycodestyle
-    # "NPY",  # numpy
 ]
 extend-ignore = [
     "C90",  # McCabe complexit

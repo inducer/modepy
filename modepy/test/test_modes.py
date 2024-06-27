@@ -317,7 +317,8 @@ def test_modal_coeffs_by_projection(dim):
     quad = mp.XiaoGimbutasSimplexQuadrature(10, dim)
     assert quad.exact_to >= 2*space.order
 
-    modal_coeffs = np.random.randn(space.space_dim)
+    rng = np.random.default_rng(seed=42)
+    modal_coeffs = rng.normal(size=space.space_dim)
     vdm = mp.vandermonde(basis.functions, quad.nodes)
 
     evaluated = vdm @ modal_coeffs

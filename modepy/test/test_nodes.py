@@ -141,13 +141,15 @@ def test_affine_map():
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
 
+    rng = np.random.default_rng(seed=42)
+
     for d in range(1, 5):
         for _i in range(100):
-            a = np.random.randn(d, d)+10*np.eye(d)
-            b = np.random.randn(d)
+            a = rng.normal(size=(d, d)) + 10 * np.eye(d)
+            b = rng.normal(size=d)
 
             m = AffineMap(a, b)
-            x = np.random.randn(d, 10)
+            x = rng.normal(size=(d, 10))
 
             assert la.norm(x-m.inverse(m(x))) < 1e-10
 

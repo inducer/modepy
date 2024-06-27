@@ -81,7 +81,7 @@ def generate_festa_sommariva_quadrature_rules(outfile):
     # NOTE: some degrees have multiple quadrature rules with a repeated
     # header, so we just take the unique ones here
     degrees = np.unique(
-            np.fromiter(_re_degree.findall(mfile), dtype=np.int)
+            np.fromiter(_re_degree.findall(mfile), dtype=np.int64)
             )
 
     rules = {}
