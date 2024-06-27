@@ -36,17 +36,9 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "flake8",
-    "flake8-pyproject",
-    "flake8-bugbear",
-    "flake8-comprehensions",
-    "flake8-isort",
-    "flake8-quotes",
-    "isort",
     "mypy",
-    "pep8-naming",
-    "pylint",
     "pytest",
+    "ruff",
 ]
 doc = [
     "furo",
@@ -65,16 +57,13 @@ include = ["modepy"]
 [tool.setuptools.package-data]
 modepy = ["py.typed"]
 
-[tool.inducer-ci-support]
-enable-flake8-bugbear = true
-enable-isort = true
+[tool.ruff]
+preview = true
+target-version = "py38"
+line-length = 85
 
-[tool.flake8]
-max-line-length = 85
-inline-quotes = "double"
-docstring-quotes = "double"
-multiline-quotes = "double"
-select = [
+[tool.ruff.lint]
+extend-select = [
     "B",    # flake8-bugbear
     "C",    # flake8-comprehensions
     "D",    # pydocstyle
@@ -84,25 +73,29 @@ select = [
     "N",    # pep8-naming
     "Q",    # flake8-quotes
     "W",    # pycodestyle
+    # "NPY",  # numpy
 ]
 extend-ignore = [
-    "E123", # closing bracket does not match indentation
-    "E126", # continuation line over-indented
-    "E127", # continuation line over-indented
-    "E128", # continuation line under-indented
+    "C90",  # McCabe complexit
+    "D",    # pydocstyle
+    "E221", # multiple spaces before operator
     "E226", # missing whitespace around arithmetic operator
     "E241", # multiple spaces after comma
     "E242", # tab after comma
     "E402", # module level import not at the top of file
     "N818", # error suffix in exception names
-    "W503", # line break before a binary operator
 ]
 
-[tool.isort]
-line_length = 85
-lines_after_imports = 2
-combine_as_imports = true
-multi_line_output = 4
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+docstring-quotes = "double"
+multiline-quotes = "double"
+
+[tool.ruff.lint.isort]
+known-first-party = ["pytools", "pymbolic"]
+known-local-folder = ["modepy"]
+lines-after-imports = 2
+combine-as-imports = true
 
 [tool.mypy]
 warn_unused_ignores = true
