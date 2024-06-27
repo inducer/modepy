@@ -1,7 +1,9 @@
 import matplotlib.pyplot as pt
 import numpy as np
+
 from pytools import (
-    generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+    generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+)
 
 from modepy.modes import simplex_onb
 from modepy.tools import submesh

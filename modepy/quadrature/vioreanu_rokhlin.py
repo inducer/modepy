@@ -90,7 +90,7 @@ class VioreanuRokhlinSimplexQuadrature(Quadrature):
         try:
             order_table = table[order]
         except KeyError:
-            raise QuadratureRuleUnavailable
+            raise QuadratureRuleUnavailable(f"Unsupported order: {order}") from None
 
         nodes = e2u(order_table["points"])
         wts = order_table["weights"]

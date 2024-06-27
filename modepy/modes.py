@@ -25,8 +25,17 @@ import math
 from abc import ABC, abstractmethod
 from functools import partial, singledispatch
 from typing import (
-    TYPE_CHECKING, Callable, Hashable, Iterable, List, Optional, Sequence, Tuple,
-    TypeVar, Union)
+    TYPE_CHECKING,
+    Callable,
+    Hashable,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 
@@ -812,7 +821,8 @@ class _SimplexBasis(Basis):
     @property
     def mode_ids(self):
         from pytools import (
-            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam)
+            generate_nonnegative_integer_tuples_summing_to_at_most as gnitsam,
+        )
         return tuple(gnitsam(self._order, self._dim))
 
 

@@ -58,7 +58,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
 
     .. versionadded:: 2018.1
     """
-    dim, nunit_nodes = unit_nodes.shape
+    dim, _nunit_nodes = unit_nodes.shape
 
     from modepy.shapes import Simplex
     from modepy.spaces import space_for_shape
@@ -168,7 +168,8 @@ def fit_modal_decay(
         function possesses.
     """
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
     mode_number_vector = make_mode_number_vector(
             tuple(gnitstam(n, dims)), ignored_modes
             ).astype(np.float64)

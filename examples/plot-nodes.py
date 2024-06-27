@@ -3,7 +3,10 @@ import numpy as np
 
 import modepy as mp
 from modepy.tools import (
-    EQUILATERAL_VERTICES, barycentric_to_equilateral, unit_to_barycentric)
+    EQUILATERAL_VERTICES,
+    barycentric_to_equilateral,
+    unit_to_barycentric,
+)
 
 
 dims = 3

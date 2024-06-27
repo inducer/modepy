@@ -129,7 +129,8 @@ def test_fejer_quadrature(kind):
 def test_simplex_quadrature(quad_class, highest_order, dim):
     """Check that quadratures on simplices works as advertised"""
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
 
     from modepy.tools import Monomial
 
@@ -173,7 +174,8 @@ def test_simplex_quadrature(quad_class, highest_order, dim):
     ])
 def test_hypercube_quadrature(dim, quad_class, max_order):
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
 
     from modepy.tools import Monomial
 

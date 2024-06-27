@@ -26,9 +26,12 @@ import logging
 import numpy as np
 import numpy.linalg as la
 import pytest
+
 from pymbolic.mapper.evaluator import EvaluationMapper
 from pymbolic.mapper.stringifier import (
-    CSESplittingStringifyMapperMixin, StringifyMapper)
+    CSESplittingStringifyMapperMixin,
+    StringifyMapper,
+)
 
 import modepy as mp
 
