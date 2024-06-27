@@ -1,15 +1,15 @@
-include test/*.py
-
 include doc/*.rst
 include doc/conf.py
 include doc/images/*.png
 include doc/Makefile
-include doc/_static/*.css
-include doc/_templates/*.html
-
-include examples/*.py
 
 include README.rst
 include LICENSE
+include CITATION.cff
 
 recursive-include contrib *.sh *.py
+
+prune .github
+prune doc/_build
+exclude .gitignore
+exclude .gitlab-ci.yml
