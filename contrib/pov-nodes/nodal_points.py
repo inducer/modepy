@@ -1,31 +1,48 @@
-from __future__ import division
-from __future__ import absolute_import
-
-from pov import Sphere, Cylinder, File, Union, Texture, Pigment, \
-        Camera, LightSource, Plane, Background, Finish
 import numpy as np
+from pov import (
+    Background,
+    Camera,
+    Cylinder,
+    File,
+    Finish,
+    LightSource,
+    Pigment,
+    Plane,
+    Sphere,
+    Texture,
+    Union,
+)
+
 import modepy as mp
+
 
 n = 8
 
 ball_radius = 0.05
 link_radius = 0.02
 
-from pytools import generate_nonnegative_integer_tuples_summing_to_at_most \
-        as gnitstam
+from pytools import (
+    generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+)
+
+
 node_tuples = list(gnitstam(n, 3))
 faces = [
-        [nt for nt in node_tuples if nt[0] == 0],
-        [nt for nt in node_tuples if nt[1] == 0],
-        [nt for nt in node_tuples if nt[2] == 0],
-        [nt for nt in node_tuples if sum(nt) == n]
-        ]
+    [nt for nt in node_tuples if nt[0] == 0],
+    [nt for nt in node_tuples if nt[1] == 0],
+    [nt for nt in node_tuples if nt[2] == 0],
+    [nt for nt in node_tuples if sum(nt) == n],
+]
 
-from modepy.tools import unit_to_barycentric, barycentric_to_equilateral
-nodes = [(n[0], n[2], n[1]) for n in
-        barycentric_to_equilateral(
-            unit_to_barycentric(
-                mp.warp_and_blend_nodes(3, n, node_tuples))).T]
+from modepy.tools import barycentric_to_equilateral, unit_to_barycentric
+
+
+nodes = [
+    (n[0], n[2], n[1])
+    for n in barycentric_to_equilateral(
+        unit_to_barycentric(mp.warp_and_blend_nodes(3, n, node_tuples))
+    ).T
+]
 id_to_node = dict(list(zip(node_tuples, nodes)))
 
 
@@ -46,10 +63,9 @@ def get_ball_color(nid):
 
 
 balls = Union(*[
-    Sphere(node, get_ball_radius(nid),
-        Texture(Pigment(color=get_ball_color(nid))))
+    Sphere(node, get_ball_radius(nid), Texture(Pigment(color=get_ball_color(nid))))
     for nid, node in id_to_node.items()
-    ])
+])
 
 links = Union()
 
@@ -62,38 +78,42 @@ for nid in node_tuples:
 
     def connect_nids(nid1, nid2):
         try:
-            links.append(Cylinder(
-                id_to_node[nid1],
-                id_to_node[nid2],
-                link_radius))
+            links.append(Cylinder(id_to_node[nid1], id_to_node[nid2], link_radius))
         except KeyError:
             pass
 
     for i, nid2 in enumerate(child_nids):
         connect_nids(nid, nid2)
-        connect_nids(nid2, child_nids[(i+1) % len(child_nids)])
+        connect_nids(nid2, child_nids[(i + 1) % len(child_nids)])
 
-links.append(Texture(
-    Pigment(color=(0.8, 0.8, 0.8)),
-    Finish(
-        specular=1,
+links.append(
+    Texture(
+        Pigment(color=(0.8, 0.8, 0.8)),
+        Finish(
+            specular=1,
         ),
-    ))
+    )
+)
 
 outf = File("nodes.pov")
 
-Camera(location=0.65*np.array((4, 0.8, -1)), look_at=(0, 0.1, 0)).write(outf)
+Camera(location=0.65 * np.array((4, 0.8, -1)), look_at=(0, 0.1, 0)).write(outf)
 LightSource(
-        (10, 5, 0),
-        color=(1, 1, 1),
-        ).write(outf)
-Background(
-        color=(1, 1, 1)
-        ).write(outf)
+    (10, 5, 0),
+    color=(1, 1, 1),
+).write(outf)
+Background(color=(1, 1, 1)).write(outf)
 if False:
     Plane(
-            (0, 1, 0), min(n[1] for n in nodes)-ball_radius,
-            Texture(Pigment(color=np.ones(3,)))
-            ).write(outf)
+        (0, 1, 0),
+        min(n[1] for n in nodes) - ball_radius,
+        Texture(
+            Pigment(
+                color=np.ones(
+                    3,
+                )
+            )
+        ),
+    ).write(outf)
 balls.write(outf)
 links.write(outf)

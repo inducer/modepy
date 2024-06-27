@@ -13,6 +13,7 @@ They are available under a Creative Commons license.
 import os
 
 import numpy as np
+
 from pytools import download_from_web_if_not_present
 
 
