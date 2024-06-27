@@ -35,8 +35,11 @@ import modepy.shapes as shp
 def test_barycentric_coordinate_map(dims):
     n = 100
     from modepy.tools import (
-        barycentric_to_equilateral, barycentric_to_unit, equilateral_to_unit,
-        unit_to_barycentric)
+        barycentric_to_equilateral,
+        barycentric_to_unit,
+        equilateral_to_unit,
+        unit_to_barycentric,
+    )
 
     rng = np.random.Generator(np.random.PCG64(17))
     unit = nd.random_nodes_for_shape(shp.Simplex(dims), n, rng=rng)
@@ -87,7 +90,8 @@ def test_tri_face_node_distribution():
 
     n = 8
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
     node_tuples = list(gnitstam(n, 2))
 
     unodes = nd.warp_and_blend_nodes(2, n, node_tuples)

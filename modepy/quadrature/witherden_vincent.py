@@ -47,17 +47,19 @@ class WitherdenVincentQuadrature(Quadrature):
     def __init__(self, order: int, dims: int) -> None:
         if dims == 2:
             from modepy.quadrature.witherden_vincent_quad_data import (
-                quad_data as table)
+                quad_data as table,
+            )
         elif dims == 3:
             from modepy.quadrature.witherden_vincent_quad_data import (
-                hex_data as table)
+                hex_data as table,
+            )
         else:
             raise QuadratureRuleUnavailable(f"invalid dimension: '{dims}'")
 
         try:
             rule = table[order]
         except KeyError:
-            raise QuadratureRuleUnavailable
+            raise QuadratureRuleUnavailable(f"Unsupported order: {order}") from None
 
         super().__init__(rule["points"], rule["weights"],
                          exact_to=rule["quad_degree"])

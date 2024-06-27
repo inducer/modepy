@@ -99,7 +99,9 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
         from pytools import (
             generate_decreasing_nonnegative_tuples_summing_to,
-            generate_unique_permutations, wandering_element)
+            generate_unique_permutations,
+            wandering_element,
+        )
 
         points_to_weights: Dict[Tuple[Tuple[int, int], ...], np.ndarray] = {}
 

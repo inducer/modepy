@@ -305,9 +305,12 @@ def inverse_mass_matrix(
                 raise NotImplementedError(
                     "inverse mass matrix of non-orthogonal basis")
         except BasisNotOrthonormal:
-            raise NotImplementedError("inverse mass matrix of non-orthogonal basis")
-        basis_functions: Sequence[Callable[[np.ndarray], np.ndarray]] = \
-            basis.functions
+            raise NotImplementedError(
+                "inverse mass matrix of non-orthogonal basis"
+                ) from None
+
+        basis_functions: Sequence[Callable[[np.ndarray], np.ndarray]] = (
+            basis.functions)
     else:
         basis_functions = basis
 

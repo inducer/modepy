@@ -55,13 +55,16 @@ THE SOFTWARE.
 """
 
 from functools import reduce
-from math import gamma  # noqa: F401
-from math import sqrt
+from math import (
+    gamma,  # noqa: F401
+    sqrt,
+)
 from typing import Dict, Optional, Protocol, Tuple, TypeVar, runtime_checkable
 from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
+
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
 import modepy.shapes as shp
@@ -322,7 +325,8 @@ def plot_element_values(
         n = resample_n
 
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
 
     if dims == 1:
         import matplotlib.pyplot as pt

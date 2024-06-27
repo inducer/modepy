@@ -271,7 +271,8 @@ def test_diff_matrix_permutation(dims):
     space = mp.PN(dims, order)
 
     from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam)
+        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
+    )
     node_tuples = list(gnitstam(order, dims))
 
     simplex_onb = mp.orthonormal_basis_for_space(space, mp.Simplex(dims))
@@ -331,7 +332,9 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import (
-        nodal_mass_matrix_for_face, nodal_quad_mass_matrix_for_face)
+        nodal_mass_matrix_for_face,
+        nodal_quad_mass_matrix_for_face,
+    )
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
         face_basis = mp.basis_for_space(face_space, face)
@@ -382,7 +385,7 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
         return
 
     from modepy.tools import _evaluate_lebesgue_function
-    lebesgue, equi_node_tuples, equi_nodes = \
+    lebesgue, _equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(order, nodes, shape)
 
     import matplotlib.pyplot as plt
@@ -571,7 +574,8 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 
     from modepy.tools import (
         reshape_array_for_tensor_product_space,
-        unreshape_array_for_tensor_product_space)
+        unreshape_array_for_tensor_product_space,
+    )
     x_r = reshape_array_for_tensor_product_space(space, x)
     vdm_dimbydim_x_r = x_r
 

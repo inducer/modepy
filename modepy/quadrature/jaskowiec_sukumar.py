@@ -46,14 +46,15 @@ class JaskowiecSukumarQuadrature(Quadrature):
     def __init__(self, order: int, dims: int) -> None:
         if dims == 3:
             from modepy.quadrature.jaskowiec_sukumar_tet_data import (
-                tet_data as table)
+                tet_data as table,
+            )
         else:
             raise QuadratureRuleUnavailable(f"invalid dimension: '{dims}'")
 
         try:
             rule = table[order]
         except KeyError:
-            raise QuadratureRuleUnavailable(f"Unsupported order: '{order}'")
+            raise QuadratureRuleUnavailable(f"Unsupported order: {order}") from None
 
         points = 2 * np.array(rule["points"]) - 1
         weights = 4 / 3 * np.array(rule["weights"])

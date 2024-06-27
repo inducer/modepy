@@ -62,7 +62,7 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
         try:
             order_table = table[order]
         except KeyError:
-            raise QuadratureRuleUnavailable
+            raise QuadratureRuleUnavailable(f"Unsupported order: {order}") from None
 
         from modepy.tools import EQUILATERAL_TO_UNIT_MAP
         e2u = EQUILATERAL_TO_UNIT_MAP[dims]
