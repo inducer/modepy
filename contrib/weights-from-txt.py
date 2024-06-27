@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
 import sys
+
+
 with open(sys.argv[1]) as inf:
     lines = [ln.strip() for ln in inf.readlines() if ln.strip()]
 
@@ -17,7 +19,7 @@ while i < len(lines):
     points = []
     weights = []
 
-    for j in range(point_count):
+    for _ in range(point_count):
         ln = lines[i]
         i += 1
         data = [float(x) for x in ln.split()]
@@ -29,6 +31,8 @@ while i < len(lines):
             "weights": weights}
 
 from pprint import pformat
+
+
 print("%s = %s" % (rule_name, pformat(table)))
 
 print("""
