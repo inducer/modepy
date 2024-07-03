@@ -80,7 +80,6 @@ preview = true
 extend-select = [
     "B",   # flake8-bugbear
     "C",   # flake8-comprehensions
-    "D",   # pydocstyle
     "E",   # pycodestyle
     "F",   # pyflakes
     "I",   # flake8-isort
@@ -91,7 +90,6 @@ extend-select = [
 ]
 extend-ignore = [
     "C90",  # McCabe complexity
-    "D",    # pydocstyle
     "E221", # multiple spaces before operator
     "E226", # missing whitespace around arithmetic operator
     "E241", # multiple spaces after comma
