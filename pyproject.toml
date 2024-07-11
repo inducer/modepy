@@ -23,11 +23,6 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Scientific/Engineering :: Mathematics",
@@ -86,7 +81,10 @@ extend-select = [
     "NPY", # numpy
     "Q",   # flake8-quotes
     "W",   # pycodestyle
+    "RUF",
+    "UP"
 ]
+
 extend-ignore = [
     "C90",  # McCabe complexity
     "E221", # multiple spaces before operator
@@ -96,10 +94,15 @@ extend-ignore = [
     "E402", # module level import not at the top of file
     "N818", # error suffix in exception names
 ]
+allowed-confusables = ["‐", "–"]
+
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
 inline-quotes = "double"
 multiline-quotes = "double"
+
+[tool.ruff.lint.per-file-ignores]
+"modepy/quadrature/jaskowiec_sukumar_tet_data.py" = ["E202", "E203"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

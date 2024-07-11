@@ -78,9 +78,9 @@ weights = "weights"
 quad_degree = "quad_degree"
 
 def process_rule(table):
-    result = {}
+    result = {{}}
     for order, kv in table.iteritems():
-        result[order] = order_tbl = {}
+        result[order] = order_tbl = {{}}
         for k, v in kv.iteritems():
             if isinstance(v, list):
                 v = [i for i in v if not isinstance(i, list) or len(i)]
@@ -90,4 +90,4 @@ def process_rule(table):
 
     return result
 
-%s = process_rule(%s)""" % (rule_name, pformat(table).replace("'", "")))
+{} = process_rule({})""".format(rule_name, pformat(table).replace("'", "")))

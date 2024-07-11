@@ -33,7 +33,7 @@ for (i, j), basis_func in zip(
         simplex_onb(dims, p),
         ):
 
-    all_nodes.append(plot_nodes + [stretch_factor*i, stretch_factor*j])
+    all_nodes.append([*plot_nodes, stretch_factor * i, stretch_factor * j])
     all_triangles.append(tri_subtriangles + node_count)
     all_values.append(basis_func(eval_nodes))
     node_count += len(plot_nodes)

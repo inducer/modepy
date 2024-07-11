@@ -24,7 +24,7 @@ def process_rule(table):
 
 
 tetrahedron_data = process_rule(
-    {  # noqa
+    {
         0: {
             points: [
                 [0.00000000000000000000000000000000e00],

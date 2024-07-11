@@ -11,7 +11,7 @@ class File:
         self.write(*items)
 
     def include(self, name):
-        self.writeln('#include "%s"' % name)
+        self.writeln(f'#include "{name}"')
         self.writeln()
 
     def indent(self):
@@ -52,10 +52,10 @@ class Vector:
             self.v = args
 
     def __str__(self):
-        return "<%s>" % (", ".join([str(x) for x in self.v]))
+        return "<{}>".format(", ".join([str(x) for x in self.v]))
 
     def __repr__(self):
-        return "Vector(%s)" % self.v
+        return f"Vector({self.v})"
 
     def __mul__(self, other):
         return Vector([r * other for r in self.v])
@@ -95,9 +95,9 @@ class Item:
                 file.writeln(key)
             elif isinstance(val, (tuple, list, np.ndarray)):
                 val = Vector(*val)
-                file.writeln("%s %s" % (key, val))
+                file.writeln(f"{key} {val}")
             else:
-                file.writeln("%s %s" % (key, val))
+                file.writeln(f"{key} {val}")
         file.block_end()
 
     def __setattr__(self, name, val):

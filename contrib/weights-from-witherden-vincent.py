@@ -52,7 +52,7 @@ hex_data = process_rules(%s)"""
 def generate_witherden_vincent_quadrature_rules(outfile):
     filename = "witherden_vincent.zip"
     download_from_web_if_not_present(
-            url="https://ars.els-cdn.com/content/image/1-s2.0-S0898122115001224-mmc1.zip",  # noqa: E501
+            url="https://ars.els-cdn.com/content/image/1-s2.0-S0898122115001224-mmc1.zip",
             local_name=filename)
 
     import zipfile

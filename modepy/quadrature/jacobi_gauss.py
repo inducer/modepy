@@ -103,7 +103,7 @@ class JacobiGaussQuadrature(Quadrature):
 
             x, w = roots_jacobi(N + 1, alpha, beta)
         else:
-            raise NotImplementedError("Unsupported backend: %s" % backend)
+            raise NotImplementedError(f"Unsupported backend: {backend}")
 
         if force_dim_axis:
             x = x.reshape(1, -1)
@@ -172,11 +172,11 @@ class JacobiGaussQuadrature(Quadrature):
         for n in range(N + 1):
             T[n, n] = b(n)
             if n > 0:
-                T[n, n-1] = current_a   # noqa: F821
+                T[n, n-1] = current_a
             if n < N:
                 next_a = a(n + 1)
                 T[n, n+1] = next_a
-                current_a = next_a      # noqa: F841
+                current_a = next_a
 
         assert la.norm(T - T.T) < 1.0e-12
         eigval, eigvec = la.eigh(T)
