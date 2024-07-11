@@ -332,7 +332,7 @@ def grad_pkdo_2d(
     i, j = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
-    dfa = _cse(grad_jacobi(0, 0, i, a), "dleg_{i}")
+    dfa = _cse(grad_jacobi(0, 0, i, a), f"dleg_{i}")
     gb = _cse(jacobi(2*i+1, 0, j, b), f"jac_{2*i+1}_{j}")
     dgb = _cse(grad_jacobi(2*i+1, 0, j, b), f"djac_{2*i+1}_{j}")
 

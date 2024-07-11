@@ -62,7 +62,7 @@ import numpy as np
 import numpy.linalg as la
 
 from modepy.shapes import Shape, Simplex, TensorProductShape, unit_vertices_for_shape
-from modepy.spaces import PN, FunctionSpace, TensorProductSpace  # noqa: F401
+from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 
 # {{{ equidistant nodes
@@ -241,7 +241,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
             (3, 0, 1, 2, -1),
             ]:
 
-        vi2, vi3, vi4 = [(i1 + vertex_step*i) % 4 for i in range(1, 4)]
+        vi2, vi3, vi4 = ((i1 + vertex_step*i) % 4 for i in range(1, 4))
 
         # all vertices have the same distance from the origin
         tangent1 = equi_vertices[vi3] - equi_vertices[vi4]
@@ -385,7 +385,7 @@ def tensor_product_nodes(
         nodesets = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
         dims = sum(n.shape[0] for n in nodesets)
 
-    result = np.empty((dims,) + tuple([n.shape[-1] for n in nodesets]))
+    result = np.empty((dims, *tuple([n.shape[-1] for n in nodesets])))
 
     d = 0
     for nodes in nodesets:

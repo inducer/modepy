@@ -14,7 +14,7 @@ i = 0
 while i < len(lines):
     ln = lines[i]
     i += 1
-    order, point_count = [int(x) for x in ln.split()]
+    order, point_count = (int(x) for x in ln.split())
 
     points = []
     weights = []
@@ -33,11 +33,11 @@ while i < len(lines):
 from pprint import pformat
 
 
-print("%s = %s" % (rule_name, pformat(table)))
+print(f"{rule_name} = {pformat(table)}")
 
-print("""
+print(f"""
 
-%s = dict(
+{rule_name} = dict(
     (order, dict((name, numpy.array(ary)) for name, ary in rule.iteritems()))
-    for order, rule in %s.iteritems())
-""" % (rule_name, rule_name))
+    for order, rule in {rule_name}.iteritems())
+""")
