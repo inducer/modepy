@@ -331,10 +331,10 @@ class TensorProductShape(Shape):
 
     def __init__(self, bases: Tuple[Shape, ...]) -> None:
         # flatten input shapes
-        bases = sum([
+        bases = sum((
             s.bases if isinstance(s, TensorProductShape) else (s,)
             for s in bases
-            ], ())
+            ), ())
 
         nsegments = len([s for s in bases if s.dim == 1])
         if nsegments < len(bases) - 1:
