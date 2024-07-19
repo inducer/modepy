@@ -119,10 +119,10 @@ class TensorProductSpace(FunctionSpace):
             return FunctionSpace.__new__(cls)
 
     def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
-        self.bases = sum([
+        self.bases = sum((
             space.bases if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
-            ], ())
+            ), ())
 
     def __getnewargs__(self):
         # Ensures TensorProductSpace is picklable
