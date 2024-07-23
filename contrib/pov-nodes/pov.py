@@ -6,7 +6,7 @@ import numpy as np
 
 class File:
     def __init__(self, fnam="out.pov", *items):
-        self.file = open(fnam, "w")
+        self.file = open(fnam, "w")  # noqa: SIM115
         self.__indent = 0
         self.write(*items)
 

@@ -125,10 +125,7 @@ def test_basis_orthogonality(shape, order, ebound):
     maxerr = 0
     for i, f in enumerate(basis.functions):
         for j, g in enumerate(basis.functions):
-            if i == j:
-                true_result = 1
-            else:
-                true_result = 0
+            true_result = 1 if i == j else 0
             result = cub(lambda x: f(x)*g(x))  # noqa: B023
             err = abs(result-true_result)
             logger.info("error %.5e max %.5e", err, maxerr)

@@ -83,6 +83,7 @@ extend-select = [
     "W",   # pycodestyle
     "RUF",
     "UP",
+    "SIM",
 ]
 
 extend-ignore = [

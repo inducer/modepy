@@ -34,6 +34,8 @@ faces = [
     [nt for nt in node_tuples if sum(nt) == n],
 ]
 
+import contextlib
+
 from modepy.tools import barycentric_to_equilateral, unit_to_barycentric
 
 
@@ -77,10 +79,8 @@ for nid in node_tuples:
         child_nids.append(tuple(nid2))
 
     def connect_nids(nid1, nid2):
-        try:
+        with contextlib.suppress(KeyError):
             links.append(Cylinder(id_to_node[nid1], id_to_node[nid2], link_radius))
-        except KeyError:
-            pass
 
     for i, nid2 in enumerate(child_nids):
         connect_nids(nid, nid2)
