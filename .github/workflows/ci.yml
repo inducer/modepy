@@ -19,6 +19,13 @@ jobs:
                 pip install ruff
                 ruff check
 
+    typos:
+        name: Typos
+        runs-on: ubuntu-latest
+        steps:
+        -   uses: actions/checkout@v4
+        -   uses: crate-ci/typos@master
+
     pytest:
         name: Pytest on Py${{ matrix.python-version }}
         runs-on: ubuntu-latest

@@ -5,7 +5,7 @@ This command should install :mod:`modepy`::
 
     pip install modepy
 
-If you are instaling :mod:`modepy` into a global environment, you may need
+If you are installing :mod:`modepy` into a global environment, you may need
 additional permissions (e.g. :command:`sudo`). If you do not have
 `pip <https://pypi.python.org/pypi/pip>`__ installed, you can easily get it
 using::

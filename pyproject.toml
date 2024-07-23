@@ -82,7 +82,7 @@ extend-select = [
     "Q",   # flake8-quotes
     "W",   # pycodestyle
     "RUF",
-    "UP"
+    "UP",
 ]
 
 extend-ignore = [
@@ -126,3 +126,24 @@ module = [
     "scipy.*",
 ]
 ignore_missing_imports = true
+
+[tool.typos.default]
+extend-ignore-re = [
+  "(?Rm)^.*(#|//)\\s*spellchecker:\\s*disable-line$"
+]
+
+[tool.typos.default.extend-words]
+# French paper title
+sur = "sur"
+# The polynomial space
+pn = "pn"
+# nd like n-dimensional
+nd = "nd"
+# SIAM abbreviated journal title
+numer = "numer"
+
+"dependees" = "dependees"
+
+[tool.typos.files]
+extend-exclude = [
+]
