@@ -248,10 +248,7 @@ def _test_diff_matrix(space, shape, rtol=2.0e-4):
     (mp.Hypercube, (6, 7, 5))])
 def test_diff_matrix(dims, shape_cls, order):
     if isinstance(order, tuple):
-        if dims == 1:
-            order = order[dims]
-        else:
-            order = order[:dims]
+        order = order[dims] if dims == 1 else order[:dims]
 
     shape = shape_cls(dims)
     space = mp.space_for_shape(shape, order)

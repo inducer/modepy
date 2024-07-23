@@ -213,6 +213,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial, singledispatch
@@ -553,13 +554,11 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         result = []
 
         def try_add_line(d1, d2):
-            try:
+            with contextlib.suppress(KeyError):
                 result.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     ))
-            except KeyError:
-                pass
 
         # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
@@ -571,14 +570,12 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         result = []
 
         def try_add_tri(d1, d2, d3):
-            try:
+            with contextlib.suppress(KeyError):
                 result.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     node_dict[add_tuples(current, d3)],
                     ))
-            except KeyError:
-                pass
 
         # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
@@ -597,15 +594,13 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         # {{{ tet sub-mesh
 
         def try_add_tet(d1, d2, d3, d4):
-            try:
+            with contextlib.suppress(KeyError):
                 result.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     node_dict[add_tuples(current, d3)],
                     node_dict[add_tuples(current, d4)],
                     ))
-            except KeyError:
-                pass
 
         result = []
         # https://github.com/PyCQA/flake8-bugbear/issues/175
@@ -640,14 +635,11 @@ def _submesh_for_hypercube(shape: TensorProductShape, node_tuples):
     result = []
     node_dict = {ituple: idx for idx, ituple in enumerate(node_tuples)}
     for current in node_tuples:
-        try:
+        with contextlib.suppress(KeyError):
             result.append(tuple(
                     node_dict[add_tuples(current, offset)]
                     for offset in vertex_node_tuples
                     ))
-
-        except KeyError:
-            pass
 
     return result
 
