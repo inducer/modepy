@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from pytools import MovedFunctionDeprecationWrapper
 
 from modepy.matrices import (
     diff_matrices,
@@ -58,6 +59,8 @@ from modepy.nodes import (
     legendre_gauss_lobatto_tensor_product_nodes,
     legendre_gauss_tensor_product_nodes,
     node_tuples_for_space,
+    padua_jacobi_nodes,
+    padua_nodes,
     random_nodes_for_shape,
     tensor_product_nodes,
     warp_and_blend_nodes,
@@ -164,6 +167,8 @@ __all__ = [
     "nodal_quad_mass_matrix_for_face",
     "node_tuples_for_space",
     "orthonormal_basis_for_space",
+    "padua_jacobi_nodes",
+    "padua_nodes",
     "quadrature_for_space",
     "random_nodes_for_shape",
     "resampling_matrix",
@@ -177,8 +182,6 @@ __all__ = [
     "vandermonde",
     "warp_and_blend_nodes",
 ]
-
-from pytools import MovedFunctionDeprecationWrapper
 
 
 get_warp_and_blend_nodes = MovedFunctionDeprecationWrapper(warp_and_blend_nodes)
