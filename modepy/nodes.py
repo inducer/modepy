@@ -385,7 +385,7 @@ def tensor_product_nodes(
         nodesets = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
         dims = sum(n.shape[0] for n in nodesets)
 
-    result = np.empty((dims, *tuple([n.shape[-1] for n in nodesets])))
+    result = np.empty((dims, *tuple(n.shape[-1] for n in nodesets)))
 
     d = 0
     for nodes in nodesets:
@@ -529,12 +529,11 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
     space_index_tuples = (
             [tp[::-1] for tp in gnitb([len(tp) for tp in tuples_for_space[::-1]])])
-    return tuple([
-        concat((
+    return tuple(concat((
             tuples_for_space[i][j]
             for i, j in enumerate(tp)
             ))
-        for tp in space_index_tuples])
+        for tp in space_index_tuples)
 
 
 @equispaced_nodes_for_space.register(TensorProductSpace)

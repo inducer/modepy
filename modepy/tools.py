@@ -496,7 +496,7 @@ def reshape_array_for_tensor_product_space(
                 f"{space.space_dim}, found {ary.shape[axis]} instead")
     return ary.reshape(
             (ary.shape[:axis]
-                + tuple([s.space_dim for s in space.bases])
+                + tuple(s.space_dim for s in space.bases)
                 + ary.shape[axis+1:]),
             order="F")
 
@@ -514,7 +514,7 @@ def unreshape_array_for_tensor_product_space(
     if not (0 <= axis < naxes):
         raise ValueError("invalid axis specified")
 
-    expected_space_dims = tuple([s.space_dim for s in space.bases])
+    expected_space_dims = tuple(s.space_dim for s in space.bases)
     if ary.shape[axis:axis+n_tp_axes] != expected_space_dims:
         raise ValueError(f"array's axes {axis}:{axis+n_tp_axes} must have shape "
                 f"{expected_space_dims}, "
