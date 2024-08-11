@@ -979,10 +979,10 @@ class TensorProductBasis(Basis):
     @property
     def functions(self) -> Tuple[BasisFunctionType, ...]:
         return tuple(
-                _TensorProductBasisFunction(mid, tuple([
-                    self.bases[ibasis].functions[mid_i]
-                    for ibasis, mid_i in enumerate(mid)
-                    ]),
+                _TensorProductBasisFunction(
+                    mid,
+                    tuple(self.bases[ibasis].functions[mid_i]
+                            for ibasis, mid_i in enumerate(mid)),
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
 
@@ -993,14 +993,13 @@ class TensorProductBasis(Basis):
         grad_bases = [b.gradients for b in self._bases]
         func = (bases, grad_bases)
         return tuple(
-                _TensorProductGradientBasisFunction(mid, tuple([
-                    tuple([
-                        func[is_deriv][ibasis][mid_i]
-                        for ibasis, (is_deriv, mid_i) in enumerate(
-                            zip(deriv_indicator_vec, mid))
-                        ])
-                    for deriv_indicator_vec in wandering_element(self._nbases)
-                    ]),
+                _TensorProductGradientBasisFunction(
+                    mid,
+                    tuple(
+                        tuple(func[is_deriv][ibasis][mid_i]
+                            for ibasis, (is_deriv, mid_i) in enumerate(
+                                zip(deriv_indicator_vec, mid)))
+                        for deriv_indicator_vec in wandering_element(self._nbases)),
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
 
@@ -1020,7 +1019,7 @@ def _orthonormal_basis_for_tp(
 
     return TensorProductBasis(
             bases,
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple(b.spatial_dim for b in space.bases))
 
 
 @basis_for_space.register(TensorProductSpace)
@@ -1034,7 +1033,7 @@ def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
     bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
     return TensorProductBasis(
             bases,
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple(b.spatial_dim for b in space.bases))
 
 
 @monomial_basis_for_space.register(TensorProductSpace)
@@ -1048,7 +1047,7 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape)
 
     return TensorProductBasis(
             bases,
-            dims_per_basis=tuple([b.spatial_dim for b in space.bases]))
+            dims_per_basis=tuple(b.spatial_dim for b in space.bases))
 
 # }}}
 

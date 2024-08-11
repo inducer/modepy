@@ -230,8 +230,8 @@ def _test_diff_matrix(space, shape, rtol=2.0e-4):
         diff_mat = (diff_mat,)
 
     f = sum(np.sin(nodes[i]) for i in range(shape.dim))
-    df_dx = tuple([np.cos(nodes[i]) for i in range(shape.dim)])
-    df_dx_num = tuple([np.dot(diff_mat[i], f) for i in range(shape.dim)])
+    df_dx = tuple(np.cos(nodes[i]) for i in range(shape.dim))
+    df_dx_num = tuple(np.dot(diff_mat[i], f) for i in range(shape.dim))
 
     for i in range(shape.dim):
         error = la.norm(df_dx[i] - df_dx_num[i]) / la.norm(df_dx[i])
@@ -500,7 +500,7 @@ def test_tensor_product_shapes():
 def test_tensor_product_reshape(dim):
     interval = mp.Simplex(1)
     shape = mp.TensorProductShape((interval,) * dim)
-    space = mp.TensorProductSpace(tuple([mp.PN(1, 4+i) for i in range(dim)]))
+    space = mp.TensorProductSpace(tuple(mp.PN(1, 4+i) for i in range(dim)))
     basis = mp.basis_for_space(space, shape)
 
     from modepy.tools import reshape_array_for_tensor_product_space
@@ -560,7 +560,7 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 
     interval = mp.Simplex(1)
     shape = mp.TensorProductShape((interval,) * dim)
-    space = mp.TensorProductSpace(tuple([mp.PN(1, 4+i) for i in range(dim)]))
+    space = mp.TensorProductSpace(tuple(mp.PN(1, 4+i) for i in range(dim)))
     basis = mp.basis_for_space(space, shape)
 
     nodes = mp.edge_clustered_nodes_for_space(space, shape)

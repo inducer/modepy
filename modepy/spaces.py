@@ -169,9 +169,8 @@ def _space_for_tensor_product_shape(
 
         orders = order
 
-    return TensorProductSpace(tuple([
-        space_for_shape(shape.bases[i], orders[i]) for i in range(nbases)
-        ]))
+    return TensorProductSpace(
+          tuple(space_for_shape(shape.bases[i], orders[i]) for i in range(nbases)))
 
 # }}}
 
