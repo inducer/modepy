@@ -9,7 +9,7 @@ from modepy.nodes import warp_factor
 for n in [1, 2, 4, *list(range(6, 30, 5))]:
     pt.plot(x,
             warp_factor(n, x, scaled=False),
-            label="N=%d" % n)
+            label=f"N={n}")
 
 pt.legend()
 pt.show()
