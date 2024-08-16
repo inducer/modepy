@@ -621,7 +621,7 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
 
         # }}}
     else:
-        raise NotImplementedError("%d-dimensional sub-meshes" % dims)
+        raise NotImplementedError(f"{dims}-dimensional sub-meshes")
 
 
 @submesh_for_shape.register(TensorProductShape)

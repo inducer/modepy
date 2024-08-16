@@ -349,7 +349,7 @@ def plot_element_values(
             ax.plot(orig_nodes[0], orig_nodes[1], orig_values, "ko", ms=5)
         pt.show()
     else:
-        raise RuntimeError("unsupported dimensionality %d" % dims)
+        raise RuntimeError(f"unsupported dimensionality {dims}")
 
 # }}}
 

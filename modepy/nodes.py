@@ -341,7 +341,7 @@ def warp_and_blend_nodes(
         return warp_and_blend_nodes_3d(n, node_tuples)
 
     else:
-        raise NotImplementedError("%d-dimensional node sets" % dims)
+        raise NotImplementedError(f"{dims}-dimensional node sets")
 
 # }}}
 
