@@ -25,7 +25,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from modepy.quadrature import Quadrature
+from modepy.quadrature import Quadrature, inf
 
 
 def _extended_euclidean(q: int, r: int) -> Tuple[int, int, int]:
@@ -92,7 +92,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
         d = 2*s + 1
 
         if dimension == 0:
-            super().__init__(np.zeros((dimension, 1)), np.ones(1))
+            super().__init__(np.zeros((dimension, 1)), np.ones(1), exact_to=inf)
             return
 
         import math
