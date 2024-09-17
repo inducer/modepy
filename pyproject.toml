@@ -115,6 +115,7 @@ known-local-folder = [
     "modepy",
 ]
 lines-after-imports = 2
+required-imports = ["from __future__ import annotations"]
 
 [tool.mypy]
 warn_unused_ignores = true

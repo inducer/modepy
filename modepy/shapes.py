@@ -187,6 +187,8 @@ Submeshes
 """
 
 # }}}
+from __future__ import annotations
+
 
 __copyright__ = """
 Copyright (c) 2013 Andreas Kloeckner
@@ -217,7 +219,7 @@ import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import Any, Callable, Dict, Sequence, Tuple
+from typing import Any, Callable, Sequence
 
 import numpy as np
 
@@ -258,7 +260,7 @@ class Face:
     """The volume :class:`Shape` to which the face belongs."""
     face_index: int
     """The face index in :attr:`volume_shape` of this face."""
-    volume_vertex_indices: Tuple[int, ...]
+    volume_vertex_indices: tuple[int, ...]
     """A tuple of indices into the vertices returned by
     :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
     """
@@ -301,7 +303,7 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
 
 
 @singledispatch
-def faces_for_shape(shape: Shape) -> Tuple[Face, ...]:
+def faces_for_shape(shape: Shape) -> tuple[Face, ...]:
     r"""
     :returns: a tuple of :class:`Face`\ s representing the faces of *shape*.
     """
@@ -320,17 +322,17 @@ class TensorProductShape(Shape):
     results in a prism shape. Special cases include the :class:`Hypercube`.
     """
 
-    bases: Tuple[Shape, ...]
+    bases: tuple[Shape, ...]
     """A :class:`tuple` of base shapes that form the tensor product."""
 
     # NOTE: https://github.com/python/mypy/issues/1020
-    def __new__(cls, bases: Tuple[Shape, ...]) -> Any:
+    def __new__(cls, bases: tuple[Shape, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
         else:
             return Shape.__new__(cls)
 
-    def __init__(self, bases: Tuple[Shape, ...]) -> None:
+    def __init__(self, bases: tuple[Shape, ...]) -> None:
         # flatten input shapes
         bases = sum((
             s.bases if isinstance(s, TensorProductShape) else (s,)
@@ -411,7 +413,7 @@ def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-_SIMPLEX_FACES: Dict[int, Tuple[Tuple[int, ...], ...]] = {
+_SIMPLEX_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
             1: ((0,), (1,)),
             2: ((0, 1), (2, 0), (1, 2)),
             3: ((0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3))
@@ -488,7 +490,7 @@ def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
     return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
 
 
-_HYPERCUBE_FACES: Dict[int, Tuple[Tuple[int, ...], ...]] = {
+_HYPERCUBE_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
         1: ((0b0,), (0b1,)),
         2: ((0b00, 0b01), (0b11, 0b10), (0b10, 0b00), (0b01, 0b11)),
         3: (
@@ -525,8 +527,8 @@ def _faces_for_hypercube(shape: Hypercube):
 
 @singledispatch
 def submesh_for_shape(
-        shape: Shape, node_tuples: Sequence[Tuple[int, ...]]
-        ) -> Sequence[Tuple[int, ...]]:
+        shape: Shape, node_tuples: Sequence[tuple[int, ...]]
+        ) -> Sequence[tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
     generate a tessellation of the reference element.
 

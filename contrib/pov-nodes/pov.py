@@ -1,4 +1,6 @@
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/205451
+from __future__ import annotations
+
 import os
 
 import numpy as np

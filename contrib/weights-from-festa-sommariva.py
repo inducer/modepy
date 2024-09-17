@@ -11,6 +11,7 @@ The quadrature rules extracted here can be found
 
 These rules are licensed under the GPL and are not included by default.
 """
+from __future__ import annotations
 
 import re
 

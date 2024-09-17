@@ -9,6 +9,7 @@ from
 
 They are available under a Creative Commons license.
 """
+from __future__ import annotations
 
 import os
 

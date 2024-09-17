@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
 __license__ = """
@@ -21,14 +24,13 @@ THE SOFTWARE.
 """
 
 from functools import reduce
-from typing import Dict, List, Tuple
 
 import numpy as np
 
 from modepy.quadrature import Quadrature, inf
 
 
-def _extended_euclidean(q: int, r: int) -> Tuple[int, int, int]:
+def _extended_euclidean(q: int, r: int) -> tuple[int, int, int]:
     """Return a tuple (p, a, b) such that p = aq + br,
     where p is the greatest common divisor.
     """
@@ -55,7 +57,7 @@ def _gcd(q: int, r: int) -> int:
     return _extended_euclidean(q, r)[0]
 
 
-def _simplify_fraction(xxx_todo_changeme: Tuple[int, int]) -> Tuple[int, int]:
+def _simplify_fraction(xxx_todo_changeme: tuple[int, int]) -> tuple[int, int]:
     (a, b) = xxx_todo_changeme
     gcd = _gcd(a, b)
     return (a//gcd, b//gcd)
@@ -103,7 +105,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             wandering_element,
         )
 
-        points_to_weights: Dict[Tuple[Tuple[int, int], ...], np.ndarray] = {}
+        points_to_weights: dict[tuple[tuple[int, int], ...], np.ndarray] = {}
 
         for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
@@ -127,8 +129,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
                 + [np.array(x)
                     for x in wandering_element(n, landscape=-1, wanderer=1)])
 
-        nodes: List[np.ndarray] = []
-        weights: List[np.ndarray] = []
+        nodes: list[np.ndarray] = []
+        weights: list[np.ndarray] = []
 
         dim_factor = 2**n
         for p, w in points_to_weights.items():

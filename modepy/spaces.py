@@ -21,6 +21,8 @@ Function Spaces
 
 .. autofunction:: space_for_shape
 """
+from __future__ import annotations
+
 
 __copyright__ = "Copyright (C) 2020 Andreas Kloeckner"
 
@@ -47,7 +49,7 @@ THE SOFTWARE.
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from numbers import Number
-from typing import Any, Tuple, Union
+from typing import Any
 
 import numpy as np
 
@@ -81,7 +83,7 @@ class FunctionSpace(ABC):
 
 @singledispatch
 def space_for_shape(
-        shape: Shape, order: Union[int, Tuple[int, ...]]
+        shape: Shape, order: int | tuple[int, ...]
         ) -> FunctionSpace:
     r"""Return an unspecified instance of :class:`FunctionSpace` suitable
     for approximation on *shape* attaining interpolation error of
@@ -108,17 +110,17 @@ class TensorProductSpace(FunctionSpace):
     :func:`~modepy.tools.reshape_array_for_tensor_product_space`.
     """
 
-    bases: Tuple[FunctionSpace, ...]
+    bases: tuple[FunctionSpace, ...]
     """A :class:`tuple` of the base spaces that take part in the tensor product."""
 
     # NOTE: https://github.com/python/mypy/issues/1020
-    def __new__(cls, bases: Tuple[FunctionSpace, ...]) -> Any:
+    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
         else:
             return FunctionSpace.__new__(cls)
 
-    def __init__(self, bases: Tuple[FunctionSpace, ...]) -> None:
+    def __init__(self, bases: tuple[FunctionSpace, ...]) -> None:
         self.bases = sum((
             space.bases if isinstance(space, TensorProductSpace) else (space,)
             for space in bases
@@ -156,7 +158,7 @@ class TensorProductSpace(FunctionSpace):
 @space_for_shape.register(TensorProductShape)
 def _space_for_tensor_product_shape(
         shape: TensorProductShape,
-        order: Union[int, Tuple[int, ...]]) -> TensorProductSpace:
+        order: int | tuple[int, ...]) -> TensorProductSpace:
     nbases = len(shape.bases)
     if isinstance(order, Number):
         assert isinstance(order, int)
@@ -213,7 +215,7 @@ class PN(FunctionSpace):
 
 
 @space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: Union[int, Tuple[int, ...]]) -> PN:
+def _space_for_simplex(shape: Simplex, order: int | tuple[int, ...]) -> PN:
     assert isinstance(order, int)
     return PN(shape.dim, order)
 

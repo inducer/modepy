@@ -31,6 +31,8 @@ Types used in documentation
     .. method::: reshape
 
 """
+from __future__ import annotations
+
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -59,7 +61,7 @@ from math import (
     gamma,  # noqa: F401
     sqrt,
 )
-from typing import Dict, Optional, Protocol, Tuple, TypeVar, runtime_checkable
+from typing import Protocol, TypeVar, runtime_checkable
 from warnings import warn
 
 import numpy as np
@@ -172,7 +174,7 @@ class AffineMap:
 
 # {{{ simplex coordinate mapping
 
-EQUILATERAL_TO_UNIT_MAP: Dict[int, AffineMap] = {
+EQUILATERAL_TO_UNIT_MAP: dict[int, AffineMap] = {
         1: AffineMap([[1]], [0]),
         2: AffineMap([
             [1, -1/sqrt(3)],
@@ -294,8 +296,8 @@ def plot_element_values(
         n: int,
         nodes: np.ndarray,
         values: np.ndarray,
-        resample_n: Optional[int] = None,
-        node_tuples: Optional[Tuple[int, ...]] = None,
+        resample_n: int | None = None,
+        node_tuples: tuple[int, ...] | None = None,
         show_nodes: bool = False) -> None:
     """
     :arg n: order of the polynomial basis.
@@ -384,7 +386,7 @@ def _evaluate_lebesgue_function(n, nodes, shape):
 def estimate_lebesgue_constant(
         n: int,
         nodes: np.ndarray,
-        shape: Optional[shp.Shape] = None,
+        shape: shp.Shape | None = None,
         *,
         visualize: bool = False) -> float:
     """Estimate the
@@ -461,11 +463,11 @@ def estimate_lebesgue_constant(
 
 @runtime_checkable
 class Reshapeable(Protocol):
-    shape: Tuple[int, ...]
+    shape: tuple[int, ...]
 
     def reshape(
-            self: "ReshapeableT", *newshape: Tuple[int, ...], order: str
-            ) -> "ReshapeableT":
+            self: ReshapeableT, *newshape: tuple[int, ...], order: str
+            ) -> ReshapeableT:
         ...
 
 

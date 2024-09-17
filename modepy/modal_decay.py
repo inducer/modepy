@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __copyright__ = "Copyright (C) 2010-2012 Andreas Kloeckner"
 
 __license__ = """
@@ -20,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from typing import Tuple
 
 import numpy as np
 import numpy.linalg as la
@@ -88,7 +90,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
 
 
 def make_mode_number_vector(
-        mode_order_tuples: Tuple[Tuple[int, ...], ...],
+        mode_order_tuples: tuple[tuple[int, ...], ...],
         ignored_modes: int) -> np.ndarray:
     node_cnt = len(mode_order_tuples)
 
@@ -152,7 +154,7 @@ def skyline_pessimize(modal_values: np.ndarray) -> np.ndarray:
 
 def fit_modal_decay(
         coeffs: np.ndarray, dims: int, n: int,
-        ignored_modes: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+        ignored_modes: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """Fit a curve to the modal decay on each element.
 
     :arg coeffs: an array of shape ``(num_elements, num_modes)`` containing modal
