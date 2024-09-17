@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 "
 "Andreas Kloeckner, Tim Warburton, Jan Hesthaven, Xueyu Zhu")
 
@@ -29,12 +32,9 @@ from typing import (
     Callable,
     Hashable,
     Iterable,
-    List,
-    Optional,
     Sequence,
     Tuple,
     TypeVar,
-    Union,
 )
 
 import numpy as np
@@ -276,7 +276,7 @@ def scaled_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValue
 
 def _rstoab(
         r: RealValueT, s: RealValueT,
-        tol: float = 1.0e-12) -> Tuple[RealValueT, RealValueT]:
+        tol: float = 1.0e-12) -> tuple[RealValueT, RealValueT]:
     """Transfer from (r, s) -> (a, b) coordinates in triangle."""
 
     # We may divide by zero below (or close to it), but we won't use the
@@ -287,7 +287,7 @@ def _rstoab(
     return a, b
 
 
-def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
+def pkdo_2d(order: tuple[int, int], rs: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -311,8 +311,8 @@ def pkdo_2d(order: Tuple[int, int], rs: np.ndarray) -> np.ndarray:
 
 
 def grad_pkdo_2d(
-        order: Tuple[int, int],
-        rs: np.ndarray) -> Tuple[RealValueT, RealValueT]:
+        order: tuple[int, int],
+        rs: np.ndarray) -> tuple[RealValueT, RealValueT]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -368,7 +368,7 @@ def grad_pkdo_2d(
 
 def _rsttoabc(
         r: RealValueT, s: RealValueT, t: RealValueT,
-        tol: float = 1.0e-10) -> Tuple[RealValueT, RealValueT, RealValueT]:
+        tol: float = 1.0e-10) -> tuple[RealValueT, RealValueT, RealValueT]:
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
     with np.errstate(all="ignore"):
@@ -379,7 +379,7 @@ def _rsttoabc(
     return a, b, c
 
 
-def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
+def pkdo_3d(order: tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -405,8 +405,8 @@ def pkdo_3d(order: Tuple[int, int, int], rst: np.ndarray) -> np.ndarray:
 
 
 def grad_pkdo_3d(
-        order: Tuple[int, int, int],
-        rst: np.ndarray) -> Tuple[RealValueT, RealValueT, RealValueT]:
+        order: tuple[int, int, int],
+        rst: np.ndarray) -> tuple[RealValueT, RealValueT, RealValueT]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -474,7 +474,7 @@ def grad_pkdo_3d(
 
 # {{{ monomials
 
-def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
+def monomial(order: tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     """Evaluate the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -488,7 +488,7 @@ def monomial(order: Tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     return product(rst[i] ** order[i] for i in range(dim))
 
 
-def grad_monomial(order: Tuple[int, ...], rst: np.ndarray) -> Tuple[RealValueT, ...]:
+def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[RealValueT, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -551,9 +551,9 @@ class _TensorProductBasisFunction:
     """
 
     def __init__(self,
-            multi_index: Tuple[Hashable, ...],
-            functions: Tuple[Callable[[np.ndarray], np.ndarray], ...], *,
-            dims_per_function: Tuple[int, ...]) -> None:
+            multi_index: tuple[Hashable, ...],
+            functions: tuple[Callable[[np.ndarray], np.ndarray], ...], *,
+            dims_per_function: tuple[int, ...]) -> None:
         assert len(dims_per_function) == len(functions)
 
         self.multi_index = multi_index
@@ -634,11 +634,11 @@ class _TensorProductGradientBasisFunction:
     """
 
     def __init__(self,
-            multi_index: Tuple[int, ...],
-            derivatives: Tuple[Tuple[
-                Callable[[np.ndarray], Union[np.ndarray, Tuple[np.ndarray, ...]]],
+            multi_index: tuple[int, ...],
+            derivatives: tuple[tuple[
+                Callable[[np.ndarray], np.ndarray | tuple[np.ndarray, ...]],
                 ...], ...], *,
-            dims_per_function: Tuple[int, ...]) -> None:
+            dims_per_function: tuple[int, ...]) -> None:
         assert all(len(dims_per_function) == len(df) for df in derivatives)
 
         self.multi_index = multi_index
@@ -684,10 +684,10 @@ class _TensorProductGradientBasisFunction:
 # {{{ conversion to symbolic
 
 def symbolicize_function(
-        f: Callable[[RealValueT], Union[RealValueT, Tuple[RealValueT, ...]]],
+        f: Callable[[RealValueT], RealValueT | tuple[RealValueT, ...]],
         dim: int,
         ref_coord_var_name: str = "r",
-        ) -> Union[RealValueT, Tuple[RealValueT, ...]]:
+        ) -> RealValueT | tuple[RealValueT, ...]:
     """For a function *f* (basis or gradient) returned by one of the functions in
     this module, return a :mod:`pymbolic` expression representing the
     same function.
@@ -743,7 +743,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def mode_ids(self) -> Tuple[Hashable, ...]:
+    def mode_ids(self) -> tuple[Hashable, ...]:
         """A tuple of of mode (basis function) identifiers, one for
         each basis function. Mode identifiers should generally be viewed
         as opaque. They are hashable. For some bases, they are tuples of
@@ -753,7 +753,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def functions(self) -> Tuple[BasisFunctionType, ...]:
+    def functions(self) -> tuple[BasisFunctionType, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
@@ -761,7 +761,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def gradients(self) -> Tuple[BasisGradientType, ...]:
+    def gradients(self) -> tuple[BasisGradientType, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
@@ -798,13 +798,13 @@ def zerod_basis(x: np.ndarray) -> np.ndarray:
 
 # {{{ PN bases
 
-def _pkdo_1d(order: Tuple[int], r: np.ndarray) -> np.ndarray:
+def _pkdo_1d(order: tuple[int], r: np.ndarray) -> np.ndarray:
     i, = order
     r0, = r
     return jacobi(0, 0, i, r0)
 
 
-def _grad_pkdo_1d(order: Tuple[int], r: np.ndarray) -> Tuple[np.ndarray]:
+def _grad_pkdo_1d(order: tuple[int], r: np.ndarray) -> tuple[np.ndarray]:
     i, = order
     r0, = r
     return (grad_jacobi(0, 0, i, r0),)
@@ -906,7 +906,7 @@ class TensorProductBasis(Basis):
 
     def __init__(self,
             bases: Sequence[Basis],
-            dims_per_basis: Optional[Tuple[int, ...]] = None) -> None:
+            dims_per_basis: tuple[int, ...] | None = None) -> None:
         """
         :param bases: a sequence of 1D bases used to construct the tensor
             product approximation basis.
@@ -940,7 +940,7 @@ class TensorProductBasis(Basis):
         return len(self._bases)
 
     @property
-    def _mode_index_tuples(self) -> Tuple[Tuple[int, ...], ...]:
+    def _mode_index_tuples(self) -> tuple[tuple[int, ...], ...]:
         from pytools import generate_nonnegative_integer_tuples_below as gnitb
 
         # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
@@ -949,7 +949,7 @@ class TensorProductBasis(Basis):
                                        for b in self._bases[::-1]]))
 
     @property
-    def mode_ids(self) -> Tuple[Hashable, ...]:
+    def mode_ids(self) -> tuple[Hashable, ...]:
         underlying_mode_id_lists = [basis.mode_ids for basis in self._bases]
         is_all_singletons_with_int = [
                 all(isinstance(mid, tuple) and len(mid) == 1
@@ -957,9 +957,9 @@ class TensorProductBasis(Basis):
                     for mid in mode_id_list)
                 for mode_id_list in underlying_mode_id_lists]
 
-        def part_flat_tuple(iterable: Iterable[Tuple[bool, Hashable]]
-                            ) -> Tuple[Hashable, ...]:
-            result: List[Hashable] = []
+        def part_flat_tuple(iterable: Iterable[tuple[bool, Hashable]]
+                            ) -> tuple[Hashable, ...]:
+            result: list[Hashable] = []
             for flatten, item in iterable:
                 if flatten:
                     assert isinstance(item, tuple)
@@ -977,7 +977,7 @@ class TensorProductBasis(Basis):
                 for mode_index_tuple in self._mode_index_tuples)
 
     @property
-    def functions(self) -> Tuple[BasisFunctionType, ...]:
+    def functions(self) -> tuple[BasisFunctionType, ...]:
         return tuple(
                 _TensorProductBasisFunction(
                     mid,
@@ -987,7 +987,7 @@ class TensorProductBasis(Basis):
                 for mid in self._mode_index_tuples)
 
     @property
-    def gradients(self) -> Tuple[BasisGradientType, ...]:
+    def gradients(self) -> tuple[BasisGradientType, ...]:
         from pytools import wandering_element
         bases = [b.functions for b in self._bases]
         grad_bases = [b.gradients for b in self._bases]

@@ -30,6 +30,9 @@ Hypercubes
 .. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
 """
 
+from __future__ import annotations
+
+
 __copyright__ = "Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, " \
         "Tim Warburton, Jan Hesthaven, Xueyu Zhu"
 
@@ -56,7 +59,7 @@ THE SOFTWARE.
 # }}}
 
 from functools import partial, singledispatch
-from typing import Optional, Sequence, Tuple, Union
+from typing import Sequence
 
 import numpy as np
 import numpy.linalg as la
@@ -69,7 +72,7 @@ from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 def equidistant_nodes(
         dims: int, n: int,
-        node_tuples: Optional[Sequence[Tuple[int, ...]]] = None
+        node_tuples: Sequence[tuple[int, ...]] | None = None
         ) -> np.ndarray:
     """
     :arg dims: dimensionality of desired simplex
@@ -288,7 +291,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 def warp_and_blend_nodes(
         dims: int, n: int,
-        node_tuples: Optional[Sequence[Tuple[int, ...]]] = None) -> np.ndarray:
+        node_tuples: Sequence[tuple[int, ...]] | None = None) -> np.ndarray:
     """Return interpolation nodes as described in [warburton-nodes]_
 
     .. [warburton-nodes] Warburton, T.
@@ -351,8 +354,8 @@ def warp_and_blend_nodes(
 # {{{ tensor product nodes
 
 def tensor_product_nodes(
-        dims_or_nodes: Union[int, Sequence[np.ndarray]],
-        nodes_1d: Optional[np.ndarray] = None) -> np.ndarray:
+        dims_or_nodes: int | Sequence[np.ndarray],
+        nodes_1d: np.ndarray | None = None) -> np.ndarray:
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -428,7 +431,7 @@ def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray
 # {{{ space-based interface
 
 @singledispatch
-def node_tuples_for_space(space: FunctionSpace) -> Sequence[Tuple[int]]:
+def node_tuples_for_space(space: FunctionSpace) -> Sequence[tuple[int]]:
     raise NotImplementedError(type(space).__name__)
 
 
@@ -445,7 +448,7 @@ def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> np.nda
 @singledispatch
 def random_nodes_for_shape(
         shape: Shape, nnodes: int,
-        rng: Optional[np.random.Generator] = None) -> np.ndarray:
+        rng: np.random.Generator | None = None) -> np.ndarray:
     """
     :arg rng: a :class:`numpy.random.Generator`.
 

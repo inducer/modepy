@@ -51,7 +51,8 @@ THE SOFTWARE.
 """
 
 from functools import singledispatch
-from typing import Callable, Iterable, Optional, Sequence
+from numbers import Number
+from typing import Callable, Iterable, Sequence
 
 import numpy as np
 
@@ -226,7 +227,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
 
     def __init__(self,
                  N: int, dims: int,  # noqa: N803
-                 backend: Optional[str] = None) -> None:
+                 backend: str | None = None) -> None:
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
         super().__init__([
             LegendreGaussQuadrature(N, backend=backend, force_dim_axis=True)
@@ -240,7 +241,7 @@ class LegendreGaussLobattoTensorProductQuadrature(TensorProductQuadrature):
 
     def __init__(self,
                  N: int, dims: int,  # noqa: N803
-                 backend: Optional[str] = None) -> None:
+                 backend: str | None = None) -> None:
         from modepy.quadrature.jacobi_gauss import LegendreGaussLobattoQuadrature
         super().__init__([
             LegendreGaussLobattoQuadrature(N, backend=backend, force_dim_axis=True)

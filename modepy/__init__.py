@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __copyright__ = """Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton,
     Jan Hesthaven, Xueyu Zhu"""
 

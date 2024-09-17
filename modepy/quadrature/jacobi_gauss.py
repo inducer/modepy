@@ -25,6 +25,8 @@
 .. autoclass:: JacobiGaussLobattoQuadrature
 .. autoclass:: LegendreGaussLobattoQuadrature
 """
+from __future__ import annotations
+
 
 __copyright__ = "Copyright (C) 2007 Andreas Kloeckner"
 
@@ -48,7 +50,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from typing import Optional, Tuple
 
 import numpy as np
 import numpy.linalg as la
@@ -73,7 +74,7 @@ class JacobiGaussQuadrature(Quadrature):
 
     def __init__(self,
             alpha: float, beta: float, N: int,                  # noqa: N803
-            backend: Optional[str] = None,
+            backend: str | None = None,
             force_dim_axis: bool = False) -> None:
         r"""
         :arg backend: Either ``"builtin"`` or ``"scipy"``. When the
@@ -119,7 +120,7 @@ class JacobiGaussQuadrature(Quadrature):
     @staticmethod
     def compute_weights_and_nodes(
             N: int, alpha: float, beta: float,  # noqa: N803
-            ) -> Tuple[np.ndarray, np.ndarray]:
+            ) -> tuple[np.ndarray, np.ndarray]:
         """
         :arg N: order of the Gauss quadrature (the order of exactly
             integrated polynomials is :math:`2 N + 1`).
@@ -203,7 +204,7 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
 
     def __init__(self,
                  N: int, backend:  # noqa: N803
-                 Optional[str] = None,
+                 str | None = None,
                  force_dim_axis: bool = False) -> None:
         super().__init__(
                 0, 0, N,
@@ -225,7 +226,7 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     def __init__(self,
                  N: int,  # noqa: N803
                  kind: int = 1,
-                 backend: Optional[str] = None,
+                 backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
         if kind == 1:
             alpha = beta = -0.5
@@ -248,7 +249,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 
     def __init__(self,
                  alpha: float, N: int,  # noqa: N803
-                 backend: Optional[str] = None,
+                 backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
         super().__init__(
                 alpha, alpha, N,
@@ -257,7 +258,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 
 def jacobi_gauss_lobatto_nodes(
         alpha: float, beta: float, N: int,          # noqa: N803
-        backend: Optional[str] = None,
+        backend: str | None = None,
         force_dim_axis: bool = False) -> np.ndarray:
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
@@ -287,7 +288,7 @@ def jacobi_gauss_lobatto_nodes(
 
 def legendre_gauss_lobatto_nodes(
         N: int,                     # noqa: N803
-        backend: Optional[str] = None,
+        backend: str | None = None,
         force_dim_axis: bool = False) -> np.ndarray:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
     *N+1* is the number of nodes.
@@ -314,7 +315,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
 
     def __init__(self,
             alpha: float, beta: float, N: int,  # noqa: N803
-            *, backend: Optional[str] = None,
+            *, backend: str | None = None,
             force_dim_axis: bool = False) -> None:
         nodes = jacobi_gauss_lobatto_nodes(alpha, beta, N, backend)
 
@@ -381,7 +382,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
 
 class LegendreGaussLobattoQuadrature(JacobiGaussLobattoQuadrature):
     def __init__(
-                self, N, *, backend: Optional[str] = None,  # noqa: N803
+                self, N, *, backend: str | None = None,  # noqa: N803
                 force_dim_axis: bool = False
             ) -> None:
         super().__init__(0, 0, N, backend=backend, force_dim_axis=force_dim_axis)

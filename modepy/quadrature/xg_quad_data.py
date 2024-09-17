@@ -1,6 +1,8 @@
 # GENERATED, DO NOT EDIT
 # Xiao-Gimbutas quadratures
 # http://dx.doi.org/10.1016/j.camwa.2009.10.027
+from __future__ import annotations
+
 import numpy
 
 

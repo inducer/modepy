@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
 __license__ = """
@@ -21,7 +24,7 @@ THE SOFTWARE.
 """
 
 
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Sequence
 from warnings import warn
 
 import numpy as np
@@ -117,7 +120,7 @@ def vandermonde(
 def multi_vandermonde(
             functions: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
             nodes: np.ndarray
-        ) -> Tuple[np.ndarray, ...]:
+        ) -> tuple[np.ndarray, ...]:
     """Evaluate multiple (generalized) Vandermonde matrices.
 
     The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
@@ -213,8 +216,8 @@ def differentiation_matrices(
             basis: Sequence[Callable[[np.ndarray], np.ndarray]],
             grad_basis: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
             nodes: np.ndarray,
-            from_nodes: Optional[np.ndarray] = None
-        ) -> Tuple[np.ndarray, ...]:
+            from_nodes: np.ndarray | None = None
+        ) -> tuple[np.ndarray, ...]:
     """Return matrices carrying out differentiation on nodal values in the
     :math:`(r,s,t)` unit directions. (See :ref:`tri-coords` and
     :ref:`tet-coords`.)
@@ -253,7 +256,7 @@ def differentiation_matrices(
 def diff_matrices(
             basis: Basis,
             nodes: np.ndarray,
-            from_nodes: Optional[np.ndarray] = None
+            from_nodes: np.ndarray | None = None
         ):
     """Like :func:`differentiation_matrices`, but for a given :class:`~modepy.Basis`.
 
@@ -264,7 +267,7 @@ def diff_matrices(
 
 
 def diff_matrix_permutation(
-            node_tuples: Sequence[Tuple[int, ...]],
+            node_tuples: Sequence[tuple[int, ...]],
             ref_axis: int
         ) -> np.ndarray:
     """Return a :mod:`numpy` array *permutation* of integers so that::
@@ -290,7 +293,7 @@ def diff_matrix_permutation(
 
 
 def inverse_mass_matrix(
-            basis: Union[Basis, Sequence[Callable[[np.ndarray], np.ndarray]]],
+            basis: Basis | Sequence[Callable[[np.ndarray], np.ndarray]],
             nodes: np.ndarray
         ) -> np.ndarray:
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
@@ -325,7 +328,7 @@ def inverse_mass_matrix(
 
 
 def mass_matrix(
-            basis: Union[Basis, Sequence[Callable[[np.ndarray], np.ndarray]]],
+            basis: Basis | Sequence[Callable[[np.ndarray], np.ndarray]],
             nodes: np.ndarray
         ) -> np.ndarray:
     r"""Return a mass matrix :math:`M`, which obeys
@@ -370,7 +373,7 @@ def modal_quad_mass_matrix(
 def nodal_quad_mass_matrix(
             quadrature: Quadrature,
             test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            nodes: Optional[np.ndarray] = None,
+            nodes: np.ndarray | None = None,
         ) -> np.ndarray:
     r"""Using the *quadrature*, provide a matrix :math:`M` that
     satisfies:

@@ -10,12 +10,12 @@ The associated paper is
 The quadrature rules can be found in the supplemental material at the same
 URL and should be a file named ``nme6528-sup-0002-supinfo.tar``.
 """
+from __future__ import annotations
 
 import pathlib
 import re
 import sys
 import tarfile
-from typing import Optional
 
 
 FILE_ORDER_REGEX = re.compile(r"cubature_tet_sym_p(\d{1,2})_n\d{1,3}_expand.txt")
@@ -64,7 +64,7 @@ def extract_rules_if_not(path: pathlib.Path) -> pathlib.Path:
 
 
 def generate_jaskowiec_sukumar_quadrature_rules(
-    infolder: pathlib.Path, outfile: Optional[pathlib.Path] = None
+    infolder: pathlib.Path, outfile: pathlib.Path | None = None
 ) -> None:
     import numpy as np
 
