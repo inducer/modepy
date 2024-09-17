@@ -9,7 +9,23 @@
     :show-inheritance:
 
 .. autofunction:: quadrature_for_space
+
+.. currentmodule:: modepy.quadrature
+
+.. class:: Quadrature
+
+    See :class:`modepy.Quadrature`.
+
+.. class:: _Inf
+
+    A sentinel type for infinite results. Do not use directly. Use
+    :func:`isinf` instead.
+
+.. autofunction:: isinf
 """
+
+from __future__ import annotations
+
 
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
         "Jan Hesthaven, Xueyu Zhu")
@@ -50,13 +66,35 @@ class QuadratureRuleUnavailable(RuntimeError):
     """
 
 
+# Literal(float("inf")) might have been nicer, but alas:
+# https://github.com/python/typing/issues/1160
+class _Inf:
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _Inf)
+
+    def __gt__(self, other: object) -> bool:
+        if isinstance(other, _Inf):
+            return False
+        return bool(isinstance(other, Number))
+
+    def __ge__(self, other: object) -> bool:
+        return bool(isinstance(other, (Number, _Inf)))
+
+
+inf = _Inf()
+
+
+def isinf(obj: object) -> bool:
+    return isinstance(obj, _Inf)
+
+
 class Quadrature:
     """The basic interface for a quadrature rule."""
 
     def __init__(self,
                  nodes: np.ndarray,
                  weights: np.ndarray,
-                 exact_to: Optional[int] = None) -> None:
+                 exact_to: int | _Inf | None = None) -> None:
         """
         :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
             of the qudrature rule.
@@ -80,7 +118,7 @@ class Quadrature:
         return 1 if self.nodes.ndim == 1 else self.nodes.shape[0]
 
     @property
-    def exact_to(self) -> int:
+    def exact_to(self) -> int | _Inf:
         """Summed polynomial degree up to which the quadrature is exact.
 
         In higher-dimensions, the quadrature is supposed to be exact on (at least)
@@ -165,11 +203,16 @@ class TensorProductQuadrature(Quadrature):
         w = np.prod(tensor_product_nodes([quad.weights for quad in quads]), axis=0)
         assert w.size == x.shape[1]
 
-        try:
-            exact_to = min(quad.exact_to for quad in quads)
-        except AttributeError:
-            # e.g. FejerQuadrature does not have any 'exact_to'
-            exact_to = None
+        if quads:
+            try:
+                exact_to = min(quad.exact_to for quad in quads)
+            except AttributeError:
+                # e.g. FejerQuadrature does not have any 'exact_to'
+                exact_to = None
+        else:
+            # 0D quadrature is point evaluation
+            # "infinite" accuracy
+            exact_to = inf
 
         super().__init__(x, w, exact_to=exact_to)
 
