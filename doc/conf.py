@@ -19,6 +19,7 @@ intersphinx_mapping = {
     "pymbolic": ("https://documen.tician.de/pymbolic", None),
     "python": ("https://docs.python.org/3/", None),
     "pytools": ("https://documen.tician.de/pytools", None),
+    "recursivenodes": ("https://tisaac.gitlab.io/recursivenodes/", None)
 }
 
 autodoc_member_order = "bysource"
