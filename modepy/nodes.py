@@ -17,8 +17,12 @@ Simplices
 .. autofunction:: equidistant_nodes
 .. autofunction:: warp_and_blend_nodes
 
-Also see :class:`modepy.VioreanuRokhlinSimplexQuadrature` if nodes on the
-boundary are not required.
+In addition to the node sets implemented here, :mod:`recursivenodes`
+by Tobin Isaac provides a selection of high-quality node sets for
+interpolation.
+
+:class:`modepy.VioreanuRokhlinSimplexQuadrature` also provides
+an interpolatory node set (without nodes on the boundary).
 
 Hypercubes
 ----------
