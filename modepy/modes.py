@@ -203,7 +203,7 @@ def jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
 
         bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
         pl.append(_cse(
-            (-aold*pl[i-1] + np.multiply(x-bnew, pl[i]))/anew,
+            (-aold*pl[i-1] + (x-bnew) * pl[i])/anew,
             prefix=f"jac_p{i+1}"))
         aold = anew
 
