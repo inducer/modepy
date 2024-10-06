@@ -134,7 +134,9 @@ def _cse(expr, prefix):
 def _where(op_a, comp, op_b, then, else_):
     from pymbolic.primitives import Comparison, Expression, If
     if isinstance(op_a, Expression) or isinstance(op_b, Expression):
-        return If(Comparison(op_a, comp, op_b), then, else_)
+        return If(
+              Comparison(op_a, Comparison.name_to_operator[comp], op_b),
+              then, else_)
 
     import operator
     comp_op = getattr(operator, comp)
