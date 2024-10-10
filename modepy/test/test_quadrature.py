@@ -27,6 +27,7 @@ THE SOFTWARE.
 import logging
 
 import numpy as np
+import numpy.linalg as la
 import pytest
 
 import modepy as mp
@@ -212,6 +213,33 @@ def test_hypercube_quadrature(dim, quad_class, max_order):
         assert _check_monomial(quad, comb) > 5.0e-15
 
         order += 2
+
+
+@pytest.mark.parametrize("shape", [mp.Simplex(1), mp.Simplex(2), mp.Simplex(3)])
+@pytest.mark.parametrize("order", [1, 3, 8])
+def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
+    space = mp.space_for_shape(shape, order)
+    basis = mp.basis_for_space(space, shape)
+
+    nodes = mp.equispaced_nodes_for_space(space, shape)
+    mass_mat = mp.mass_matrix(basis, nodes)
+    mass_weights = np.ones(len(mass_mat)) @ mass_mat
+
+    vdm = mp.vandermonde(basis.functions, nodes)
+    assert basis.orthonormality_weight() == 1
+
+    from math import factorial
+    shape_volume = 2**shape.dim / factorial(shape.dim)
+
+    # integrals are orthogonal to the constant
+    integrals = np.zeros(len(basis.functions))
+    # boldly assume that the first basis function is the constant
+    integrals[0] = shape_volume * basis.functions[0](np.zeros(shape.dim))
+
+    newton_cotes_weights = la.solve(vdm.T, integrals)
+
+    assert (la.norm(newton_cotes_weights - mass_weights, np.inf)
+            / la.norm(newton_cotes_weights, np.inf)) < 1e-13
 
 
 # You can test individual routines by typing
