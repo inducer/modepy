@@ -475,7 +475,7 @@ ReshapeableT = TypeVar("ReshapeableT", bound=Reshapeable)
 
 
 def reshape_array_for_tensor_product_space(
-        space: TensorProductSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
+        space: TensorProductSpace, ary: ReshapeableT, axis: int = -1) -> ReshapeableT:
     """Return a reshaped view of *ary* that exposes the tensor product nature
     of the space. Axis number *axis* of *ary* must index coefficients
     corresponding to a tensor-product-structured basis (e.g. modal or nodal
@@ -489,13 +489,21 @@ def reshape_array_for_tensor_product_space(
         function along a given dimension will be represented by variation
         of array entries along the corresponding array axis.
     """
+
+    ndim = len(ary.shape)
     if axis < 0:
-        axis += len(ary.shape)
-    if not (0 <= axis < len(ary.shape)):
-        raise ValueError("invalid axis specified")
+        axis += ndim
+
+    if not (0 <= axis < ndim):
+        raise ValueError(f"Invalid axis specified: {axis} not in 0..{ndim}")
+
     if ary.shape[axis] != space.space_dim:
-        raise ValueError(f"array's axis {axis} must have length "
+        raise ValueError(f"The input array's axis {axis} must have length "
                 f"{space.space_dim}, found {ary.shape[axis]} instead")
+
+    if space.spatial_dim == 1:
+        return ary
+
     return ary.reshape(
             (ary.shape[:axis]
                 + tuple(s.space_dim for s in space.bases)

@@ -499,7 +499,7 @@ def test_tensor_product_shapes():
 
 # {{{ tensor product reshape
 
-@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize("dim", [1, 2, 3])
 def test_tensor_product_reshape(dim):
     interval = mp.Simplex(1)
     shape = mp.TensorProductShape((interval,) * dim)
