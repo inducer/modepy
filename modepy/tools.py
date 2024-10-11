@@ -477,13 +477,15 @@ ReshapeableT = TypeVar("ReshapeableT", bound=Reshapeable)
 def reshape_array_for_tensor_product_space(
         space: TensorProductSpace, ary: ReshapeableT, axis: int = -1) -> ReshapeableT:
     """Return a reshaped view of *ary* that exposes the tensor product nature
-    of the space. Axis number *axis* of *ary* must index coefficients
-    corresponding to a tensor-product-structured basis (e.g. modal or nodal
-    coefficients).
+    of the *space*.
 
-    :arg ary: an array with last dimension having a length matching the
+    :arg ary: an array with *axis* dimension having a length matching the
         :attr:`~modepy.FunctionSpace.space_dim` of *space*.
-    :arg result: *ary* reshaped with axis number *axis* replaced by
+    :arg axis: an integer that must index a dimension of *ary* with coefficients
+        corresponding to a tensor-product-structured basis (e.g. modal or nodal
+        coefficients).
+
+    :returns: *ary* reshaped with axis number *axis* replaced by
         a tuple of dimensions matching the dimensions of the spaces
         making up the tensor product. Variation of the represented
         function along a given dimension will be represented by variation
