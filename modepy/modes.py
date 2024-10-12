@@ -134,7 +134,9 @@ def _cse(expr, prefix):
 def _where(op_a, comp, op_b, then, else_):
     from pymbolic.primitives import Comparison, Expression, If
     if isinstance(op_a, Expression) or isinstance(op_b, Expression):
-        return If(Comparison(op_a, comp, op_b), then, else_)
+        return If(
+              Comparison(op_a, Comparison.name_to_operator[comp], op_b),
+              then, else_)
 
     import operator
     comp_op = getattr(operator, comp)
@@ -203,7 +205,7 @@ def jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
 
         bnew = -(alpha*alpha-beta*beta)/(h1*(h1+2.))
         pl.append(_cse(
-            (-aold*pl[i-1] + np.multiply(x-bnew, pl[i]))/anew,
+            (-aold*pl[i-1] + (x-bnew) * pl[i])/anew,
             prefix=f"jac_p{i+1}"))
         aold = anew
 
