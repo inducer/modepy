@@ -114,7 +114,7 @@ def create_decay_baseline(mode_number_vector: np.ndarray, n: int) -> np.ndarray:
     modal_coefficients[zeros] = 1  # irrelevant, just keeps log from NaNing
 
     # NOTE: mypy seems to be confused by the __itruediv__ argument types
-    modal_coefficients /= la.norm(modal_coefficients)   # type: ignore[misc]
+    modal_coefficients /= la.norm(modal_coefficients)   # type: ignore[arg-type,misc]
 
     return modal_coefficients
 
