@@ -178,7 +178,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
     from pytools import wandering_element
     from pytools.convergence import EOCRecorder
-    for bf, gradbf in zip(basis.functions, basis.gradients):
+    for bf, gradbf in zip(basis.functions, basis.gradients, strict=True):
         eoc_rec = EOCRecorder()
         for h in [1e-2, 1e-3]:
             r = mp.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
@@ -246,7 +246,7 @@ def test_symbolic_basis(shape, order, basis_getter):
     rng = np.random.Generator(np.random.PCG64(17))
     r = mp.random_nodes_for_shape(shape, 10000, rng=rng)
 
-    for func, sym_func in zip(basis.functions, sym_basis):
+    for func, sym_func in zip(basis.functions, sym_basis, strict=True):
         strmap = MyStringifyMapper()
         s = strmap(sym_func)
         for name, val in strmap.cse_name_list:
@@ -276,7 +276,7 @@ def test_symbolic_basis(shape, order, basis_getter):
 
     sym_grad_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.gradients]
 
-    for grad, sym_grad in zip(basis.gradients, sym_grad_basis):
+    for grad, sym_grad in zip(basis.gradients, sym_grad_basis, strict=True):
         strmap = MyStringifyMapper()
         s = strmap(sym_grad)
         for name, val in strmap.cse_name_list:
@@ -290,7 +290,7 @@ def test_symbolic_basis(shape, order, basis_getter):
             sym_val = (sym_val,)
             ref_val = (ref_val,)
 
-        for sv_i, rv_i in zip(sym_val, ref_val):
+        for sv_i, rv_i in zip(sym_val, ref_val, strict=True):
             ref_norm = la.norm(rv_i, np.inf)
             err = la.norm(sv_i-rv_i, np.inf)
             if ref_norm:

@@ -47,7 +47,7 @@ nodes = [
         unit_to_barycentric(mp.warp_and_blend_nodes(3, n, node_tuples))
     ).T
 ]
-id_to_node = dict(list(zip(node_tuples, nodes)))
+id_to_node = dict(list(zip(node_tuples, nodes, strict=True)))
 
 
 def get_ball_radius(nid):

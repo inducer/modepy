@@ -110,7 +110,7 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
         # Note that gll_diag_mass_mat is not a good approximation of gll_ref_mass_mat
         # in the matrix norm sense!
 
-        for mid, func in zip(basis.mode_ids, basis.functions):
+        for mid, func in zip(basis.mode_ids, basis.functions, strict=True):
             if max(cast(Tuple[int, ...], mid)) < order - 1:
                 err = np.abs(
                     gll_ref_mass_mat @ func(gll_quad.nodes)

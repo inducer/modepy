@@ -580,7 +580,8 @@ def test_tensor_product_vdm_dim_by_dim(dim):
     x_r = reshape_array_for_tensor_product_space(space, x)
     vdm_dimbydim_x_r = x_r
 
-    for i, (subspace, subshape) in enumerate(zip(space.bases, shape.bases)):
+    for i, (subspace, subshape) in enumerate(
+                            zip(space.bases, shape.bases, strict=True)):
         subnodes = mp.edge_clustered_nodes_for_space(subspace, subshape)
         subbasis = mp.basis_for_space(subspace, subshape)
         subvdm = mp.vandermonde(subbasis.functions, subnodes)

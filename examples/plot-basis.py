@@ -33,6 +33,7 @@ stretch_factor = 1.5
 for (i, j), basis_func in zip(
         gnitstam(p, dims),
         simplex_onb(dims, p),
+        strict=True,
         ):
 
     all_nodes.append([*plot_nodes, stretch_factor * i, stretch_factor * j])
