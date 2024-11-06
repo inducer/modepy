@@ -292,7 +292,7 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     from operator import xor as outerprod
 
     from pymbolic.geometric_algebra import MultiVector
-    surface_ps = reduce(outerprod, [
+    surface_ps: MultiVector = reduce(outerprod, [
         MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
         for i in range(face.dim)])
 
