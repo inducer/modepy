@@ -62,8 +62,8 @@ THE SOFTWARE.
 
 # }}}
 
+from collections.abc import Sequence
 from functools import partial, singledispatch
-from typing import Sequence
 
 import numpy as np
 import numpy.linalg as la

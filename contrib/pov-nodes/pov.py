@@ -72,7 +72,7 @@ class Item:
 
         args = list(args)
         for i in range(len(args)):
-            if isinstance(args[i], (tuple, list, np.ndarray)):
+            if isinstance(args[i], tuple | list | np.ndarray):
                 args[i] = Vector(args[i])
 
         self.args = args
@@ -95,7 +95,7 @@ class Item:
         for key, val in list(self.kwargs.items()):
             if val is None:
                 file.writeln(key)
-            elif isinstance(val, (tuple, list, np.ndarray)):
+            elif isinstance(val, tuple | list | np.ndarray):
                 val = Vector(*val)
                 file.writeln(f"{key} {val}")
             else:
