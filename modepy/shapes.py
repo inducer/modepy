@@ -217,9 +217,10 @@ THE SOFTWARE.
 
 import contextlib
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 

@@ -50,9 +50,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from collections.abc import Callable, Iterable, Sequence
 from functools import singledispatch
 from numbers import Number
-from typing import Callable, Iterable, Sequence
 
 import numpy as np
 
@@ -79,7 +79,7 @@ class _Inf:
         return bool(isinstance(other, Number))
 
     def __ge__(self, other: object) -> bool:
-        return bool(isinstance(other, (Number, _Inf)))
+        return bool(isinstance(other, Number | _Inf))
 
 
 inf = _Inf()

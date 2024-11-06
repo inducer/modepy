@@ -24,7 +24,7 @@ THE SOFTWARE.
 """
 
 
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 from warnings import warn
 
 import numpy as np

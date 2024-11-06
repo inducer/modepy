@@ -26,14 +26,10 @@ THE SOFTWARE.
 
 import math
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Hashable, Iterable, Sequence
 from functools import partial, singledispatch
 from typing import (
     TYPE_CHECKING,
-    Callable,
-    Hashable,
-    Iterable,
-    Sequence,
-    Tuple,
     TypeVar,
 )
 
@@ -725,7 +721,7 @@ def symbolicize_function(
 # {{{ basis interface
 
 BasisFunctionType = Callable[[np.ndarray], np.ndarray]
-BasisGradientType = Callable[[np.ndarray], Tuple[np.ndarray, ...]]
+BasisGradientType = Callable[[np.ndarray], tuple[np.ndarray, ...]]
 
 
 class BasisNotOrthonormal(Exception):
