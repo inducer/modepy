@@ -555,7 +555,7 @@ def _equispaced_nodes_for_tp(
 
     return tensor_product_nodes([
         equispaced_nodes_for_space(b, s)
-        for b, s in zip(space.bases, shape.bases)
+        for b, s in zip(space.bases, shape.bases, strict=True)
         ])
 
 
@@ -571,7 +571,7 @@ def _edge_clustered_nodes_for_tp(
 
     return tensor_product_nodes([
         edge_clustered_nodes_for_space(b, s)
-        for b, s in zip(space.bases, shape.bases)
+        for b, s in zip(space.bases, shape.bases, strict=True)
         ])
 
 

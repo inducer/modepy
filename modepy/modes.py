@@ -579,7 +579,7 @@ class _TensorProductBasisFunction:
             # Likely we're evaluating symbolically.
             result = 1
 
-        for d, function in zip(self.dims_per_function, self.functions):
+        for d, function in zip(self.dims_per_function, self.functions, strict=True):
             result *= function(x[n:n + d])
             n += d
 
@@ -656,7 +656,7 @@ class _TensorProductGradientBasisFunction:
         n = 0
         for ider, derivative in enumerate(self.derivatives):
             f = 0
-            for iaxis, function in zip(self.dims_per_function, derivative):
+            for iaxis, function in zip(self.dims_per_function, derivative, strict=True):
                 components = function(x[f:f + iaxis])
 
                 if isinstance(components, tuple):
@@ -975,7 +975,8 @@ class TensorProductBasis(Basis):
                 part_flat_tuple((flatten, umid[mid_index_i])
                       for flatten, umid, mid_index_i in zip(
                           is_all_singletons_with_int,
-                          underlying_mode_id_lists, mode_index_tuple))
+                          underlying_mode_id_lists, mode_index_tuple,
+                          strict=True))
                 for mode_index_tuple in self._mode_index_tuples)
 
     @property
@@ -1000,7 +1001,7 @@ class TensorProductBasis(Basis):
                     tuple(
                         tuple(func[is_deriv][ibasis][mid_i]
                             for ibasis, (is_deriv, mid_i) in enumerate(
-                                zip(deriv_indicator_vec, mid)))
+                                zip(deriv_indicator_vec, mid, strict=True)))
                         for deriv_indicator_vec in wandering_element(self._nbases)),
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
@@ -1017,7 +1018,7 @@ def _orthonormal_basis_for_tp(
         raise ValueError("spatial dimensions of shape and space must match")
 
     bases = [orthonormal_basis_for_space(b, s)
-            for b, s in zip(space.bases, shape.bases)]
+            for b, s in zip(space.bases, shape.bases, strict=True)]
 
     return TensorProductBasis(
             bases,
@@ -1032,7 +1033,8 @@ def _basis_for_tp(space: TensorProductSpace, shape: TensorProductShape):
     if space.spatial_dim != shape.dim:
         raise ValueError("spatial dimensions of shape and space must match")
 
-    bases = [basis_for_space(b, s) for b, s in zip(space.bases, shape.bases)]
+    bases = [basis_for_space(b, s)
+        for b, s in zip(space.bases, shape.bases, strict=True)]
     return TensorProductBasis(
             bases,
             dims_per_basis=tuple(b.spatial_dim for b in space.bases))
@@ -1045,7 +1047,7 @@ def _monomial_basis_for_tp(space: TensorProductSpace, shape: TensorProductShape)
 
     bases = [
             monomial_basis_for_space(b, s)
-            for b, s in zip(space.bases, shape.bases)]
+            for b, s in zip(space.bases, shape.bases, strict=True)]
 
     return TensorProductBasis(
             bases,

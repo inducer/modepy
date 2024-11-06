@@ -134,7 +134,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
         dim_factor = 2**n
         for p, w in points_to_weights.items():
-            real_p = reduce(add, (a/b * v for (a, b), v in zip(p, vertices)))
+            real_p = reduce(add, (a/b * v
+                                for (a, b), v in zip(p, vertices, strict=True)))
             nodes.append(real_p)
             weights.append(dim_factor * w)
 

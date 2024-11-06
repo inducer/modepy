@@ -298,7 +298,7 @@ def _quadrature_for_tp(
     else:
         quad = TensorProductQuadrature([
             quadrature_for_space(sp, shp)
-            for sp, shp in zip(space.bases, shape.bases)
+            for sp, shp in zip(space.bases, shape.bases, strict=True)
             ])
 
     assert all(quad.exact_to >= getattr(s, "order", 0) for s in space.bases)
