@@ -1,7 +1,7 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "hatchling.build"
 requires = [
-    "setuptools>=63",
+    "hatchling",
 ]
 
 [project]
@@ -52,20 +52,6 @@ test = [
 Documentation = "https://documen.tician.de/modepy"
 Homepage = "https://mathema.tician.de/software/modepy"
 Repository = "https://github.com/inducer/modepy"
-
-[tool.setuptools.packages.find]
-include = [
-    "modepy*",
-]
-
-[tool.setuptools.package-dir]
-# https://github.com/Infleqtion/client-superstaq/pull/715
-"" = "."
-
-[tool.setuptools.package-data]
-modepy = [
-    "py.typed",
-]
 
 [tool.ruff]
 preview = true
