@@ -34,7 +34,7 @@ f_coefficients = np.linalg.solve(vdm, f)
 # Now linearly combine the (x-)derivatives of the basis using
 # f_coefficients to compute the numerical derivatives.
 
-dx = mp.vandermonde(basis.gradients, nodes)[0]
+dx = mp.multi_vandermonde(basis.gradients, nodes)[0]
 df_dx_num = dx @ f_coefficients
 
 assert np.linalg.norm(df_dx - df_dx_num) < 1.0e-5
