@@ -32,7 +32,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pymbolic>=2024.1",
+    "pymbolic>=2024.2",
     "pytools",
 ]
 
