@@ -120,16 +120,16 @@ Monomials
 # {{{ helpers for symbolic evaluation
 
 def _cse(expr, prefix):
-    from pymbolic.primitives import CommonSubexpression, Expression
-    if isinstance(expr, Expression):
+    from pymbolic.primitives import CommonSubexpression, ExpressionNode
+    if isinstance(expr, ExpressionNode):
         return CommonSubexpression(expr, prefix)
     else:
         return expr
 
 
 def _where(op_a, comp, op_b, then, else_):
-    from pymbolic.primitives import Comparison, Expression, If
-    if isinstance(op_a, Expression) or isinstance(op_b, Expression):
+    from pymbolic.primitives import Comparison, ExpressionNode, If
+    if isinstance(op_a, ExpressionNode) or isinstance(op_b, ExpressionNode):
         return If(
               Comparison(op_a, Comparison.name_to_operator[comp], op_b),
               then, else_)
