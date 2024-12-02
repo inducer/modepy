@@ -980,10 +980,11 @@ class TensorProductBasis(Basis):
 
     @property
     def functions(self) -> tuple[BasisFunctionType, ...]:
+        bases = [b.functions for b in self._bases]
         return tuple(
                 _TensorProductBasisFunction(
                     mid,
-                    tuple(self.bases[ibasis].functions[mid_i]
+                    tuple(bases[ibasis][mid_i]
                             for ibasis, mid_i in enumerate(mid)),
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
