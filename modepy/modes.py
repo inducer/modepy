@@ -32,6 +32,7 @@ from functools import partial, singledispatch
 from typing import (
     TYPE_CHECKING,
     TypeVar,
+    cast,
 )
 
 import numpy as np
@@ -561,10 +562,10 @@ class _TensorProductBasisFunction:
         assert len(self.dims_per_function) == len(self.functions)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         return sum(self.dims_per_function)
 
-    def __call__(self, x):
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         assert x.shape[0] == self.ndim
 
         n = 0
@@ -577,7 +578,7 @@ class _TensorProductBasisFunction:
             result = np.ones(x.shape[1:], dtype=(x+np.float32(1)).dtype)
         else:
             # Likely we're evaluating symbolically.
-            result = 1
+            result = 1  # type: ignore[assignment]
 
         for d, function in zip(self.dims_per_function, self.functions, strict=True):
             result *= function(x[n:n + d])
@@ -644,13 +645,13 @@ class _TensorProductGradientBasisFunction:
         assert all(len(self.dims_per_function) == len(df) for df in self.derivatives)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         return sum(self.dims_per_function)
 
-    def __call__(self, x):
+    def __call__(self, x: np.ndarray) -> tuple[np.ndarray, ...]:
         assert x.shape[0] == self.ndim
 
-        result = [1] * self.ndim
+        result: list[int | np.ndarray] = [1] * self.ndim
         n = 0
         for ider, derivative in enumerate(self.derivatives):
             f = 0
@@ -672,7 +673,7 @@ class _TensorProductGradientBasisFunction:
                 f += iaxis
             n += self.dims_per_function[ider]
 
-        return tuple(result)
+        return cast(tuple[np.ndarray, ...], tuple(result))
 
     def __repr__(self):
         return (f"{type(self).__name__}(mi={self.multi_index}, "
