@@ -178,7 +178,8 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
     from pytools import wandering_element
     from pytools.convergence import EOCRecorder
-    for bf, gradbf in zip(basis.functions, basis.gradients, strict=True):
+    for ifunc, (bf, gradbf) in enumerate(
+                zip(basis.functions, basis.gradients, strict=True)):
         eoc_rec = EOCRecorder()
         for h in [1e-2, 1e-3]:
             r = mp.random_nodes_for_shape(shape, nnodes=1000, rng=rng)
@@ -197,6 +198,15 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
             logger.info("error: %.5e", err)
             eoc_rec.add_data_point(h, err)
+
+            for idiff_axis in range(shape.dim):
+                dr_bf = basis.derivatives(idiff_axis)[ifunc](r)
+                ref = gradbf_v[idiff_axis]
+                err = la.norm(dr_bf - ref, 2)
+                if la.norm(ref, 2) > 1e-13:
+                    err = err/la.norm(ref, 2)
+
+                assert err < 1e-13
 
         tol = 1e-8
         if eoc_rec.max_error() >= tol:

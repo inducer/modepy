@@ -131,6 +131,11 @@ def multi_vandermonde(
     A sequence of matrices is returned--i.e. this function
     works directly on :func:`modepy.Basis.gradients` and returns
     a tuple of matrices.
+
+    .. note::
+
+        If only one of the matrices is needed, it may be convenient to instead call
+        :func:`vandermonde` with the result of :meth:`Basis.derivatives`.
     """
 
     nnodes = nodes.shape[-1]

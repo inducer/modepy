@@ -791,6 +791,28 @@ class Basis(ABC):
         Each function returns a tuple of derivatives, one per reference axis.
         """
 
+    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+        """
+        Returns a tuple of callable functions in the same order as
+        :meth:`functions` representing the same basis functions with a
+        derivative with respect to *axis* applied.
+
+        .. note::
+
+            :meth:`gradients` and :meth:`derivatives` provide equivalent
+            functionality. Usage ergonomics are often 'nicer' for
+            :meth:`derivatives`. If *all* gradient data is desired
+            for simplices, calling :meth:`gradients` can be somewhat more
+            efficient because subexpressions can be reused across
+            components of the gradient.
+
+        .. versionadded:: 2024.1.1
+        """
+        return tuple(
+            partial(lambda fi_inner, nodes: fi_inner(nodes)[axis], fi)
+            for fi in self.gradients
+        )
+
 # }}}
 
 
@@ -885,12 +907,17 @@ class _SimplexMonomialBasis(_SimplexBasis):
         raise BasisNotOrthonormal
 
     @property
-    def functions(self):
+    def functions(self) -> tuple[BasisFunctionType, ...]:
         return tuple(partial(monomial, mid) for mid in self.mode_ids)
 
     @property
-    def gradients(self):
+    def gradients(self) -> tuple[BasisGradientType, ...]:
         return tuple(partial(grad_monomial, mid) for mid in self.mode_ids)
+
+    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+        return tuple(
+            partial(diff_monomial, mid, axis)
+            for mid in self.mode_ids)
 
 
 @basis_for_space.register(PN)
@@ -972,6 +999,15 @@ class TensorProductBasis(Basis):
                                        for b in self._bases[::-1]]))
 
     @property
+    def _dim_ranges(self) -> tuple[tuple[int, int], ...]:
+        idim = 0
+        result = []
+        for dims in self._dims_per_basis:
+            result.append((idim, idim + dims))
+            idim += dims
+        return tuple(result)
+
+    @property
     def mode_ids(self) -> tuple[Hashable, ...]:
         underlying_mode_id_lists = [basis.mode_ids for basis in self._bases]
         is_all_singletons_with_int = [
@@ -1025,6 +1061,21 @@ class TensorProductBasis(Basis):
                             for ibasis, (is_deriv, mid_i) in enumerate(
                                 zip(deriv_indicator_vec, mid, strict=True)))
                         for deriv_indicator_vec in wandering_element(self._nbases)),
+                    dims_per_function=self._dims_per_basis)
+                for mid in self._mode_index_tuples)
+
+    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+        bases = [b.functions for b in self._bases]
+        return tuple(
+                _TensorProductBasisFunction(
+                    mid,
+                    tuple(
+                        (
+                            self._bases[ibasis].derivatives(axis-start_axis)[mid_i]
+                            if start_axis <= axis < end_axis
+                            else bases[ibasis][mid_i])
+                        for ibasis, (mid_i, (start_axis, end_axis))
+                        in enumerate(zip(mid, self._dim_ranges, strict=True))),
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
 
