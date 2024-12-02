@@ -116,6 +116,7 @@ Monomials
 
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
+.. autofunction:: diff_monomial
 """
 
 
@@ -497,7 +498,28 @@ def _diff_monomial_1d(r: np.ndarray, o: int) -> np.ndarray:
         return o * r**(o-1)
 
 
-def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[RealValueT, ...]:
+def diff_monomial(
+            order: tuple[int, ...],
+            diff_axis: int,
+            rst: np.ndarray
+        ) -> np.ndarray:
+    """Evaluate the derivative of the monomial of order *order*
+    with respect to the axis *diff_axis* at the points *rst*.
+
+    :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
+    :arg rst: ``rst[0], rst[1]`` are arrays of :math:`(r, s, ...)` coordinates.
+        (See :ref:`tri-coords`)
+    """
+    dim = len(order)
+    assert dim == rst.shape[0]
+
+    from pytools import product
+    return product(
+        _diff_monomial_1d(rst[i], order[i]) if diff_axis == i else rst[i] ** order[i]
+        for i in range(dim))
+
+
+def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[np.ndarray, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
