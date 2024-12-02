@@ -486,6 +486,15 @@ def monomial(order: tuple[int, ...], rst: np.ndarray) -> np.ndarray:
     return product(rst[i] ** order[i] for i in range(dim))
 
 
+def _diff_monomial_1d(r: np.ndarray, o: int) -> np.ndarray:
+    if o == 0:
+        return 0*r
+    elif o == 1:
+        return 1+0*r
+    else:
+        return o * r**(o-1)
+
+
 def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[RealValueT, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
@@ -500,19 +509,11 @@ def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[RealValueT, 
     dim = len(order)
     assert dim == rst.shape[0]
 
-    def diff_monomial(r, o):
-        if o == 0:
-            return 0*r
-        elif o == 1:
-            return 1+0*r
-        else:
-            return o * r**(o-1)
-
     from pytools import product
     return tuple(
             product(
                 (
-                    diff_monomial(rst[i], order[i])
+                    _diff_monomial_1d(rst[i], order[i])
                     if j == i else
                     rst[i] ** order[i])
                 for i in range(dim)
