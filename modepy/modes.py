@@ -27,6 +27,7 @@ THE SOFTWARE.
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Sequence
+from dataclasses import dataclass, field
 from functools import partial, singledispatch
 from typing import (
     TYPE_CHECKING,
@@ -525,41 +526,43 @@ def grad_monomial(order: tuple[int, ...], rst: np.ndarray) -> tuple[RealValueT, 
 
 # {{{ tensor product basis helpers
 
+@dataclass(frozen=True)
 class _TensorProductBasisFunction:
     r"""
-    .. attribute:: multi_index
-
-        A :class:`tuple` used to identify each function in :attr:`functions`
-        that is mainly meant for debugging and not used internally.
-
-    .. attribute:: functions
-
-        A :class:`tuple` of callables that can be evaluated on the tensor
-        product space :math:`\mathbb{R}^{d_1} \times \cdots \times \mathbb{R}^{d_n}`,
-        i.e. one function :math:`f_i` for each :math:`\mathbb{R}^{d_i}` component
-
-        .. math::
-
-            f(x_1, \dots, x_d) =
-                    f_1(x_1, \dots, x_{d_1}) \times \cdots \times
-                    f_n(x_{d_{n - 1}}, \dots, x_{d_n})
-
-    .. attribute:: dims_per_function
-
-        A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`.
+    .. autoattribute:: multi_index
+    .. autoattribute:: functions
+    .. autoattribute:: dims_per_function
     """
 
-    def __init__(self,
-            multi_index: tuple[Hashable, ...],
-            functions: tuple[Callable[[np.ndarray], np.ndarray], ...], *,
-            dims_per_function: tuple[int, ...]) -> None:
-        assert len(dims_per_function) == len(functions)
+    multi_index: tuple[Hashable, ...]
+    """
+    A :class:`tuple` used to identify each function in :attr:`functions`
+    that is mainly meant for debugging and not used internally.
+    """
 
-        self.multi_index = multi_index
-        self.functions = functions
+    functions: tuple[Callable[[np.ndarray], np.ndarray], ...]
+    r"""A :class:`tuple` of callables that can be evaluated on the tensor
+    product space :math:`\mathbb{R}^{d_1} \times \cdots \times \mathbb{R}^{d_n}`,
+    i.e. one function :math:`f_i` for each :math:`\mathbb{R}^{d_i}` component
 
-        self.dims_per_function = dims_per_function
-        self.ndim = sum(self.dims_per_function)
+    .. math::
+
+        f(x_1, \dots, x_d) =
+                f_1(x_1, \dots, x_{d_1}) \times \cdots \times
+                f_n(x_{d_{n - 1}}, \dots, x_{d_n})
+    """
+
+    dims_per_function: tuple[int, ...] = field(kw_only=True)
+    r"""
+    A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`.
+    """
+
+    def __post_init__(self) -> None:
+        assert len(self.dims_per_function) == len(self.functions)
+
+    @property
+    def ndim(self):
+        return sum(self.dims_per_function)
 
     def __call__(self, x):
         assert x.shape[0] == self.ndim
@@ -587,64 +590,62 @@ class _TensorProductBasisFunction:
                 f"dims={self.dims_per_function}, functions={self.functions})")
 
 
+@dataclass(frozen=True)
 class _TensorProductGradientBasisFunction:
     r"""
-    .. attribute:: multi_index
-
-        A :class:`tuple` used to identify each function in :attr:`functions`
-        that is mainly meant for debugging and not used internally.
-
-    .. attribute:: derivatives
-
-        A :class:`tuple` of :class:`tuple`\ s of callables ``df[i][j]`` that
-        evaluate the derivatives of the tensor product. Each ``df[i]`` tuple
-        is equivalent to a :class:`_TensorProductBasisFunction` and is used
-        to evaluate the derivatives of a single basis function of the tensor
-        product. To be specific, a basis function in the tensor product is
-        given by
-
-        .. math::
-
-            f(x_1, \dots, x_d) =
-                    f_1(x_1, \dots, x_{d_1}) \times \cdots \times
-                    f_n(x_{d_{n - 1}}, \dots, x_{d_n})
-
-        and its derivative with respect to :math:`x_k`, for :math:`k \in
-        [d_i, d_{i + 1})` is given by
-
-        .. math::
-
-            \frac{\partial f}{\partial x_k} =
-                f_1 \times \cdots \times
-                \frac{\partial f_i}{x_k}
-                \times \cdots \times
-                f_n.
-
-        In our notation, ``df[i]`` gives all the derivatives of :math:`f`
-        with respect to :math:`k \in [d_i, d_{i + 1})`. When evaluating
-        ``df[i][j]`` can be a function :math:`f_i`, for which the callable
-        just returns the function values, or :math:`\partial_k f_i`, for
-        which it returns all the derivatives with respect to
-        :math:`k \in [d_i, d_{i + 1}]`.
-
-    .. attribute:: dims_per_function
-
-        A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`.
+    .. autoattribute:: multi_index
+    .. autoattribute:: derivatives
+    .. autoattribute:: dims_per_function
     """
 
-    def __init__(self,
-            multi_index: tuple[int, ...],
-            derivatives: tuple[tuple[
-                Callable[[np.ndarray], np.ndarray | tuple[np.ndarray, ...]],
-                ...], ...], *,
-            dims_per_function: tuple[int, ...]) -> None:
-        assert all(len(dims_per_function) == len(df) for df in derivatives)
+    multi_index: tuple[int, ...]
+    """A :class:`tuple` used to identify each function in :attr:`functions`
+    that is mainly meant for debugging and not used internally.
+    """
 
-        self.multi_index = multi_index
-        self.derivatives = tuple(derivatives)
+    derivatives: tuple[tuple[
+        Callable[[np.ndarray], np.ndarray | tuple[np.ndarray, ...]],
+        ...], ...]
+    r"""A :class:`tuple` of :class:`tuple`\ s of callables ``df[i][j]`` that
+    evaluate the derivatives of the tensor product. Each ``df[i]`` tuple
+    is equivalent to a :class:`_TensorProductBasisFunction` and is used
+    to evaluate the derivatives of a single basis function of the tensor
+    product. To be specific, a basis function in the tensor product is
+    given by
 
-        self.dims_per_function = dims_per_function
-        self.ndim = sum(self.dims_per_function)
+    .. math::
+
+        f(x_1, \dots, x_d) =
+                f_1(x_1, \dots, x_{d_1}) \times \cdots \times
+                f_n(x_{d_{n - 1}}, \dots, x_{d_n})
+
+    and its derivative with respect to :math:`x_k`, for :math:`k \in
+    [d_i, d_{i + 1})` is given by
+
+    .. math::
+
+        \frac{\partial f}{\partial x_k} =
+            f_1 \times \cdots \times
+            \frac{\partial f_i}{x_k}
+            \times \cdots \times
+            f_n.
+
+    In our notation, ``df[i]`` gives all the derivatives of :math:`f`
+    with respect to :math:`k \in [d_i, d_{i + 1})`. When evaluating
+    ``df[i][j]`` can be a function :math:`f_i`, for which the callable
+    just returns the function values, or :math:`\partial_k f_i`, for
+    which it returns all the derivatives with respect to
+    :math:`k \in [d_i, d_{i + 1}]`."""
+
+    dims_per_function: tuple[int, ...] = field(kw_only=True)
+    r"""A :class:`tuple` containing the dimensions :math:`(d_1, \dots, d_n)`."""
+
+    def __post_init__(self) -> None:
+        assert all(len(self.dims_per_function) == len(df) for df in self.derivatives)
+
+    @property
+    def ndim(self):
+        return sum(self.dims_per_function)
 
     def __call__(self, x):
         assert x.shape[0] == self.ndim
