@@ -606,15 +606,17 @@ def nodal_quad_bilinear_form(
     :func:`nodal_quad_mass_matrix`.
     """
     if len(test_functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with test_functions")
+        raise ValueError("volume_nodes not unisolvent with trial_functions")
 
     vdm_out = vandermonde(trial_functions, nodes)
 
-    modal_operator = modal_quad_bilinear_form(test_functions, quadrature)
+    nodal_operator = la.solve(
+        vdm_out.T, modal_quad_bilinear_form(test_functions, quadrature))
+
     if uses_quadrature_domain:
-        return la.solve(vdm_out.T, modal_operator)
+        return nodal_operator
     else:
-        resampler = resampling_matrix(trial_functions, quadrature.nodes, nodes)
-        return la.solve(vdm_out.T, modal_operator) @ resampler
+        return nodal_operator @ resampling_matrix(
+            trial_functions, quadrature.nodes, nodes)
 
 # vim: foldmethod=marker
