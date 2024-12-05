@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from modepy.matrices import nodal_quad_bilinear_form, nodal_quad_mass_matrix
-
 
 __copyright__ = "Copyright (C) 2024 University of Illinois Board of Trustees"
 
@@ -26,7 +24,7 @@ THE SOFTWARE.
 """
 
 
-from typing import Type, cast
+from typing import cast
 
 import numpy as np
 import numpy.linalg as la
@@ -126,7 +124,7 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
 @pytest.mark.parametrize("nodes_on_bdry", [False, True])
 @pytest.mark.parametrize("test_derivatives", [False, True])
 def test_bilinear_forms(
-            shape_cls: Type[mp.Shape],
+            shape_cls: type[mp.Shape],
             dim: int,
             order: int,
             nodes_on_bdry: bool,
@@ -162,7 +160,7 @@ def test_bilinear_forms(
             f = 1 - nodes[ax]**2
             fp = -2*nodes[ax]
 
-            weak_operator = nodal_quad_bilinear_form(
+            weak_operator = mp.nodal_quad_bilinear_form(
                 basis.derivatives(ax),
                 basis.functions,
                 quad,
@@ -172,7 +170,7 @@ def test_bilinear_forms(
             err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
             assert err <= 1e-12
     else:
-        quad_mass_mat = nodal_quad_bilinear_form(
+        quad_mass_mat = mp.nodal_quad_bilinear_form(
             basis.functions,
             basis.functions,
             quad,

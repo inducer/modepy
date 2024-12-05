@@ -66,6 +66,8 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: modal_quad_mass_matrix_for_face
 .. autofunction:: nodal_quad_mass_matrix_for_face
 .. autofunction:: spectral_diag_nodal_mass_matrix
+.. autofunction:: modal_quad_bilinear_form
+.. autofunction:: nodal_quad_bilinear_form
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
@@ -612,8 +614,7 @@ def nodal_quad_bilinear_form(
     if uses_quadrature_domain:
         return la.solve(vdm_out.T, modal_operator)
     else:
-        vdm_in = vandermonde(trial_functions, quadrature.nodes)
-        nodal_interp_mat = la.solve(vdm_out.T, vdm_in.T)
-        return la.solve(vdm_out.T, modal_operator) @ nodal_interp_mat.T
+        resampler = resampling_matrix(trial_functions, quadrature.nodes, nodes)
+        return la.solve(vdm_out.T, modal_operator) @ resampler
 
 # vim: foldmethod=marker
