@@ -122,13 +122,13 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("order", [0, 1, 2, 4])
 @pytest.mark.parametrize("nodes_on_bdry", [False, True])
-@pytest.mark.parametrize("test_derivatives", [False, True])
+@pytest.mark.parametrize("test_weak_d_dr", [False, True])
 def test_bilinear_forms(
             shape_cls: type[mp.Shape],
             dim: int,
             order: int,
             nodes_on_bdry: bool,
-            test_derivatives: bool
+            test_weak_d_dr: bool
         ) -> None:
     shape = shape_cls(dim)
     space = mp.space_for_shape(shape, order)
@@ -153,7 +153,7 @@ def test_bilinear_forms(
 
     basis = mp.orthonormal_basis_for_space(space, shape)
 
-    if test_derivatives and order not in [0, 1]:
+    if test_weak_d_dr and order not in [0, 1]:
         mass_inv = mp.inverse_mass_matrix(basis, nodes)
 
         for ax in range(dim):
