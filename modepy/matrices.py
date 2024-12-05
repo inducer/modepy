@@ -550,4 +550,70 @@ def nodal_quad_mass_matrix_for_face(
                     modal_quad_mass_matrix_for_face(face, face_quad, test_functions))
 
 
+def modal_quad_bilinear_form(
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        quadrature: Quadrature
+    ) -> np.ndarray:
+    r"""Using the *quadrature*, provide a matrix :math:`A` that
+    satisfies:
+
+    .. math::
+
+        \displaystyle (A \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
+
+    where :math:`\phi_i` are the *test_functions* at the nodes
+    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`.
+
+    Seeks to generalize functionality found in, e.g.
+    :func:`modal_quad_mass_matrix`.
+    """
+    modal_operator = np.empty((len(test_functions), len(quadrature.weights)))
+
+    for i, test_f in enumerate(test_functions):
+        modal_operator[i] = test_f(quadrature.nodes) * quadrature.weights
+
+    return modal_operator
+
+
+def nodal_quad_bilinear_form(
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        quadrature: Quadrature,
+        nodes: np.ndarray,
+        uses_quadrature_domain: bool = False
+    ) -> np.ndarray:
+    r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
+
+    .. math::
+
+        \displaystyle (A \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
+
+    where :math:`\phi_i` are the Lagrange basis functions obtained from
+    *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
+    and nodes from *quadrature*, and :math:`u_j` are point values of the trial
+    function at either *nodes* or the *quadrature* nodes depending on whether
+    a quadrature domain is used (as signified by *uses_quadrature_domain*).
+
+    If *uses_quadrature_domain* is set to False, then an interpolation operator
+    is used to make the operator :math:`N \times N` where :math:`N` is the
+    number of nodes in *nodes*. Otherwise, the operator has shape :math:`N
+    \times N_q` where :math:`N_q` is the number of nodes associated with
+    *quadrature*.
+
+    Seeks to generalize functionality found in, e.g.
+    :func:`nodal_quad_mass_matrix`.
+    """
+    if len(test_functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with test_functions")
+
+    vdm_out = vandermonde(trial_functions, nodes)
+
+    modal_operator = modal_quad_bilinear_form(test_functions, quadrature)
+    if uses_quadrature_domain:
+        return la.solve(vdm_out.T, modal_operator)
+    else:
+        vdm_in = vandermonde(trial_functions, quadrature.nodes)
+        nodal_interp_mat = la.solve(vdm_out.T, vdm_in.T)
+        return la.solve(vdm_out.T, modal_operator) @ nodal_interp_mat.T
+
 # vim: foldmethod=marker
