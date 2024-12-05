@@ -366,9 +366,6 @@ def modal_quad_bilinear_form(
 
     where :math:`\phi_i` are the *test_functions* at the nodes
     :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`.
-
-    Seeks to generalize functionality found in, e.g.
-    :func:`modal_quad_mass_matrix`.
     """
     modal_operator = np.empty((len(test_functions), len(quadrature.weights)))
 
@@ -402,9 +399,6 @@ def nodal_quad_bilinear_form(
     number of nodes in *nodes*. Otherwise, the operator has shape :math:`N
     \times N_q` where :math:`N_q` is the number of nodes associated with
     *quadrature*. Default behavior is to assume a quadrature domain is not used.
-
-    Seeks to generalize functionality found in, e.g.
-    :func:`nodal_quad_mass_matrix`.
     """
     if len(test_functions) != nodes.shape[1]:
         raise ValueError("volume_nodes not unisolvent with trial_functions")
