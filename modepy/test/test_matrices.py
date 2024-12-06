@@ -118,6 +118,70 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
                 assert np.max(err) < 1e-14
 
 
+@pytest.mark.parametrize("shape_cls", [mp.Hypercube, mp.Simplex])
+@pytest.mark.parametrize("dim", [1, 2, 3])
+@pytest.mark.parametrize("order", [0, 1, 2, 4])
+@pytest.mark.parametrize("nodes_on_bdry", [False, True])
+@pytest.mark.parametrize("test_weak_d_dr", [False, True])
+def test_bilinear_forms(
+            shape_cls: type[mp.Shape],
+            dim: int,
+            order: int,
+            nodes_on_bdry: bool,
+            test_weak_d_dr: bool
+        ) -> None:
+    shape = shape_cls(dim)
+    space = mp.space_for_shape(shape, order)
+
+    quad_space = mp.space_for_shape(shape, 2*order)
+    quad = mp.quadrature_for_space(quad_space, shape)
+
+    if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
+        if nodes_on_bdry:
+            nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(
+                shape.dim, order,
+            )
+        else:
+            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
+    elif isinstance(shape, mp.Simplex):
+        if nodes_on_bdry:
+            nodes = mp.warp_and_blend_nodes(shape.dim, order)
+        else:
+            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
+    else:
+        raise AssertionError()
+
+    basis = mp.orthonormal_basis_for_space(space, shape)
+
+    if test_weak_d_dr and order not in [0, 1]:
+        mass_inv = mp.inverse_mass_matrix(basis, nodes)
+
+        for ax in range(dim):
+            f = 1 - nodes[ax]**2
+            fp = -2*nodes[ax]
+
+            weak_operator = mp.nodal_quad_bilinear_form(
+                basis.derivatives(ax),
+                basis.functions,
+                quad,
+                nodes,
+                uses_quadrature_domain=False)
+
+            err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
+            assert err <= 1e-12
+    else:
+        quad_mass_mat = mp.nodal_quad_bilinear_form(
+            basis.functions,
+            basis.functions,
+            quad,
+            nodes,
+            uses_quadrature_domain=False)
+
+        vdm_mass_mat = mp.mass_matrix(basis, nodes)
+        err = la.norm(quad_mass_mat - vdm_mass_mat) / la.norm(vdm_mass_mat)
+        assert err < 1e-14
+
+
 # You can test individual routines by typing
 # $ python test_modes.py 'test_routine()'
 

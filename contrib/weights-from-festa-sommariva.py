@@ -76,17 +76,17 @@ def generate_festa_sommariva_quadrature_rules(outfile):
     #
     #   DEGREE:  <degree>
 
-    _re_degree = re.compile(r"DEGREE:\s+(\d+)")
-    _re_xw = re.compile(r"xw\s?=\s?\[(.+?)\];", re.DOTALL)
+    re_degree = re.compile(r"DEGREE:\s+(\d+)")
+    re_xw = re.compile(r"xw\s?=\s?\[(.+?)\];", re.DOTALL)
 
     # NOTE: some degrees have multiple quadrature rules with a repeated
     # header, so we just take the unique ones here
     degrees = np.unique(
-            np.fromiter(_re_degree.findall(mfile), dtype=np.int64)
+            np.fromiter(re_degree.findall(mfile), dtype=np.int64)
             )
 
     rules = {}
-    for imatch, match in enumerate(_re_xw.findall(mfile)):
+    for imatch, match in enumerate(re_xw.findall(mfile)):
         d = degrees[imatch]
         assert d == imatch + 1, (d, imatch + 1)
 
