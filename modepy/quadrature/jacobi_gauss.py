@@ -50,7 +50,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
 import numpy as np
 import numpy.linalg as la
 
@@ -267,7 +266,7 @@ def jacobi_gauss_lobatto_nodes(
     Exact to degree :math:`2N - 3`.
     """
 
-    x = np.zeros((N + 1,))
+    x: np.ndarray[tuple[int, ...], np.dtype[np.floating]] = np.zeros((N + 1,))
     if N == 0:
         x[0] = 0
         return x

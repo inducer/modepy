@@ -103,7 +103,9 @@ def make_mode_number_vector(
     return mode_number_vector
 
 
-def create_decay_baseline(mode_number_vector: np.ndarray, n: int) -> np.ndarray:
+def create_decay_baseline(
+        mode_number_vector: np.ndarray[tuple[int, ...], np.dtype[np.floating]],
+        n: int) -> np.ndarray[tuple[int, ...], np.dtype[np.floating]]:
     """Create a vector of modal coefficients that exhibit 'optimal'
     (:math:`k^{-N}`) decay.
     """
@@ -111,10 +113,8 @@ def create_decay_baseline(mode_number_vector: np.ndarray, n: int) -> np.ndarray:
     zeros = mode_number_vector == 0
 
     modal_coefficients = mode_number_vector**(-n)
-    modal_coefficients[zeros] = 1  # irrelevant, just keeps log from NaNing
-
-    # NOTE: mypy seems to be confused by the __itruediv__ argument types
-    modal_coefficients /= la.norm(modal_coefficients)   # type: ignore[arg-type,misc]
+    modal_coefficients[zeros] = 1.0  # irrelevant, just keeps log from NaNing
+    modal_coefficients /= la.norm(modal_coefficients)
 
     return modal_coefficients
 
