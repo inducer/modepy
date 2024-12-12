@@ -49,21 +49,15 @@ def test_nodal_mass_matrix_against_quad(
     quad_space = mp.space_for_shape(shape, 2*order)
     quad = mp.quadrature_for_space(quad_space, shape)
 
-    if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
-        if nodes_on_bdry:
-            nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(
-                shape.dim, order,
-            )
-        else:
-            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
-    elif isinstance(shape, mp.Simplex):
-        if nodes_on_bdry:
-            nodes = mp.warp_and_blend_nodes(shape.dim, order)
-        else:
-            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
-
+    if nodes_on_bdry:
+        nodes = mp.edge_clustered_nodes_for_space(space, shape)
     else:
-        raise AssertionError()
+        if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
+            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
+        elif isinstance(shape, mp.Simplex):
+            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
+        else:
+            raise AssertionError()
 
     basis = mp.orthonormal_basis_for_space(space, shape)
 
@@ -136,20 +130,15 @@ def test_bilinear_forms(
     quad_space = mp.space_for_shape(shape, 2*order)
     quad = mp.quadrature_for_space(quad_space, shape)
 
-    if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
-        if nodes_on_bdry:
-            nodes = mp.legendre_gauss_lobatto_tensor_product_nodes(
-                shape.dim, order,
-            )
-        else:
-            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
-    elif isinstance(shape, mp.Simplex):
-        if nodes_on_bdry:
-            nodes = mp.warp_and_blend_nodes(shape.dim, order)
-        else:
-            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
+    if nodes_on_bdry:
+        nodes = mp.edge_clustered_nodes_for_space(space, shape)
     else:
-        raise AssertionError()
+        if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
+            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
+        elif isinstance(shape, mp.Simplex):
+            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
+        else:
+            raise AssertionError()
 
     basis = mp.orthonormal_basis_for_space(space, shape)
 
@@ -160,22 +149,20 @@ def test_bilinear_forms(
             f = 1 - nodes[ax]**2
             fp = -2*nodes[ax]
 
-            weak_operator = mp.nodal_quad_bilinear_form(
+            weak_operator = mp.nodal_quad_bilinear_form_resampled(
                 basis.derivatives(ax),
                 basis.functions,
                 quad,
-                nodes,
-                uses_quadrature_domain=False)
+                nodes)
 
             err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
             assert err <= 1e-12
     else:
-        quad_mass_mat = mp.nodal_quad_bilinear_form(
+        quad_mass_mat = mp.nodal_quad_bilinear_form_resampled(
             basis.functions,
             basis.functions,
             quad,
-            nodes,
-            uses_quadrature_domain=False)
+            nodes)
 
         vdm_mass_mat = mp.mass_matrix(basis, nodes)
         err = la.norm(quad_mass_mat - vdm_mass_mat) / la.norm(vdm_mass_mat)

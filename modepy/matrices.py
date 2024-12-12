@@ -68,6 +68,7 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: spectral_diag_nodal_mass_matrix
 .. autofunction:: modal_quad_bilinear_form
 .. autofunction:: nodal_quad_bilinear_form
+.. autofunction:: nodal_quad_bilinear_form_resampled
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
@@ -379,8 +380,7 @@ def nodal_quad_bilinear_form(
         test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         quadrature: Quadrature,
-        nodes: np.ndarray,
-        uses_quadrature_domain: bool = False
+        nodes: np.ndarray
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
@@ -391,28 +391,38 @@ def nodal_quad_bilinear_form(
     where :math:`\phi_i` are the Lagrange basis functions obtained from
     *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
     and nodes from *quadrature*, and :math:`u_j` are point values of the trial
-    function at either *nodes* or the *quadrature* nodes depending on whether
-    a quadrature domain is used (as signified by *uses_quadrature_domain*).
-
-    If *uses_quadrature_domain* is set to False, then an interpolation operator
-    is used to make the operator :math:`N \times N` where :math:`N` is the
-    number of nodes in *nodes*. Otherwise, the operator has shape :math:`N
-    \times N_q` where :math:`N_q` is the number of nodes associated with
-    *quadrature*. Default behavior is to assume a quadrature domain is not used.
+    function at the *quadrature* nodes.
     """
     if len(test_functions) != nodes.shape[1]:
         raise ValueError("volume_nodes not unisolvent with trial_functions")
 
     vdm_out = vandermonde(trial_functions, nodes)
 
-    nodal_operator = la.solve(
+    return la.solve(
         vdm_out.T, modal_quad_bilinear_form(quadrature, test_functions))
 
-    if uses_quadrature_domain:
-        return nodal_operator
-    else:
-        return nodal_operator @ resampling_matrix(
-            trial_functions, quadrature.nodes, nodes)
+
+def nodal_quad_bilinear_form_resampled(
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        quadrature: Quadrature,
+        nodes: np.ndarray
+    ) -> np.ndarray:
+    r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
+
+    .. math::
+
+        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \phi_i(r_k)
+        \phi_j(r_k)) u_j,
+
+    where :math:`\phi_i` are the Lagrange basis functions obtained from
+    *test_functions* at *nodes*, :math:`w_k` and :math:`r_k` are the weights
+    and nodes from *quadrature*, and :math:`u_k` are point values of the trial
+    function at *nodes*.
+    """
+    return nodal_quad_bilinear_form(
+        test_functions, trial_functions, quadrature, nodes) @ resampling_matrix(
+        trial_functions, quadrature.nodes, nodes)
 
 
 def modal_quad_mass_matrix(
@@ -462,8 +472,7 @@ def nodal_quad_mass_matrix(
         test_functions,
         test_functions,
         quadrature,
-        nodes,
-        uses_quadrature_domain=True)
+        nodes)
 
 
 def spectral_diag_nodal_mass_matrix(
