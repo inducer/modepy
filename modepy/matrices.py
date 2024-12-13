@@ -417,7 +417,7 @@ def nodal_quad_bilinear_form_resampled(
 
     where :math:`\phi_i` are the Lagrange basis functions obtained from
     *test_functions* at *nodes*, :math:`w_k` and :math:`r_k` are the weights
-    and nodes from *quadrature*, and :math:`u_k` are point values of the trial
+    and nodes from *quadrature*, and :math:`u_j` are point values of the trial
     function at *nodes*.
     """
     return nodal_quad_bilinear_form(
