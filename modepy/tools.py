@@ -491,6 +491,8 @@ def reshape_array_for_tensor_product_space(
         function along a given dimension will be represented by variation
         of array entries along the corresponding array axis.
     """
+    if space.spatial_dim == 1:
+        return ary
 
     ndim = len(ary.shape)
     if axis < 0:
@@ -518,6 +520,8 @@ def unreshape_array_for_tensor_product_space(
     """Undoes the effect of :func:`reshape_array_for_tensor_product_space`,
     given the same *space* and *axis*.
     """
+    if space.spatial_dim == 1:
+        return ary
 
     n_tp_axes = len(space.bases)
     naxes = len(ary.shape) - n_tp_axes + 1
