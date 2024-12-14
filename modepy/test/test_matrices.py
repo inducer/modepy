@@ -114,7 +114,7 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
 
 @pytest.mark.parametrize("shape_cls", [mp.Hypercube, mp.Simplex])
 @pytest.mark.parametrize("dim", [1, 2, 3])
-@pytest.mark.parametrize("order", [1, 2, 4])
+@pytest.mark.parametrize("order", [0, 1, 2, 4])
 @pytest.mark.parametrize("nodes_on_bdry", [False, True])
 @pytest.mark.parametrize("test_weak_d_dr", [False, True])
 def test_bilinear_forms(
