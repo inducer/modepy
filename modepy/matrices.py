@@ -441,7 +441,12 @@ def modal_quad_mass_matrix(
 
     .. versionadded :: 2024.2
     """
-    return modal_quad_bilinear_form(quadrature, test_functions)
+    modal_mass_matrix = np.empty((len(test_functions), len(quadrature.weights)))
+
+    for i, test_f in enumerate(test_functions):
+        modal_mass_matrix[i] = test_f(quadrature.nodes) * quadrature.weights
+
+    return modal_mass_matrix
 
 
 def nodal_quad_mass_matrix(
@@ -468,11 +473,10 @@ def nodal_quad_mass_matrix(
     if nodes is None:
         nodes = quadrature.nodes
 
-    return nodal_quad_bilinear_form(
-        test_functions,
-        test_functions,
-        quadrature,
-        nodes)
+    vdm = vandermonde(test_functions, nodes)
+
+    return la.solve(vdm.T,
+                    modal_quad_mass_matrix(quadrature, test_functions))
 
 
 def spectral_diag_nodal_mass_matrix(
