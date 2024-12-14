@@ -49,7 +49,7 @@ def _make_clenshaw_curtis_nodes_and_weights(n: int) -> tuple[np.ndarray, np.ndar
     # Clenshaw-Curtis weights
     w = np.concatenate([2 / N / (N - 2), 1 / N[-1:], np.zeros(m)])
     w = 0 - w[:-1] - w[-1:0:-1]
-    g0 = -np.ones(n)
+    g0: np.ndarray[tuple[int, ...], np.dtype[np.floating]] = -np.ones(n)
     g0[r] = g0[r] + n
     g0[m] = g0[m] + n
     g0 = g0 / (n**2 - 1 + (n % 2))
