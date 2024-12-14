@@ -420,13 +420,17 @@ def modal_quad_bilinear_form(
 
     .. math::
 
-        \displaystyle A_{i,j} = \sum_k w_k \psi_i(r_k)
-        \phi_j(r_k),
+        \displaystyle A_{ij} = \sum_k \psi_i(r_k) \phi_j(r_k) w_k,
 
     where :math:`\psi_i` are from *test_functions*, :math:`\phi_j` are from
     *trial_functions*, :math:`r_k` and :math:`w_k` are nodes and weights
-    from *quadrature*, and :math:`u_j` are modal coefficients of a trial
-    solution.
+    from *quadrature*. The matrix :math:`A` satisfies
+
+    .. math::
+
+        \displaystyle (u, psi_i)_A = \sum_{j} A_{ij} u_j,
+
+    where :math:`u_i` are modal coefficients of a trial solution.
     """
     return np.einsum(
         "qi,qj,q->ij",
@@ -443,17 +447,22 @@ def nodal_quad_bilinear_form(
             proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
             nodes: np.ndarray
         ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
+    r"""Using *quadrature*, provide a matrix :math:`A` defined as:
 
     .. math::
 
-        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \psi_i(r_k)
-        \phi_j(r_k)) u_j,
+        \displaystyle A_{ij} = \sum_k \psi_i(r_k) \phi_j(r_k) w_k,
 
-    where :math:`\psi_i` and :math:`\phi_j` are the Lagrange basis functions
-    obtained from *test_functions* and *trial_functions* at *nodes*, :math:`w_k`
-    and :math:`r_k` are the weights and nodes from *quadrature*, and :math:`u_j`
-    are nodal coefficients (point values) of a trial solution at *nodes*.
+    where :math:`\psi_i` are Lagrange basis functions obtained from
+    *test_functions*, :math:`\phi_j` are Lagrange basis functions obtained from
+    *trial_functions*, :math:`r_k` and :math:`w_k` are nodes and weights from
+    *quadrature*. The matrix :math:`A` satisfies
+
+    .. math::
+
+        \displaystyle (u, psi_i)_A = \sum_{j} A_{ij} u_j,
+
+    where :math:`u_i` are nodal coefficients of a trial solution.
     """
     if len(test_functions) != nodes.shape[1]:
         raise ValueError("volume_nodes not unisolvent with proj_functions")
