@@ -354,9 +354,9 @@ def mass_matrix(
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_quad_bilinear_form(
+def modal_quadrature_operator(
         quadrature: Quadrature,
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]]
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
     ) -> np.ndarray:
     r"""Using the *quadrature*, provide a matrix :math:`A` that
     satisfies:
@@ -366,7 +366,8 @@ def modal_quad_bilinear_form(
         \displaystyle (A \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
 
     where :math:`\phi_i` are the *test_functions* at the nodes
-    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`.
+    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`, and
+    :math:`u_j` is a trial solution evaluated at the *quadrature* nodes.
     """
     modal_operator = np.empty((len(test_functions), len(quadrature.weights)))
 
@@ -376,11 +377,11 @@ def modal_quad_bilinear_form(
     return modal_operator
 
 
-def nodal_quad_bilinear_form(
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+def nodal_quadrature_operator(
         quadrature: Quadrature,
-        nodes: np.ndarray
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        nodes: np.ndarray | None = None
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
@@ -391,38 +392,74 @@ def nodal_quad_bilinear_form(
     where :math:`\phi_i` are the Lagrange basis functions obtained from
     *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
     and nodes from *quadrature*, and :math:`u_j` are point values of the trial
-    function at the *quadrature* nodes.
+    solution at the *quadrature* nodes.
     """
-    if len(test_functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with trial_functions")
+    if nodes is None:
+        nodes = quadrature.nodes
 
-    vdm_out = vandermonde(trial_functions, nodes)
+    if len(proj_functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with interp_functions")
+
+    vdm = vandermonde(proj_functions, nodes)
 
     return la.solve(
-        vdm_out.T, modal_quad_bilinear_form(quadrature, test_functions))
+        vdm.T, modal_quadrature_operator(
+            quadrature,
+            test_functions
+        )
+    )
 
 
-def nodal_quad_bilinear_form_resampled(
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        quadrature: Quadrature,
-        nodes: np.ndarray
-    ) -> np.ndarray:
+def modal_quad_bilinear_form(
+            quadrature: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
     .. math::
 
-        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \phi_i(r_k)
+        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \psi_i(r_k)
         \phi_j(r_k)) u_j,
 
-    where :math:`\phi_i` are the Lagrange basis functions obtained from
-    *test_functions* at *nodes*, :math:`w_k` and :math:`r_k` are the weights
-    and nodes from *quadrature*, and :math:`u_j` are point values of the trial
-    function at *nodes*.
+    where :math:`\psi_i` are from *test_functions*, :math:`\phi_j` are from
+    *trial_functions*, :math:`r_k` and :math:`w_k` are nodes and weights
+    from *quadrature*, and :math:`u_j` are modal coefficients of a trial
+    solution.
     """
-    return nodal_quad_bilinear_form(
-        test_functions, trial_functions, quadrature, nodes) @ resampling_matrix(
-        trial_functions, quadrature.nodes, nodes)
+    return np.einsum(
+        "qi,qj,q->ij",
+        vandermonde(test_functions, quadrature.nodes),
+        vandermonde(trial_functions, quadrature.nodes),
+        quadrature.weights
+    )
+
+
+def nodal_quad_bilinear_form(
+            quadrature: Quadrature,
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            nodes: np.ndarray
+        ) -> np.ndarray:
+    r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
+
+    .. math::
+
+        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \psi_i(r_k)
+        \phi_j(r_k)) u_j,
+
+    where :math:`\psi_i` and :math:`\phi_j` are the Lagrange basis functions
+    obtained from *test_functions* and *trial_functions* at *nodes*, :math:`w_k`
+    and :math:`r_k` are the weights and nodes from *quadrature*, and :math:`u_j`
+    are nodal coefficients (point values) of a trial solution at *nodes*.
+    """
+    modal_operator = modal_quad_bilinear_form(
+        quadrature, test_functions, trial_functions)
+
+    vdm = vandermonde(proj_functions, nodes)
+
+    return la.solve(vdm.T, modal_operator) @ la.inv(vdm)
 
 
 def modal_quad_mass_matrix(
@@ -441,12 +478,7 @@ def modal_quad_mass_matrix(
 
     .. versionadded :: 2024.2
     """
-    modal_mass_matrix = np.empty((len(test_functions), len(quadrature.weights)))
-
-    for i, test_f in enumerate(test_functions):
-        modal_mass_matrix[i] = test_f(quadrature.nodes) * quadrature.weights
-
-    return modal_mass_matrix
+    return modal_quadrature_operator(quadrature, test_functions)
 
 
 def nodal_quad_mass_matrix(
@@ -470,13 +502,8 @@ def nodal_quad_mass_matrix(
 
     .. versionadded :: 2024.2
     """
-    if nodes is None:
-        nodes = quadrature.nodes
-
-    vdm = vandermonde(test_functions, nodes)
-
-    return la.solve(vdm.T,
-                    modal_quad_mass_matrix(quadrature, test_functions))
+    return nodal_quadrature_operator(
+        quadrature, test_functions, test_functions, nodes)
 
 
 def spectral_diag_nodal_mass_matrix(

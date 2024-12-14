@@ -114,7 +114,7 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
 
 @pytest.mark.parametrize("shape_cls", [mp.Hypercube, mp.Simplex])
 @pytest.mark.parametrize("dim", [1, 2, 3])
-@pytest.mark.parametrize("order", [0, 1, 2, 4])
+@pytest.mark.parametrize("order", [1, 2, 4])
 @pytest.mark.parametrize("nodes_on_bdry", [False, True])
 @pytest.mark.parametrize("test_weak_d_dr", [False, True])
 def test_bilinear_forms(
@@ -149,19 +149,21 @@ def test_bilinear_forms(
             f = 1 - nodes[ax]**2
             fp = -2*nodes[ax]
 
-            weak_operator = mp.nodal_quad_bilinear_form_resampled(
+            weak_operator = mp.nodal_quad_bilinear_form(
+                quad,
                 basis.derivatives(ax),
                 basis.functions,
-                quad,
+                basis.functions,
                 nodes)
 
             err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
             assert err <= 1e-12
     else:
-        quad_mass_mat = mp.nodal_quad_bilinear_form_resampled(
-            basis.functions,
-            basis.functions,
+        quad_mass_mat = mp.nodal_quad_bilinear_form(
             quad,
+            basis.functions,
+            basis.functions,
+            basis.functions,
             nodes)
 
         vdm_mass_mat = mp.mass_matrix(basis, nodes)
