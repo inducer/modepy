@@ -68,7 +68,8 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: spectral_diag_nodal_mass_matrix
 .. autofunction:: modal_quad_bilinear_form
 .. autofunction:: nodal_quad_bilinear_form
-.. autofunction:: nodal_quad_bilinear_form_resampled
+.. autofunction:: nodal_quadrature_operator
+.. autofunction:: modal_quadrature_operator
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
