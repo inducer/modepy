@@ -359,7 +359,7 @@ def modal_quad_operator(
         quadrature: Quadrature,
         test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
     ) -> np.ndarray:
-    r"""Using the *quadrature*, provide a matrix :math:`A` that
+    r"""Using *quadrature*, provide a matrix :math:`A` that
     satisfies:
 
     .. math::
@@ -392,7 +392,7 @@ def nodal_quad_operator(
 
     where :math:`\phi_i` are the Lagrange basis functions obtained from
     *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
-    and nodes from *quadrature*, and :math:`u_j` are point values of the trial
+    and nodes from *quadrature*, and :math:`u_j` are point values of a trial
     solution at the *quadrature* nodes.
     """
     if nodes is None:
@@ -428,7 +428,7 @@ def modal_quad_bilinear_form(
 
     .. math::
 
-        \displaystyle (u, psi_i)_A = \sum_{j} A_{ij} u_j,
+        \displaystyle (u, \psi_i)_A = \sum_{j} A_{ij} u_j,
 
     where :math:`u_i` are modal coefficients of a trial solution.
     """
@@ -460,7 +460,7 @@ def nodal_quad_bilinear_form(
 
     .. math::
 
-        \displaystyle (u, psi_i)_A = \sum_{j} A_{ij} u_j,
+        \displaystyle (u, \psi_i)_A = \sum_{j} A_{ij} u_j,
 
     where :math:`u_i` are nodal coefficients of a trial solution.
     """
@@ -479,7 +479,7 @@ def modal_quad_mass_matrix(
             quadrature: Quadrature,
             test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
-    r"""Using the *quadrature*, provide a matrix :math:`M` that
+    r"""Using *quadrature*, provide a matrix :math:`M` that
     satisfies:
 
     .. math::
@@ -499,7 +499,7 @@ def nodal_quad_mass_matrix(
             test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
             nodes: np.ndarray | None = None,
         ) -> np.ndarray:
-    r"""Using the *quadrature*, provide a matrix :math:`M` that
+    r"""Using *quadrature*, provide a matrix :math:`M` that
     satisfies:
 
     .. math::
