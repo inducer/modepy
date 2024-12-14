@@ -68,8 +68,8 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: spectral_diag_nodal_mass_matrix
 .. autofunction:: modal_quad_bilinear_form
 .. autofunction:: nodal_quad_bilinear_form
-.. autofunction:: nodal_quadrature_operator
-.. autofunction:: modal_quadrature_operator
+.. autofunction:: nodal_quad_operator
+.. autofunction:: modal_quad_operator
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
@@ -355,7 +355,7 @@ def mass_matrix(
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_quadrature_operator(
+def modal_quad_operator(
         quadrature: Quadrature,
         test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
     ) -> np.ndarray:
@@ -378,7 +378,7 @@ def modal_quadrature_operator(
     return modal_operator
 
 
-def nodal_quadrature_operator(
+def nodal_quad_operator(
         quadrature: Quadrature,
         test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
@@ -404,7 +404,7 @@ def nodal_quadrature_operator(
     vdm = vandermonde(proj_functions, nodes)
 
     return la.solve(
-        vdm.T, modal_quadrature_operator(
+        vdm.T, modal_quad_operator(
             quadrature,
             test_functions
         )
@@ -416,12 +416,12 @@ def modal_quad_bilinear_form(
             test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
             trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
+    r"""Using *quadrature*, provide a matrix :math:`A` defined as:
 
     .. math::
 
-        \displaystyle (A \boldsymbol u)_i = \sum_k,j (w_k \psi_i(r_k)
-        \phi_j(r_k)) u_j,
+        \displaystyle A_{i,j} = \sum_k w_k \psi_i(r_k)
+        \phi_j(r_k),
 
     where :math:`\psi_i` are from *test_functions*, :math:`\phi_j` are from
     *trial_functions*, :math:`r_k` and :math:`w_k` are nodes and weights
@@ -482,7 +482,7 @@ def modal_quad_mass_matrix(
 
     .. versionadded :: 2024.2
     """
-    return modal_quadrature_operator(quadrature, test_functions)
+    return modal_quad_operator(quadrature, test_functions)
 
 
 def nodal_quad_mass_matrix(
@@ -506,7 +506,7 @@ def nodal_quad_mass_matrix(
 
     .. versionadded :: 2024.2
     """
-    return nodal_quadrature_operator(
+    return nodal_quad_operator(
         quadrature, test_functions, test_functions, nodes)
 
 
