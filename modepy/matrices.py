@@ -399,7 +399,7 @@ def nodal_quadrature_operator(
         nodes = quadrature.nodes
 
     if len(proj_functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with interp_functions")
+        raise ValueError("volume_nodes not unisolvent with proj_functions")
 
     vdm = vandermonde(proj_functions, nodes)
 
@@ -455,6 +455,9 @@ def nodal_quad_bilinear_form(
     and :math:`r_k` are the weights and nodes from *quadrature*, and :math:`u_j`
     are nodal coefficients (point values) of a trial solution at *nodes*.
     """
+    if len(test_functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with proj_functions")
+
     modal_operator = modal_quad_bilinear_form(
         quadrature, test_functions, trial_functions)
 
