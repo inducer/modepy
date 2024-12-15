@@ -70,7 +70,7 @@ import numpy.linalg as la
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
 import modepy.shapes as shp
-from modepy.spaces import TensorProductSpace
+from modepy.spaces import FunctionSpace, TensorProductSpace
 
 
 class Monomial:
@@ -475,7 +475,7 @@ ReshapeableT = TypeVar("ReshapeableT", bound=Reshapeable)
 
 
 def reshape_array_for_tensor_product_space(
-        space: TensorProductSpace, ary: ReshapeableT, axis: int = -1) -> ReshapeableT:
+        space: FunctionSpace, ary: ReshapeableT, axis: int = -1) -> ReshapeableT:
     """Return a reshaped view of *ary* that exposes the tensor product nature
     of the *space*.
 
@@ -491,6 +491,8 @@ def reshape_array_for_tensor_product_space(
         function along a given dimension will be represented by variation
         of array entries along the corresponding array axis.
     """
+    if not isinstance(space, TensorProductSpace):
+        return ary
 
     ndim = len(ary.shape)
     if axis < 0:
@@ -503,9 +505,6 @@ def reshape_array_for_tensor_product_space(
         raise ValueError(f"The input array's axis {axis} must have length "
                 f"{space.space_dim}, found {ary.shape[axis]} instead")
 
-    if space.spatial_dim == 1:
-        return ary
-
     return ary.reshape(
             (ary.shape[:axis]
                 + tuple(s.space_dim for s in space.bases)
@@ -514,10 +513,12 @@ def reshape_array_for_tensor_product_space(
 
 
 def unreshape_array_for_tensor_product_space(
-        space: TensorProductSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
+        space: FunctionSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
     """Undoes the effect of :func:`reshape_array_for_tensor_product_space`,
     given the same *space* and *axis*.
     """
+    if not isinstance(space, TensorProductSpace):
+        return ary
 
     n_tp_axes = len(space.bases)
     naxes = len(ary.shape) - n_tp_axes + 1
