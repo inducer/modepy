@@ -421,6 +421,21 @@ def modal_quad_bilinear_form(
         trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         mapping_function: Callable[[np.ndarray], np.ndarray] | None = None,
     ) -> np.ndarray:
+    r"""Using *quadrature*, provide a matrix :math:`A` defined as:
+
+    .. math::
+
+        \displaystyle A_{ij} = \sum_k \phi_i(r_k) \psi_j(r_k) w_k,
+
+    where :math:`phi_i` are in *test_functions*, :math:`\psi_j` are in
+    *trial_functions*, and :math:`r_k` and :math:`w_k` are nodes and weights
+    from *quadrature*.
+
+    An optional *mapping_function* can be supplied to map the arguments
+    evaluated by *test_functions*. This would be useful, e.g., to evaluate a
+    face mass matrix in the context of DG-FEM. Otherwise, the input to
+    *test_functions* are the *quadrature* nodes.
+    """
     mapped_nodes = (
         mapping_function(quadrature.nodes)
         if mapping_function is not None else quadrature.nodes
@@ -460,6 +475,11 @@ def nodal_quad_bilinear_form(
         \displaystyle (u, \psi_i)_A = \sum_{j} A_{ij} u_j,
 
     where :math:`u_i` are nodal coefficients of a trial solution.
+
+    Optional arguments allow this function to work in cases where the input and
+    output discretizations are not necessarily the same. This is the case, for
+    example, in DG-FEM when evaluating a face mass matrix or when there is a
+    base and quadrature discretization.
     """
     if output_nodes is None:
         output_nodes = input_nodes
