@@ -82,8 +82,11 @@ of the basis to return to nodal values.
 """
 
 
+BasisFunctionType = Callable[[np.ndarray], np.ndarray]
+
+
 def vandermonde(
-            functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            functions: Sequence[BasisFunctionType],
             nodes: np.ndarray
         ) -> np.ndarray:
     """Return a (generalized) Vandermonde matrix.
@@ -167,7 +170,7 @@ def multi_vandermonde(
 
 
 def resampling_matrix(
-            basis: Sequence[Callable[[np.ndarray], np.ndarray]],
+            basis: Sequence[BasisFunctionType],
             new_nodes: np.ndarray,
             old_nodes: np.ndarray,
             least_squares_ok: bool = False
@@ -222,7 +225,7 @@ def resampling_matrix(
 
 
 def differentiation_matrices(
-            basis: Sequence[Callable[[np.ndarray], np.ndarray]],
+            basis: Sequence[BasisFunctionType],
             grad_basis: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
             nodes: np.ndarray,
             from_nodes: np.ndarray | None = None
@@ -302,7 +305,7 @@ def diff_matrix_permutation(
 
 
 def inverse_mass_matrix(
-            basis: Basis | Sequence[Callable[[np.ndarray], np.ndarray]],
+            basis: Basis | Sequence[BasisFunctionType],
             nodes: np.ndarray
         ) -> np.ndarray:
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
@@ -321,7 +324,7 @@ def inverse_mass_matrix(
                 "inverse mass matrix of non-orthogonal basis"
                 ) from None
 
-        basis_functions: Sequence[Callable[[np.ndarray], np.ndarray]] = (
+        basis_functions: Sequence[BasisFunctionType] = (
             basis.functions)
     else:
         basis_functions = basis
@@ -337,7 +340,7 @@ def inverse_mass_matrix(
 
 
 def mass_matrix(
-            basis: Basis | Sequence[Callable[[np.ndarray], np.ndarray]],
+            basis: Basis | Sequence[BasisFunctionType],
             nodes: np.ndarray
         ) -> np.ndarray:
     r"""Return a mass matrix :math:`M`, which obeys
@@ -357,7 +360,7 @@ def mass_matrix(
 
 def modal_quad_operator(
         quadrature: Quadrature,
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        test_functions: Sequence[BasisFunctionType],
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that
     satisfies:
@@ -380,9 +383,10 @@ def modal_quad_operator(
 
 def nodal_quad_operator(
         quadrature: Quadrature,
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        nodes: np.ndarray | None = None
+        test_functions: Sequence[BasisFunctionType],
+        proj_functions: Sequence[BasisFunctionType],
+        nodes: np.ndarray | None = None,
+        mapped_nodes: np.ndarray | None = None
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
@@ -411,41 +415,15 @@ def nodal_quad_operator(
     )
 
 
-def modal_quad_bilinear_form(
-            quadrature: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`A` defined as:
-
-    .. math::
-
-        \displaystyle A_{ij} = \sum_k \psi_i(r_k) \phi_j(r_k) w_k,
-
-    where :math:`\psi_i` are from *test_functions*, :math:`\phi_j` are from
-    *trial_functions*, :math:`r_k` and :math:`w_k` are nodes and weights
-    from *quadrature*. The matrix :math:`A` satisfies
-
-    .. math::
-
-        \displaystyle (u, \psi_i)_A = \sum_{j} A_{ij} u_j,
-
-    where :math:`u_i` are modal coefficients of a trial solution.
-    """
-    return np.einsum(
-        "qi,qj,q->ij",
-        vandermonde(test_functions, quadrature.nodes),
-        vandermonde(trial_functions, quadrature.nodes),
-        quadrature.weights
-    )
-
-
 def nodal_quad_bilinear_form(
             quadrature: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            proj_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            nodes: np.ndarray
+            test_basis: Basis,
+            trial_basis: Basis,
+            input_nodes: np.ndarray,
+            output_nodes: np.ndarray | None = None,
+            mapping_function: Callable | None = None,
+            test_derivative_ax: int | None = None,
+            trial_derivative_ax: int | None = None
         ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` defined as:
 
@@ -464,59 +442,35 @@ def nodal_quad_bilinear_form(
 
     where :math:`u_i` are nodal coefficients of a trial solution.
     """
-    if len(test_functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with proj_functions")
+    if output_nodes is None:
+        output_nodes = input_nodes
 
-    modal_operator = modal_quad_bilinear_form(
-        quadrature, test_functions, trial_functions)
+    test_functions = (
+        test_basis.derivatives(test_derivative_ax)
+        if test_derivative_ax is not None else test_basis.functions
+    )
 
-    vdm = vandermonde(proj_functions, nodes)
+    trial_functions = (
+        trial_basis.derivatives(trial_derivative_ax)
+        if trial_derivative_ax is not None else trial_basis.functions
+    )
 
-    return la.solve(vdm.T, modal_operator) @ la.inv(vdm)
+    mapped_nodes = (
+        mapping_function(quadrature.nodes)
+        if mapping_function is not None else quadrature.nodes
+    )
 
+    modal_operator = np.einsum(
+        "qi,qj,q->ij",
+        vandermonde(test_functions, mapped_nodes),
+        vandermonde(trial_functions, quadrature.nodes),
+        quadrature.weights
+    )
 
-def modal_quad_mass_matrix(
-            quadrature: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`M` that
-    satisfies:
+    input_vdm = vandermonde(trial_basis.functions, input_nodes)
+    output_vdm = vandermonde(test_basis.functions, output_nodes)
 
-    .. math::
-
-        \displaystyle (M \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
-
-    where :math:`\phi_i` are the *test_functions* at the nodes
-    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`.
-
-    .. versionadded :: 2024.2
-    """
-    return modal_quad_operator(quadrature, test_functions)
-
-
-def nodal_quad_mass_matrix(
-            quadrature: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            nodes: np.ndarray | None = None,
-        ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`M` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle (M \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
-
-    where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
-    *test_functions* at *nodes*, :math:`w_i` and :math:`r_i` are the
-    weights and nodes from *qudarature*, and :math:`u_j` are the point
-    values of the trial function at the nodes of *quadrature*.
-
-    If *nodes* is not provided, use *quadrature*'s nodes.
-
-    .. versionadded :: 2024.2
-    """
-    return nodal_quad_operator(
-        quadrature, test_functions, test_functions, nodes)
+    return la.solve(output_vdm.T, modal_operator) @ la.inv(input_vdm)
 
 
 def spectral_diag_nodal_mass_matrix(
@@ -540,25 +494,38 @@ def spectral_diag_nodal_mass_matrix(
     return quadrature.weights
 
 
+# {{{ deprecated remove in 2025-ish
+
+def modal_quad_mass_matrix(
+            quadrature: Quadrature,
+            test_functions: Sequence[BasisFunctionType],
+        ) -> np.ndarray:
+    from warnings import warn
+    warn("`modal_quad_mass_matrix` is deprecated and will stop working in "
+         "2025. Please use `modal_quad_operator` instead.", stacklevel=1)
+    return modal_quad_operator(quadrature, test_functions)
+
+
+def nodal_quad_mass_matrix(
+            quadrature: Quadrature,
+            test_functions: Sequence[BasisFunctionType],
+            nodes: np.ndarray | None = None,
+        ) -> np.ndarray:
+    from warnings import warn
+    warn("`nodal_quad_mass_matrix` is deprecated and will stop working in "
+         "2025. Please use `nodal_quad_operator` instead.", stacklevel=1)
+    return nodal_quad_operator(
+        quadrature, test_functions, test_functions, nodes)
+
+
 def modal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]]
+            trial_functions: Sequence[BasisFunctionType],
+            test_functions: Sequence[BasisFunctionType]
         ) -> np.ndarray:
-    r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle {(M_f)}_{ij} \approx \int_F \phi_i(r) \psi_j(r) dr,
-
-    where :math:`\phi_i` are the (volume) basis functions
-    *test_functions*, and :math:`\psi_j` are the (surface)
-    *trial_functions*.
-
-    .. versionadded:: 2020.3
-    """
-
+    from warnings import warn
+    warn("`modal_mass_matrix_for_face` is deprecated and will stop working in "
+         "2025. Please use `modal_quad_bilinear_form` instead.", stacklevel=1)
     mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     result = np.empty((len(test_functions), len(trial_functions)))
@@ -573,23 +540,14 @@ def modal_mass_matrix_for_face(
 
 def nodal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-            volume_nodes: np.ndarray, face_nodes: np.ndarray
+            trial_functions: Sequence[BasisFunctionType],
+            test_functions: Sequence[BasisFunctionType],
+            volume_nodes: np.ndarray,
+            face_nodes: np.ndarray
         ) -> np.ndarray:
-    r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle {(M_f)}_{ij} \approx \int_F \phi_i(r) \psi_j(r) dr,
-
-    where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
-    *test_functions* at *volume_nodes*, and :math:`\psi_j` are the (surface)
-    Lagrange basis functions obtained from *trial_functions* at *face_nodes*.
-
-    .. versionadded :: 2020.3
-    """
+    from warnings import warn
+    warn("`nodal_mass_matrix_for_face` is deprecated and will stop working in "
+         "2025. Please use `nodal_quad_bilinear_form` instead.", stacklevel=1)
     face_vdm = vandermonde(trial_functions, face_nodes)
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
@@ -608,21 +566,11 @@ def nodal_mass_matrix_for_face(
 
 def modal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            test_functions: Sequence[BasisFunctionType],
         ) -> np.ndarray:
-    r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle (M_f \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
-
-    where :math:`\phi_i` are the *test_functions*, :math:`w_j` and :math:`r_j` are
-    the weights and nodes from *face_quad*, and :math:`u_j` are the point values of
-    the trial function at the nodes of *face_quad*.
-
-    .. versionadded :: 2024.2
-    """
+    from warnings import warn
+    warn("`modal_quad_mass_matrix_for_face` is deprecated and will stop working "
+         "in 2025. Please use `modal_quad_operator` instead.", stacklevel=1)
     mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     vol_modal_mass_matrix = np.empty((len(test_functions), len(face_quad.weights)))
@@ -635,23 +583,12 @@ def modal_quad_mass_matrix_for_face(
 
 def nodal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+            test_functions: Sequence[BasisFunctionType],
             volume_nodes: np.ndarray,
         ) -> np.ndarray:
-    r"""Using the quadrature *face_quad*, provide a matrix :math:`M_f` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle (M_f \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
-
-    where :math:`\phi_i` are the (volume) Lagrange basis functions obtained from
-    *test_functions* at *volume_nodes*, :math:`w_j` and :math:`r_j` are the
-    weights and nodes from *face_quad*, and :math:`u_j` are the point
-    values of the trial function at the nodes of *face_quad*.
-
-    .. versionadded :: 2021.2
-    """
+    from warnings import warn
+    warn("`nodal_quad_mass_matrix_for_face` is deprecated and will stop working "
+         "in 2025. Please use `nodal_quad_operator` instead.", stacklevel=1)
     if len(test_functions) != volume_nodes.shape[1]:
         raise ValueError("volume_nodes not unisolvent with test_functions")
 
@@ -659,5 +596,7 @@ def nodal_quad_mass_matrix_for_face(
 
     return la.solve(vol_vdm.T,
                     modal_quad_mass_matrix_for_face(face, face_quad, test_functions))
+
+# }}}
 
 # vim: foldmethod=marker
