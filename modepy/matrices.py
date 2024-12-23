@@ -415,6 +415,25 @@ def nodal_quad_operator(
     )
 
 
+def modal_quad_bilinear_form(
+        quadrature: Quadrature,
+        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
+        mapping_function: Callable[[np.ndarray], np.ndarray] | None = None,
+    ) -> np.ndarray:
+    mapped_nodes = (
+        mapping_function(quadrature.nodes)
+        if mapping_function is not None else quadrature.nodes
+    )
+
+    return np.einsum(
+        "qi,qj,q->ij",
+        vandermonde(test_functions, mapped_nodes),
+        vandermonde(trial_functions, quadrature.nodes),
+        quadrature.weights
+    )
+
+
 def nodal_quad_bilinear_form(
             quadrature: Quadrature,
             test_basis: Basis,
@@ -455,16 +474,11 @@ def nodal_quad_bilinear_form(
         if trial_derivative_ax is not None else trial_basis.functions
     )
 
-    mapped_nodes = (
-        mapping_function(quadrature.nodes)
-        if mapping_function is not None else quadrature.nodes
-    )
-
-    modal_operator = np.einsum(
-        "qi,qj,q->ij",
-        vandermonde(test_functions, mapped_nodes),
-        vandermonde(trial_functions, quadrature.nodes),
-        quadrature.weights
+    modal_operator = modal_quad_bilinear_form(
+        quadrature,
+        test_functions,
+        trial_functions,
+        mapping_function
     )
 
     input_vdm = vandermonde(trial_basis.functions, input_nodes)
@@ -498,24 +512,37 @@ def spectral_diag_nodal_mass_matrix(
 
 def modal_quad_mass_matrix(
             quadrature: Quadrature,
-            test_functions: Sequence[BasisFunctionType],
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_quad_mass_matrix` is deprecated and will stop working in "
-         "2025. Please use `modal_quad_operator` instead.", stacklevel=1)
-    return modal_quad_operator(quadrature, test_functions)
+         "2025.", stacklevel=0)
+    modal_mass_matrix = np.empty((len(test_functions), len(quadrature.weights)))
+
+    for i, test_f in enumerate(test_functions):
+        modal_mass_matrix[i] = test_f(quadrature.nodes) * quadrature.weights
+
+    return modal_mass_matrix
 
 
 def nodal_quad_mass_matrix(
             quadrature: Quadrature,
-            test_functions: Sequence[BasisFunctionType],
+            test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
             nodes: np.ndarray | None = None,
         ) -> np.ndarray:
     from warnings import warn
     warn("`nodal_quad_mass_matrix` is deprecated and will stop working in "
-         "2025. Please use `nodal_quad_operator` instead.", stacklevel=1)
-    return nodal_quad_operator(
-        quadrature, test_functions, test_functions, nodes)
+         "2025. Consider switching to `nodal_quad_bilinear_form`", stacklevel=0)
+    if nodes is None:
+        nodes = quadrature.nodes
+
+    if len(test_functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with test_functions")
+
+    vdm = vandermonde(test_functions, nodes)
+
+    return la.solve(vdm.T,
+                    modal_quad_mass_matrix(quadrature, test_functions))
 
 
 def modal_mass_matrix_for_face(
@@ -525,7 +552,7 @@ def modal_mass_matrix_for_face(
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_mass_matrix_for_face` is deprecated and will stop working in "
-         "2025. Please use `modal_quad_bilinear_form` instead.", stacklevel=1)
+         "2025.", stacklevel=1)
     mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     result = np.empty((len(test_functions), len(trial_functions)))
@@ -570,7 +597,7 @@ def modal_quad_mass_matrix_for_face(
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_quad_mass_matrix_for_face` is deprecated and will stop working "
-         "in 2025. Please use `modal_quad_operator` instead.", stacklevel=1)
+         "in 2025.", stacklevel=1)
     mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     vol_modal_mass_matrix = np.empty((len(test_functions), len(face_quad.weights)))
@@ -588,7 +615,8 @@ def nodal_quad_mass_matrix_for_face(
         ) -> np.ndarray:
     from warnings import warn
     warn("`nodal_quad_mass_matrix_for_face` is deprecated and will stop working "
-         "in 2025. Please use `nodal_quad_operator` instead.", stacklevel=1)
+         "in 2025. Consider using `nodal_quad_bilinear_form` instead",
+         stacklevel=1)
     if len(test_functions) != volume_nodes.shape[1]:
         raise ValueError("volume_nodes not unisolvent with test_functions")
 
