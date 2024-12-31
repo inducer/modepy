@@ -383,10 +383,10 @@ def modal_quad_operator(
 
 def nodal_quad_operator(
         quadrature: Quadrature,
-        test_functions: Sequence[BasisFunctionType],
-        proj_functions: Sequence[BasisFunctionType],
+        test_basis: Basis,
+        test_derivative_ax: int | None = None,
         nodes: np.ndarray | None = None,
-        mapped_nodes: np.ndarray | None = None
+        mapping_function: Callable[[np.ndarray], np.ndarray] | None = None
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
@@ -402,17 +402,27 @@ def nodal_quad_operator(
     if nodes is None:
         nodes = quadrature.nodes
 
-    if len(proj_functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with proj_functions")
+    if len(test_basis.functions) != nodes.shape[1]:
+        raise ValueError("volume_nodes not unisolvent with test functions")
 
-    vdm = vandermonde(proj_functions, nodes)
-
-    return la.solve(
-        vdm.T, modal_quad_operator(
-            quadrature,
-            test_functions
-        )
+    test_functions = (
+        test_basis.derivatives(test_derivative_ax)
+        if test_derivative_ax is not None else test_basis.functions
     )
+
+    vdm = vandermonde(test_basis.functions, nodes)
+
+    mapped_nodes = (
+        mapping_function(quadrature.nodes)
+        if mapping_function is not None else quadrature.nodes
+    )
+
+    modal_operator = np.array([
+        test_f(mapped_nodes) * quadrature.weights
+        for test_f in test_functions
+    ])
+
+    return la.solve(vdm.T, modal_operator)
 
 
 def modal_quad_bilinear_form(
@@ -504,7 +514,7 @@ def nodal_quad_bilinear_form(
     input_vdm = vandermonde(trial_basis.functions, input_nodes)
     output_vdm = vandermonde(test_basis.functions, output_nodes)
 
-    return la.solve(output_vdm.T, modal_operator) @ la.inv(input_vdm)
+    return la.solve(output_vdm.T, modal_operator @ la.inv(input_vdm))
 
 
 def spectral_diag_nodal_mass_matrix(
