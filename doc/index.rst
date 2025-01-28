@@ -49,6 +49,7 @@ Contents
     modes
     nodes
     quadrature
+    quad_construction
     tools
     misc
     🚀 Github <https://github.com/inducer/modepy>
