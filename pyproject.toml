@@ -34,6 +34,8 @@ dependencies = [
     "numpy",
     "pymbolic>=2024.2",
     "pytools",
+    # for Never
+    "typing_extensions>=4.1",
 ]
 
 [project.optional-dependencies]
