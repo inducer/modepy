@@ -138,7 +138,10 @@ class Quadrature:
             f"'{type(self).__name__}' rule does not define an exact order"
             )
 
-    def __call__(self, f: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
+    def __call__(
+                self,
+                f: Callable[[np.ndarray], np.ndarray]
+            ) -> np.ndarray | np.inexact:
         """Evaluate the callable *f* at the quadrature nodes and return its
         integral.
 
