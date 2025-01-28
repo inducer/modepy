@@ -90,7 +90,7 @@ def test_gauss_quadrature(backend, quad_type):
             assert err < 3.0e-15, (s, deg, err, i_f, i_f_true)
 
 
-def test_clenshaw_curtis_quadrature():
+def test_clenshaw_curtis_quadrature() -> None:
     from modepy.quadrature.clenshaw_curtis import ClenshawCurtisQuadrature
 
     for s in range(1, 9 + 1):
@@ -107,7 +107,7 @@ def test_clenshaw_curtis_quadrature():
 
 
 @pytest.mark.parametrize("kind", [1, 2])
-def test_fejer_quadrature(kind):
+def test_fejer_quadrature(kind: int) -> None:
     from modepy.quadrature.clenshaw_curtis import FejerQuadrature
 
     for deg in range(1, 9 + 1):
@@ -130,7 +130,7 @@ def test_fejer_quadrature(kind):
     (mp.GrundmannMoellerSimplexQuadrature, 3),
     ])
 @pytest.mark.parametrize("dim", [2, 3])
-def test_simplex_quadrature(quad_class, highest_order, dim):
+def test_simplex_quadrature(quad_class, highest_order, dim) -> None:
     """Check that quadratures on simplices works as advertised"""
     from pytools import (
         generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
