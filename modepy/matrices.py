@@ -374,7 +374,7 @@ def nodal_quadrature_matrix(
         nodes = quadrature.nodes
 
     if len(test_basis.functions) != nodes.shape[1]:
-        raise ValueError("volume_nodes not unisolvent with test functions")
+        raise ValueError("nodes not unisolvent with test functions")
 
     test_functions = (
         test_basis.derivatives(test_derivative_ax)
@@ -438,6 +438,9 @@ def nodal_quadrature_bilinear_form_matrix(
     """
     if output_nodes is None:
         output_nodes = input_nodes
+
+    if len(test_basis.functions) != output_nodes.shape[1]:
+        raise ValueError("output_nodes not unisolvent with test functions")
 
     test_functions = (
         test_basis.derivatives(test_derivative_ax)
