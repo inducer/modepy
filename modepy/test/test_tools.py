@@ -295,45 +295,7 @@ def test_diff_matrix_permutation(dims):
 
 @pytest.mark.parametrize("dims", [2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_modal_quad_bilinear_form_for_face(dims, shape_cls, order=3):
-    vol_shape = shape_cls(dims)
-    vol_space = mp.space_for_shape(vol_shape, order)
-    vol_basis = mp.basis_for_space(vol_space, vol_shape)
-
-    from modepy.matrices import modal_quad_bilinear_form
-    for face in mp.faces_for_shape(vol_shape):
-        face_space = mp.space_for_shape(face, order)
-        face_basis = mp.basis_for_space(face_space, face)
-        face_quad = mp.quadrature_for_space(mp.space_for_shape(face, 2*order), face)
-        face_quad2 = mp.quadrature_for_space(
-                mp.space_for_shape(face, 2*order+2), face)
-        fmm = modal_quad_bilinear_form(
-            quadrature=face_quad,
-            test_functions=vol_basis.functions,
-            trial_functions=face_basis.functions,
-            mapping_function=face.map_to_volume
-        )
-
-        fmm2 = modal_quad_bilinear_form(
-            quadrature=face_quad2,
-            test_functions=vol_basis.functions,
-            trial_functions=face_basis.functions,
-            mapping_function=face.map_to_volume
-        )
-
-        error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
-        logger.info("fmm error: %.5e", error)
-        assert error < 1e-11, f"error {error:.5e} on face {face.face_index}"
-
-        fmm[np.abs(fmm) < 1e-13] = 0
-        nnz = np.sum(fmm > 0)
-
-        logger.info("fmm: nnz %d\n%s", nnz, fmm)
-
-
-@pytest.mark.parametrize("dims", [2, 3])
-@pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_nodal_quad_bilinear_form_for_face(dims, shape_cls, order=3):
+def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3):
     vol_shape = shape_cls(dims)
     vol_space = mp.space_for_shape(vol_shape, order)
 
@@ -341,8 +303,8 @@ def test_nodal_quad_bilinear_form_for_face(dims, shape_cls, order=3):
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import (
-        nodal_quad_bilinear_form,
-        nodal_quad_operator,
+        nodal_quadrature_bilinear_form_matrix,
+        nodal_quadrature_matrix,
     )
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
@@ -352,7 +314,7 @@ def test_nodal_quad_bilinear_form_for_face(dims, shape_cls, order=3):
         face_quad2 = mp.quadrature_for_space(
                 mp.space_for_shape(face, 2*order+2), face)
 
-        fmm = nodal_quad_bilinear_form(
+        fmm = nodal_quadrature_bilinear_form_matrix(
             quadrature=face_quad,
             test_basis=volume_basis,
             trial_basis=face_basis,
@@ -361,7 +323,7 @@ def test_nodal_quad_bilinear_form_for_face(dims, shape_cls, order=3):
             mapping_function=face.map_to_volume
         )
 
-        fmm2 = nodal_quad_operator(
+        fmm2 = nodal_quadrature_matrix(
             quadrature=face_quad2,
             test_basis=volume_basis,
             nodes=volume_nodes,

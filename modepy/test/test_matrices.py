@@ -112,7 +112,7 @@ def test_bilinear_forms(
             f = 1 - nodes[ax]**2
             fp = -2*nodes[ax]
 
-            weak_operator = mp.nodal_quad_bilinear_form(
+            weak_operator = mp.nodal_quadrature_bilinear_form_matrix(
                 quadrature=quad,
                 test_basis=basis,
                 trial_basis=basis,
@@ -123,7 +123,7 @@ def test_bilinear_forms(
             err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
             assert err <= 1e-12
     else:
-        quad_mass_mat = mp.nodal_quad_bilinear_form(
+        quad_mass_mat = mp.nodal_quadrature_bilinear_form_matrix(
             quadrature=quad,
             test_basis=basis,
             trial_basis=basis,

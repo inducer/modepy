@@ -61,15 +61,9 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 
 .. autofunction:: inverse_mass_matrix
 .. autofunction:: mass_matrix
-.. autofunction:: modal_mass_matrix_for_face
-.. autofunction:: nodal_mass_matrix_for_face
-.. autofunction:: modal_quad_mass_matrix_for_face
-.. autofunction:: nodal_quad_mass_matrix_for_face
 .. autofunction:: spectral_diag_nodal_mass_matrix
-.. autofunction:: modal_quad_bilinear_form
-.. autofunction:: nodal_quad_bilinear_form
-.. autofunction:: nodal_quad_operator
-.. autofunction:: modal_quad_operator
+.. autofunction:: nodal_quadrature_matrix
+.. autofunction:: nodal_quadrature_bilinear_form_matrix
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
 obtain modal values and then using a Vandermonde matrix for the derivatives
@@ -358,30 +352,7 @@ def mass_matrix(
     return la.inv(inverse_mass_matrix(basis, nodes))
 
 
-def modal_quad_operator(
-        quadrature: Quadrature,
-        test_functions: Sequence[BasisFunctionType],
-    ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`A` that
-    satisfies:
-
-    .. math::
-
-        \displaystyle (A \boldsymbol u)_i = \sum_j w_j \phi_i(r_j) u_j,
-
-    where :math:`\phi_i` are the *test_functions* at the nodes
-    :math:`r_j` of *quadrature*, with corresponding weights :math:`w_j`, and
-    :math:`u_j` is a trial solution evaluated at the *quadrature* nodes.
-    """
-    modal_operator = np.empty((len(test_functions), len(quadrature.weights)))
-
-    for i, test_f in enumerate(test_functions):
-        modal_operator[i] = test_f(quadrature.nodes) * quadrature.weights
-
-    return modal_operator
-
-
-def nodal_quad_operator(
+def nodal_quadrature_matrix(
         quadrature: Quadrature,
         test_basis: Basis,
         test_derivative_ax: int | None = None,
@@ -396,8 +367,8 @@ def nodal_quad_operator(
 
     where :math:`\phi_i` are the Lagrange basis functions obtained from
     *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
-    and nodes from *quadrature*, and :math:`u_j` are point values of a trial
-    solution at the *quadrature* nodes.
+    and nodes from *quadrature*, and :math:`u_j` are trial solution point values
+    at *quadrature* nodes.
     """
     if nodes is None:
         nodes = quadrature.nodes
@@ -425,47 +396,13 @@ def nodal_quad_operator(
     return la.solve(vdm.T, modal_operator)
 
 
-def modal_quad_bilinear_form(
-        quadrature: Quadrature,
-        test_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        trial_functions: Sequence[Callable[[np.ndarray], np.ndarray]],
-        mapping_function: Callable[[np.ndarray], np.ndarray] | None = None,
-    ) -> np.ndarray:
-    r"""Using *quadrature*, provide a matrix :math:`A` defined as:
-
-    .. math::
-
-        \displaystyle A_{ij} = \sum_k \phi_i(r_k) \psi_j(r_k) w_k,
-
-    where :math:`phi_i` are in *test_functions*, :math:`\psi_j` are in
-    *trial_functions*, and :math:`r_k` and :math:`w_k` are nodes and weights
-    from *quadrature*.
-
-    An optional *mapping_function* can be supplied to map the arguments
-    evaluated by *test_functions*. This would be useful, e.g., to evaluate a
-    face mass matrix in the context of DG-FEM. Otherwise, the input to
-    *test_functions* are the *quadrature* nodes.
-    """
-    mapped_nodes = (
-        mapping_function(quadrature.nodes)
-        if mapping_function is not None else quadrature.nodes
-    )
-
-    return np.einsum(
-        "qi,qj,q->ij",
-        vandermonde(test_functions, mapped_nodes),
-        vandermonde(trial_functions, quadrature.nodes),
-        quadrature.weights
-    )
-
-
-def nodal_quad_bilinear_form(
+def nodal_quadrature_bilinear_form_matrix(
             quadrature: Quadrature,
             test_basis: Basis,
             trial_basis: Basis,
             input_nodes: np.ndarray,
             output_nodes: np.ndarray | None = None,
-            mapping_function: Callable | None = None,
+            mapping_function: Callable[[np.ndarray], np.ndarray] | None = None,
             test_derivative_ax: int | None = None,
             trial_derivative_ax: int | None = None
         ) -> np.ndarray:
@@ -484,12 +421,20 @@ def nodal_quad_bilinear_form(
 
         \displaystyle (u, \psi_i)_A = \sum_{j} A_{ij} u_j,
 
-    where :math:`u_i` are nodal coefficients of a trial solution.
+    where :math:`u_i` are nodal coefficients.
 
-    Optional arguments allow this function to work in cases where the input and
-    output discretizations are not necessarily the same. This is the case, for
-    example, in DG-FEM when evaluating a face mass matrix or when there is a
-    base and quadrature discretization.
+    An optional *mapping_function* can be supplied to map the *quadrature* nodes
+    evaluated by *test_basis* before constructing the matrix.
+
+    An optional set of *output_nodes* can be supplied if the result should live
+    on a domain different from the domain of *input_nodes*.
+
+    Test and trial function derivatives can be requested by supplying either
+    *test_derivative_ax* or *trial_derivative_ax* as an integer corresponding to
+    an enumerated spatial derivative ax. For example, *test_derivative_ax = 0*
+    would use *test_basis* differentiated with respect to :math:`x` while
+    *trial_derivative_ax = 2* would use *trial_basis* differentiated with
+    respect to :math:`z`.
     """
     if output_nodes is None:
         output_nodes = input_nodes
@@ -504,11 +449,16 @@ def nodal_quad_bilinear_form(
         if trial_derivative_ax is not None else trial_basis.functions
     )
 
-    modal_operator = modal_quad_bilinear_form(
-        quadrature,
-        test_functions,
-        trial_functions,
-        mapping_function
+    mapped_nodes = (
+        mapping_function(quadrature.nodes)
+        if mapping_function is not None else quadrature.nodes
+    )
+
+    modal_operator = np.einsum(
+        "qi,qj,q->ij",
+        vandermonde(test_functions, mapped_nodes),
+        vandermonde(trial_functions, quadrature.nodes),
+        quadrature.weights
     )
 
     input_vdm = vandermonde(trial_basis.functions, input_nodes)
@@ -546,7 +496,7 @@ def modal_quad_mass_matrix(
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_quad_mass_matrix` is deprecated and will stop working in "
-         "2025.", stacklevel=0)
+         "2026.", stacklevel=1)
     modal_mass_matrix = np.empty((len(test_functions), len(quadrature.weights)))
 
     for i, test_f in enumerate(test_functions):
@@ -562,7 +512,7 @@ def nodal_quad_mass_matrix(
         ) -> np.ndarray:
     from warnings import warn
     warn("`nodal_quad_mass_matrix` is deprecated and will stop working in "
-         "2025. Consider switching to `nodal_quad_bilinear_form`", stacklevel=0)
+         "2026. Consider switching to `nodal_quad_bilinear_form`", stacklevel=1)
     if nodes is None:
         nodes = quadrature.nodes
 
@@ -582,7 +532,7 @@ def modal_mass_matrix_for_face(
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_mass_matrix_for_face` is deprecated and will stop working in "
-         "2025.", stacklevel=1)
+         "2026.", stacklevel=1)
     mapped_nodes = face.map_to_volume(face_quad.nodes)
 
     result = np.empty((len(test_functions), len(trial_functions)))
@@ -604,7 +554,7 @@ def nodal_mass_matrix_for_face(
         ) -> np.ndarray:
     from warnings import warn
     warn("`nodal_mass_matrix_for_face` is deprecated and will stop working in "
-         "2025. Please use `nodal_quad_bilinear_form` instead.", stacklevel=1)
+         "2026. Please use `nodal_quad_bilinear_form` instead.", stacklevel=1)
     face_vdm = vandermonde(trial_functions, face_nodes)
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
@@ -653,7 +603,8 @@ def nodal_quad_mass_matrix_for_face(
     vol_vdm = vandermonde(test_functions, volume_nodes)
 
     return la.solve(vol_vdm.T,
-                    modal_quad_mass_matrix_for_face(face, face_quad, test_functions))
+                    modal_quad_mass_matrix_for_face(face, face_quad,
+                                                    test_functions))
 
 # }}}
 
