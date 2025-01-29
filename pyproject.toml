@@ -6,7 +6,7 @@ requires = [
 
 [project]
 name = "modepy"
-version = "2025.1"
+version = "2025.2"
 description = "Modes and nodes for high-order methods"
 readme = "README.rst"
 license = { text = "MIT" }
