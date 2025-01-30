@@ -491,7 +491,7 @@ def spectral_diag_nodal_mass_matrix(
     return quadrature.weights
 
 
-# {{{ deprecated remove in 2025-ish
+# {{{ deprecated remove in 2026-ish
 
 def modal_quad_mass_matrix(
             quadrature: Quadrature,
