@@ -63,7 +63,7 @@ where :math:`(\phi_i)_i` is the basis of functions underlying :math:`V`.
 .. autofunction:: inverse_mass_matrix
 .. autofunction:: mass_matrix
 .. autofunction:: spectral_diag_nodal_mass_matrix
-.. autofunction:: nodal_quadrature_matrix
+.. autofunction:: nodal_quadrature_test_matrix
 .. autofunction:: nodal_quadrature_bilinear_form_matrix
 
 Differentiation is also convenient to express by using :math:`V^{-1}` to
