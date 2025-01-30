@@ -304,7 +304,7 @@ def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3
 
     from modepy.matrices import (
         nodal_quadrature_bilinear_form_matrix,
-        nodal_quadrature_matrix,
+        nodal_quadrature_test_matrix,
     )
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
@@ -316,16 +316,16 @@ def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3
 
         fmm = nodal_quadrature_bilinear_form_matrix(
             quadrature=face_quad,
-            test_basis=volume_basis,
-            trial_basis=face_basis,
+            test_basis_functions=volume_basis.functions,
+            trial_basis_functions=face_basis.functions,
             input_nodes=face_nodes,
             output_nodes=volume_nodes,
             mapping_function=face.map_to_volume
         )
 
-        fmm2 = nodal_quadrature_matrix(
+        fmm2 = nodal_quadrature_test_matrix(
             quadrature=face_quad2,
-            test_basis=volume_basis,
+            test_basis_functions=volume_basis.functions,
             nodes=volume_nodes,
             mapping_function=face.map_to_volume
         )
