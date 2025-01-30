@@ -36,6 +36,9 @@ element context. Features include:
     - Jaśkowiec-Sukumar on the tetrahedron
     - Witherden-Vincent on the hypercube
     - Generic tensor products built on the above, e.g. for prisms and hypercubes
+- Tools to construct new quadrature rules:
+    - A basic iterative Gauss-Newton process to optimize/tighten rules
+    - Vioreanu-Rokhlin node initial generation based on multiplication operators
 - Matrices for FEM, usable across all element types:
     - generalized Vandermonde,
     - mass matrices (including lumped diagonal),
