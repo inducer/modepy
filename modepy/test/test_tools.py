@@ -316,18 +316,21 @@ def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3
 
         fmm = nodal_quadrature_bilinear_form_matrix(
             quadrature=face_quad,
-            test_basis_functions=volume_basis.functions,
-            trial_basis_functions=face_basis.functions,
+            test_functions=volume_basis.functions,
+            trial_functions=face_basis.functions,
+            nodal_interp_functions_test=volume_basis.functions,
+            nodal_interp_functions_trial=face_basis.functions,
             input_nodes=face_nodes,
             output_nodes=volume_nodes,
-            mapping_function=face.map_to_volume
+            test_function_node_map=face.map_to_volume
         )
 
         fmm2 = nodal_quadrature_test_matrix(
             quadrature=face_quad2,
-            test_basis_functions=volume_basis.functions,
+            test_functions=volume_basis.functions,
+            nodal_interp_functions=volume_basis.functions,
             nodes=volume_nodes,
-            mapping_function=face.map_to_volume
+            test_function_node_map=face.map_to_volume
         )
 
         for f_face in face_basis.functions:

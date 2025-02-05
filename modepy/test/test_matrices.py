@@ -157,10 +157,11 @@ def test_bilinear_forms(
 
             weak_operator = mp.nodal_quadrature_bilinear_form_matrix(
                 quadrature=quad,
-                test_basis_functions=basis.functions,
-                trial_basis_functions=basis.functions,
+                test_functions=basis.derivatives(ax),
+                trial_functions=basis.functions,
+                nodal_interp_functions_test=basis.functions,
+                nodal_interp_functions_trial=basis.functions,
                 input_nodes=nodes,
-                test_derivatives=basis.derivatives(ax)
             )
 
             err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
@@ -168,8 +169,10 @@ def test_bilinear_forms(
     else:
         quad_mass_mat = mp.nodal_quadrature_bilinear_form_matrix(
             quadrature=quad,
-            test_basis_functions=basis.functions,
-            trial_basis_functions=basis.functions,
+            test_functions=basis.functions,
+            trial_functions=basis.functions,
+            nodal_interp_functions_test=basis.functions,
+            nodal_interp_functions_trial=basis.functions,
             input_nodes=nodes
         )
 

@@ -77,11 +77,11 @@ of the basis to return to nodal values.
 """
 
 
-NodalFunctionType: TypeAlias = Callable[[np.ndarray], np.ndarray]
+NodalFunction: TypeAlias = Callable[[np.ndarray], np.ndarray]
 
 
 def vandermonde(
-            functions: Sequence[NodalFunctionType],
+            functions: Sequence[NodalFunction],
             nodes: np.ndarray
         ) -> np.ndarray:
     """Return a (generalized) Vandermonde matrix.
@@ -165,7 +165,7 @@ def multi_vandermonde(
 
 
 def resampling_matrix(
-            basis: Sequence[NodalFunctionType],
+            basis: Sequence[NodalFunction],
             new_nodes: np.ndarray,
             old_nodes: np.ndarray,
             least_squares_ok: bool = False
@@ -220,7 +220,7 @@ def resampling_matrix(
 
 
 def differentiation_matrices(
-            basis: Sequence[NodalFunctionType],
+            basis: Sequence[NodalFunction],
             grad_basis: Sequence[Callable[[np.ndarray], Sequence[np.ndarray]]],
             nodes: np.ndarray,
             from_nodes: np.ndarray | None = None
@@ -300,7 +300,7 @@ def diff_matrix_permutation(
 
 
 def inverse_mass_matrix(
-            basis: Basis | Sequence[NodalFunctionType],
+            basis: Basis | Sequence[NodalFunction],
             nodes: np.ndarray
         ) -> np.ndarray:
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
@@ -319,7 +319,7 @@ def inverse_mass_matrix(
                 "inverse mass matrix of non-orthogonal basis"
                 ) from None
 
-        basis_functions: Sequence[NodalFunctionType] = (
+        basis_functions: Sequence[NodalFunction] = (
             basis.functions)
     else:
         basis_functions = basis
@@ -335,7 +335,7 @@ def inverse_mass_matrix(
 
 
 def mass_matrix(
-            basis: Basis | Sequence[NodalFunctionType],
+            basis: Basis | Sequence[NodalFunction],
             nodes: np.ndarray
         ) -> np.ndarray:
     r"""Return a mass matrix :math:`M`, which obeys
@@ -355,10 +355,10 @@ def mass_matrix(
 
 def nodal_quadrature_test_matrix(
         quadrature: Quadrature,
-        test_basis_functions: Sequence[NodalFunctionType],
-        test_derivatives: Sequence[NodalFunctionType] | None = None,
+        test_functions: Sequence[NodalFunction],
+        nodal_interp_functions: Sequence[NodalFunction],
         nodes: np.ndarray | None = None,
-        mapping_function: NodalFunctionType | None = None
+        test_function_node_map: NodalFunction | None = None
     ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
@@ -370,42 +370,39 @@ def nodal_quadrature_test_matrix(
     *test_functions* at *nodes*, :math:`w_j` and :math:`r_j` are the weights
     and nodes from *quadrature*, and :math:`u_j` are trial solution point values
     at *quadrature* nodes.
+
+    *test_function_node_map* is an optional argument used, for example, to map
+    nodes on element faces to the element volume. This does not constitute a
+    change in the domain of integration. This is only used to map the nodes
+    passed to *test_functions*.
     """
     if nodes is None:
         nodes = quadrature.nodes
 
-    if len(test_basis_functions) != nodes.shape[1]:
-        raise ValueError("nodes not unisolvent with test functions")
+    if len(nodal_interp_functions) != nodes.shape[1]:
+        raise ValueError("nodes not unisolvent with nodal_interp_functions")
 
-    test_functions = (
-        test_derivatives
-        if test_derivatives is not None else test_basis_functions
+    vdm = vandermonde(test_functions, nodes)
+
+    test_nodes = (
+        test_function_node_map(quadrature.nodes)
+        if test_function_node_map is not None else quadrature.nodes
     )
 
-    vdm = vandermonde(test_basis_functions, nodes)
+    modal_mat = vandermonde(test_functions, test_nodes).T*quadrature.weights
 
-    mapped_nodes = (
-        mapping_function(quadrature.nodes)
-        if mapping_function is not None else quadrature.nodes
-    )
-
-    modal_operator = np.array([
-        test_f(mapped_nodes) * quadrature.weights
-        for test_f in test_functions
-    ])
-
-    return la.solve(vdm.T, modal_operator)
+    return la.solve(vdm.T, modal_mat)
 
 
 def nodal_quadrature_bilinear_form_matrix(
             quadrature: Quadrature,
-            test_basis_functions: Sequence[NodalFunctionType],
-            trial_basis_functions: Sequence[NodalFunctionType],
+            test_functions: Sequence[NodalFunction],
+            trial_functions: Sequence[NodalFunction],
+            nodal_interp_functions_test: Sequence[NodalFunction],
+            nodal_interp_functions_trial: Sequence[NodalFunction],
             input_nodes: np.ndarray,
             output_nodes: np.ndarray | None = None,
-            mapping_function: NodalFunctionType | None = None,
-            test_derivatives: Sequence[NodalFunctionType] | None = None,
-            trial_derivatives: Sequence[NodalFunctionType] | None = None
+            test_function_node_map: NodalFunction | None = None,
         ) -> np.ndarray:
     r"""Using *quadrature*, provide a matrix :math:`A` defined as:
 
@@ -424,31 +421,25 @@ def nodal_quadrature_bilinear_form_matrix(
 
     where :math:`u_i` are nodal coefficients.
 
-    An optional *mapping_function* can be supplied to map the *quadrature* nodes
-    evaluated by *test_basis* before constructing the matrix.
-
-    *test_derivatives* and *trial_derivatives* can be optionally supplied as the
-    test/trial functions in the inner product.
+    *test_function_node_map* is an optional argument used, for example, to map
+    nodes on element faces to the element volume. This does not constitute a
+    change in the domain of integration. This is only used to map the nodes
+    passed to *test_functions*.
     """
     if output_nodes is None:
         output_nodes = input_nodes
 
-    if len(test_basis_functions) != output_nodes.shape[1]:
-        raise ValueError("output_nodes not unisolvent with test functions")
+    if len(nodal_interp_functions_test) != output_nodes.shape[1]:
+        raise ValueError(
+            "output_nodes not unisolvent with nodal_test_interp_functions")
 
-    test_functions = (
-        test_derivatives
-        if test_derivatives is not None else test_basis_functions
-    )
-
-    trial_functions = (
-        trial_derivatives
-        if trial_derivatives is not None else trial_basis_functions
-    )
+    if len(nodal_interp_functions_trial) != input_nodes.shape[1]:
+        raise ValueError(
+            "input_nodes not unisolvent with nodal_trial_interp_functions")
 
     mapped_nodes = (
-        mapping_function(quadrature.nodes)
-        if mapping_function is not None else quadrature.nodes
+        test_function_node_map(quadrature.nodes)
+        if test_function_node_map is not None else quadrature.nodes
     )
 
     modal_operator = np.einsum(
@@ -458,8 +449,8 @@ def nodal_quadrature_bilinear_form_matrix(
         quadrature.weights
     )
 
-    input_vdm = vandermonde(trial_basis_functions, input_nodes)
-    output_vdm = vandermonde(test_basis_functions, output_nodes)
+    input_vdm = vandermonde(nodal_interp_functions_trial, input_nodes)
+    output_vdm = vandermonde(nodal_interp_functions_test, output_nodes)
 
     return la.solve(output_vdm.T, modal_operator @ la.inv(input_vdm))
 
@@ -524,8 +515,8 @@ def nodal_quad_mass_matrix(
 
 def modal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            trial_functions: Sequence[NodalFunctionType],
-            test_functions: Sequence[NodalFunctionType]
+            trial_functions: Sequence[NodalFunction],
+            test_functions: Sequence[NodalFunction]
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_mass_matrix_for_face` is deprecated and will stop working in "
@@ -544,8 +535,8 @@ def modal_mass_matrix_for_face(
 
 def nodal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            trial_functions: Sequence[NodalFunctionType],
-            test_functions: Sequence[NodalFunctionType],
+            trial_functions: Sequence[NodalFunction],
+            test_functions: Sequence[NodalFunction],
             volume_nodes: np.ndarray,
             face_nodes: np.ndarray
         ) -> np.ndarray:
@@ -570,7 +561,7 @@ def nodal_mass_matrix_for_face(
 
 def modal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            test_functions: Sequence[NodalFunctionType],
+            test_functions: Sequence[NodalFunction],
         ) -> np.ndarray:
     from warnings import warn
     warn("`modal_quad_mass_matrix_for_face` is deprecated and will stop working "
@@ -587,7 +578,7 @@ def modal_quad_mass_matrix_for_face(
 
 def nodal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
-            test_functions: Sequence[NodalFunctionType],
+            test_functions: Sequence[NodalFunction],
             volume_nodes: np.ndarray,
         ) -> np.ndarray:
     from warnings import warn
