@@ -4,9 +4,9 @@ modepy: Basis Functions, Node Sets, Quadratures
 .. image:: https://gitlab.tiker.net/inducer/modepy/badges/main/pipeline.svg
     :alt: Gitlab Build Status
     :target: https://gitlab.tiker.net/inducer/modepy/commits/main
-.. image:: https://github.com/inducer/modepy/workflows/CI/badge.svg?branch=main&event=push
+.. image:: https://github.com/inducer/modepy/actions/workflows/ci.yml/badge.svg
     :alt: Github Build Status
-    :target: https://github.com/inducer/modepy/actions?query=branch%3Amain+workflow%3ACI+event%3Apush
+    :target: https://github.com/inducer/modepy/actions/workflows/ci.yml
 .. image:: https://badge.fury.io/py/modepy.png
     :alt: Python Package Index Release Page
     :target: https://pypi.org/project/modepy/
@@ -36,6 +36,9 @@ element context. Features include:
     - Jaśkowiec-Sukumar on the tetrahedron
     - Witherden-Vincent on the hypercube
     - Generic tensor products built on the above, e.g. for prisms and hypercubes
+- Tools to construct new quadrature rules:
+    - A basic iterative Gauss-Newton process to optimize/tighten rules
+    - Vioreanu-Rokhlin node initial generation based on multiplication operators
 - Matrices for FEM, usable across all element types:
     - generalized Vandermonde,
     - mass matrices (including lumped diagonal),

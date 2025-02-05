@@ -55,6 +55,7 @@ from functools import singledispatch
 from numbers import Number
 
 import numpy as np
+from typing_extensions import Never
 
 from modepy.shapes import Shape, Simplex, TensorProductShape
 from modepy.spaces import PN, FunctionSpace, TensorProductSpace
@@ -80,6 +81,16 @@ class _Inf:
 
     def __ge__(self, other: object) -> bool:
         return bool(isinstance(other, Number | _Inf))
+
+    def __add__(self, other: object) -> _Inf:
+        if (isinstance(other, float | int | np.integer | np.floating)
+                and np.isfinite(other)):
+            return self
+
+        return NotImplemented
+
+    def __index__(self) -> Never:
+        raise ValueError("_Inf cannot be cast to integer")
 
 
 inf = _Inf()
@@ -138,7 +149,10 @@ class Quadrature:
             f"'{type(self).__name__}' rule does not define an exact order"
             )
 
-    def __call__(self, f: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
+    def __call__(
+                self,
+                f: Callable[[np.ndarray], np.ndarray]
+            ) -> np.ndarray | np.inexact:
         """Evaluate the callable *f* at the quadrature nodes and return its
         integral.
 
