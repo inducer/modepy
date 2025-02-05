@@ -23,7 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
-
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Sequence
@@ -747,8 +746,8 @@ def symbolicize_function(
 
 # {{{ basis interface
 
-BasisFunctionType: TypeAlias = Callable[[np.ndarray], np.ndarray]
-BasisGradientType: TypeAlias = Callable[[np.ndarray], tuple[np.ndarray, ...]]
+BasisFunction: TypeAlias = Callable[[np.ndarray], np.ndarray]
+BasisGradient: TypeAlias = Callable[[np.ndarray], tuple[np.ndarray, ...]]
 
 
 class BasisNotOrthonormal(Exception):
@@ -778,7 +777,7 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def functions(self) -> tuple[BasisFunctionType, ...]:
+    def functions(self) -> tuple[BasisFunction, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
@@ -786,14 +785,14 @@ class Basis(ABC):
 
     @property
     @abstractmethod
-    def gradients(self) -> tuple[BasisGradientType, ...]:
+    def gradients(self) -> tuple[BasisGradient, ...]:
         """A tuple of (callable) basis functions of length matching
         :attr:`mode_ids`.  Each function takes a vector of :math:`(r, s, t)`
         reference coordinates (depending on dimension) as input.
         Each function returns a tuple of derivatives, one per reference axis.
         """
 
-    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+    def derivatives(self, axis: int) -> tuple[BasisFunction, ...]:
         """
         Returns a tuple of callable functions in the same order as
         :meth:`functions` representing the same basis functions with a
@@ -909,14 +908,14 @@ class _SimplexMonomialBasis(_SimplexBasis):
         raise BasisNotOrthonormal
 
     @property
-    def functions(self) -> tuple[BasisFunctionType, ...]:
+    def functions(self) -> tuple[BasisFunction, ...]:
         return tuple(partial(monomial, mid) for mid in self.mode_ids)
 
     @property
-    def gradients(self) -> tuple[BasisGradientType, ...]:
+    def gradients(self) -> tuple[BasisGradient, ...]:
         return tuple(partial(grad_monomial, mid) for mid in self.mode_ids)
 
-    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+    def derivatives(self, axis: int) -> tuple[BasisFunction, ...]:
         return tuple(
             partial(diff_monomial, mid, axis)
             for mid in self.mode_ids)
@@ -1039,7 +1038,7 @@ class TensorProductBasis(Basis):
                 for mode_index_tuple in self._mode_index_tuples)
 
     @property
-    def functions(self) -> tuple[BasisFunctionType, ...]:
+    def functions(self) -> tuple[BasisFunction, ...]:
         bases = [b.functions for b in self._bases]
         return tuple(
                 _TensorProductBasisFunction(
@@ -1050,7 +1049,7 @@ class TensorProductBasis(Basis):
                 for mid in self._mode_index_tuples)
 
     @property
-    def gradients(self) -> tuple[BasisGradientType, ...]:
+    def gradients(self) -> tuple[BasisGradient, ...]:
         from pytools import wandering_element
         bases = [b.functions for b in self._bases]
         grad_bases = [b.gradients for b in self._bases]
@@ -1066,7 +1065,7 @@ class TensorProductBasis(Basis):
                     dims_per_function=self._dims_per_basis)
                 for mid in self._mode_index_tuples)
 
-    def derivatives(self, axis: int) -> tuple[BasisFunctionType, ...]:
+    def derivatives(self, axis: int) -> tuple[BasisFunction, ...]:
         bases = [b.functions for b in self._bases]
         return tuple(
                 _TensorProductBasisFunction(
