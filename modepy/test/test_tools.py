@@ -295,36 +295,7 @@ def test_diff_matrix_permutation(dims):
 
 @pytest.mark.parametrize("dims", [2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_modal_mass_matrix_for_face(dims, shape_cls, order=3):
-    vol_shape = shape_cls(dims)
-    vol_space = mp.space_for_shape(vol_shape, order)
-    vol_basis = mp.basis_for_space(vol_space, vol_shape)
-
-    from modepy.matrices import modal_mass_matrix_for_face
-    for face in mp.faces_for_shape(vol_shape):
-        face_space = mp.space_for_shape(face, order)
-        face_basis = mp.basis_for_space(face_space, face)
-        face_quad = mp.quadrature_for_space(mp.space_for_shape(face, 2*order), face)
-        face_quad2 = mp.quadrature_for_space(
-                mp.space_for_shape(face, 2*order+2), face)
-        fmm = modal_mass_matrix_for_face(
-                face, face_quad, face_basis.functions, vol_basis.functions)
-        fmm2 = modal_mass_matrix_for_face(
-                face, face_quad2, face_basis.functions, vol_basis.functions)
-
-        error = la.norm(fmm - fmm2, np.inf) / la.norm(fmm2, np.inf)
-        logger.info("fmm error: %.5e", error)
-        assert error < 1e-11, f"error {error:.5e} on face {face.face_index}"
-
-        fmm[np.abs(fmm) < 1e-13] = 0
-        nnz = np.sum(fmm > 0)
-
-        logger.info("fmm: nnz %d\n%s", nnz, fmm)
-
-
-@pytest.mark.parametrize("dims", [2, 3])
-@pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
+def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3):
     vol_shape = shape_cls(dims)
     vol_space = mp.space_for_shape(vol_shape, order)
 
@@ -332,8 +303,8 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
     volume_basis = mp.basis_for_space(vol_space, vol_shape)
 
     from modepy.matrices import (
-        nodal_mass_matrix_for_face,
-        nodal_quad_mass_matrix_for_face,
+        nodal_quadrature_bilinear_form_matrix,
+        nodal_quadrature_test_matrix,
     )
     for face in mp.faces_for_shape(vol_shape):
         face_space = mp.space_for_shape(face, order)
@@ -342,11 +313,25 @@ def test_nodal_mass_matrix_for_face(dims, shape_cls, order=3):
         face_quad = mp.quadrature_for_space(mp.space_for_shape(face, 2*order), face)
         face_quad2 = mp.quadrature_for_space(
                 mp.space_for_shape(face, 2*order+2), face)
-        fmm = nodal_mass_matrix_for_face(
-                face, face_quad, face_basis.functions, volume_basis.functions,
-                volume_nodes, face_nodes)
-        fmm2 = nodal_quad_mass_matrix_for_face(
-                face, face_quad2, volume_basis.functions, volume_nodes)
+
+        fmm = nodal_quadrature_bilinear_form_matrix(
+            quadrature=face_quad,
+            test_functions=volume_basis.functions,
+            trial_functions=face_basis.functions,
+            nodal_interp_functions_test=volume_basis.functions,
+            nodal_interp_functions_trial=face_basis.functions,
+            input_nodes=face_nodes,
+            output_nodes=volume_nodes,
+            test_function_node_map=face.map_to_volume
+        )
+
+        fmm2 = nodal_quadrature_test_matrix(
+            quadrature=face_quad2,
+            test_functions=volume_basis.functions,
+            nodal_interp_functions=volume_basis.functions,
+            nodes=volume_nodes,
+            test_function_node_map=face.map_to_volume
+        )
 
         for f_face in face_basis.functions:
             fval_nodal = f_face(face_nodes)

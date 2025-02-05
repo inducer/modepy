@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from functools import partial, singledispatch
 from typing import (
     TYPE_CHECKING,
+    TypeAlias,
     TypeVar,
     cast,
 )
@@ -46,6 +47,7 @@ if TYPE_CHECKING:
 
 RealValueT = TypeVar("RealValueT",
                      np.ndarray, "pymbolic.primitives.Expression", float)
+
 """:class:`~typing.TypeVar` for basis function inputs and outputs."""
 
 __doc__ = """This functionality provides sets of basis functions for the
@@ -745,8 +747,8 @@ def symbolicize_function(
 
 # {{{ basis interface
 
-BasisFunctionType = Callable[[np.ndarray], np.ndarray]
-BasisGradientType = Callable[[np.ndarray], tuple[np.ndarray, ...]]
+BasisFunctionType: TypeAlias = Callable[[np.ndarray], np.ndarray]
+BasisGradientType: TypeAlias = Callable[[np.ndarray], tuple[np.ndarray, ...]]
 
 
 class BasisNotOrthonormal(Exception):

@@ -118,6 +118,69 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
                 assert np.max(err) < 1e-14
 
 
+@pytest.mark.parametrize("shape_cls", [mp.Hypercube, mp.Simplex])
+@pytest.mark.parametrize("dim", [1, 2, 3])
+@pytest.mark.parametrize("order", [0, 1, 2, 4])
+@pytest.mark.parametrize("nodes_on_bdry", [False, True])
+@pytest.mark.parametrize("test_weak_d_dr", [False, True])
+def test_bilinear_forms(
+            shape_cls: type[mp.Shape],
+            dim: int,
+            order: int,
+            nodes_on_bdry: bool,
+            test_weak_d_dr: bool
+        ) -> None:
+    shape = shape_cls(dim)
+    space = mp.space_for_shape(shape, order)
+
+    quad_space = mp.space_for_shape(shape, 2*order)
+    quad = mp.quadrature_for_space(quad_space, shape)
+
+    if nodes_on_bdry:
+        nodes = mp.edge_clustered_nodes_for_space(space, shape)
+    else:
+        if isinstance(shape, mp.Hypercube) or shape == mp.Simplex(1):
+            nodes = mp.legendre_gauss_tensor_product_nodes(shape.dim, order)
+        elif isinstance(shape, mp.Simplex):
+            nodes = mp.VioreanuRokhlinSimplexQuadrature(order, shape.dim).nodes
+        else:
+            raise AssertionError()
+
+    basis = mp.orthonormal_basis_for_space(space, shape)
+
+    if test_weak_d_dr and order not in [0, 1]:
+        mass_inv = mp.inverse_mass_matrix(basis, nodes)
+
+        for ax in range(dim):
+            f = 1 - nodes[ax]**2
+            fp = -2*nodes[ax]
+
+            weak_operator = mp.nodal_quadrature_bilinear_form_matrix(
+                quadrature=quad,
+                test_functions=basis.derivatives(ax),
+                trial_functions=basis.functions,
+                nodal_interp_functions_test=basis.functions,
+                nodal_interp_functions_trial=basis.functions,
+                input_nodes=nodes,
+            )
+
+            err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
+            assert err <= 1e-12
+    else:
+        quad_mass_mat = mp.nodal_quadrature_bilinear_form_matrix(
+            quadrature=quad,
+            test_functions=basis.functions,
+            trial_functions=basis.functions,
+            nodal_interp_functions_test=basis.functions,
+            nodal_interp_functions_trial=basis.functions,
+            input_nodes=nodes
+        )
+
+        vdm_mass_mat = mp.mass_matrix(basis, nodes)
+        err = la.norm(quad_mass_mat - vdm_mass_mat) / la.norm(vdm_mass_mat)
+        assert err < 1e-14
+
+
 # You can test individual routines by typing
 # $ python test_modes.py 'test_routine()'
 
