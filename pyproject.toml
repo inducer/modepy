@@ -131,8 +131,8 @@ pn = "pn"
 nd = "nd"
 # SIAM abbreviated journal title
 numer = "numer"
-
-"dependees" = "dependees"
+# written out 0d
+zerod = "zerod"
 
 [tool.typos.files]
 extend-exclude = [
