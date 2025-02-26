@@ -382,7 +382,7 @@ def nodal_quadrature_test_matrix(
     if len(nodal_interp_functions) != nodes.shape[1]:
         raise ValueError("nodes not unisolvent with nodal_interp_functions")
 
-    vdm = vandermonde(test_functions, nodes)
+    vdm = vandermonde(nodal_interp_functions, nodes)
 
     test_nodes = (
         test_function_node_map(quadrature.nodes)
