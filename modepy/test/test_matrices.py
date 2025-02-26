@@ -155,7 +155,7 @@ def test_bilinear_forms(
             f = 1 - nodes[ax]**2
             fp = -2*nodes[ax]
 
-            weak_operator = mp.nodal_quadrature_bilinear_form_matrix(
+            weak_operator_full = mp.nodal_quadrature_bilinear_form_matrix(
                 quadrature=quad,
                 test_functions=basis.derivatives(ax),
                 trial_functions=basis.functions,
@@ -164,10 +164,26 @@ def test_bilinear_forms(
                 input_nodes=nodes,
             )
 
-            err = la.norm(mass_inv @ weak_operator.T @ f - fp) / la.norm(fp)
-            assert err <= 1e-12
+            weak_operator_half = mp.nodal_quadrature_test_matrix(
+                quadrature=quad,
+                test_functions=basis.derivatives(ax),
+                nodal_interp_functions=basis.functions,
+                nodes=nodes
+            )
+
+            vdm = mp.vandermonde(basis.functions, nodes)
+            vdm_q = mp.vandermonde(basis.functions, quad.nodes)
+
+            err_full = la.norm(
+                mass_inv @ weak_operator_full.T @ f - fp) / la.norm(fp)
+
+            err_half = la.norm(
+                mass_inv @ (weak_operator_half @ vdm_q @ la.inv(vdm)).T @ f - fp
+            ) / la.norm(fp)
+
+            assert ((err_full <= 1e-12) and (err_half <= 1e-12))
     else:
-        quad_mass_mat = mp.nodal_quadrature_bilinear_form_matrix(
+        quad_mass_mat_full = mp.nodal_quadrature_bilinear_form_matrix(
             quadrature=quad,
             test_functions=basis.functions,
             trial_functions=basis.functions,
@@ -176,9 +192,25 @@ def test_bilinear_forms(
             input_nodes=nodes
         )
 
+        quad_mass_mat_half = mp.nodal_quadrature_test_matrix(
+            quadrature=quad,
+            test_functions=basis.functions,
+            nodal_interp_functions=basis.functions,
+            nodes=nodes
+        )
+
+        vdm = mp.vandermonde(basis.functions, nodes)
+        vdm_q = mp.vandermonde(basis.functions, quad.nodes)
+
         vdm_mass_mat = mp.mass_matrix(basis, nodes)
-        err = la.norm(quad_mass_mat - vdm_mass_mat) / la.norm(vdm_mass_mat)
-        assert err < 1e-14
+
+        err_full = la.norm(
+            quad_mass_mat_full - vdm_mass_mat) / la.norm(vdm_mass_mat)
+
+        err_half = la.norm(
+            quad_mass_mat_half @ vdm_q @ la.inv(vdm) - vdm_mass_mat
+        ) / la.norm(vdm_mass_mat)
+        assert ((err_full < 1e-14) and (err_half < 1e-14))
 
 
 # You can test individual routines by typing
