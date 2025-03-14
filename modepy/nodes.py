@@ -124,7 +124,7 @@ def warp_factor(n, output_nodes, scaled=True):
     from modepy.modes import jacobi
 
     basis = [partial(jacobi, 0, 0, n) for n in range(n + 1)]
-    Veq = vandermonde(basis, equi_nodes)  # noqa
+    Veq = vandermonde(basis, equi_nodes)  # noqa: N806
 
     # create interpolator from equi_nodes to output_nodes
     eq_to_out = la.solve(Veq.T, vandermonde(basis, output_nodes).T).T

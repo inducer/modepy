@@ -68,12 +68,12 @@ extend-select = [
     "N",   # pep8-naming
     "NPY", # numpy
     "Q",   # flake8-quotes
+    "PGH", # pygrep-hooks
+    "RUF", # ruff
+    "SIM", # flake8-simplify
+    "UP",  # pyupgrade
     "W",   # pycodestyle
-    "RUF",
-    "UP",
-    "SIM",
 ]
-
 extend-ignore = [
     "C90",  # McCabe complexity
     "E221", # multiple spaces before operator
