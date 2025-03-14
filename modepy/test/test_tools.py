@@ -77,7 +77,7 @@ def constant(x):
 
 @pytest.mark.parametrize(("case_name", "test_func", "dims", "n", "expected_expn"), [
     ("jump-1d", partial(jump, 0), 1, 10, -1),
-    ("kink-1d", partial(kink, 0), 1, 10, -1.7),  # Slightly off from -2 (same in paper)  # noqa
+    ("kink-1d", partial(kink, 0), 1, 10, -1.7),  # Slightly off from -2 (same in paper)
     ("c1-1d", partial(c1, 0), 1, 10, -3),
 
     # Offset 1D tests

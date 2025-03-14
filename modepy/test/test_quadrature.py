@@ -59,7 +59,7 @@ def test_transformed_quadrature():
 
 
 try:
-    import scipy  # noqa
+    import scipy  # noqa: F401
 except ImportError:
     BACKENDS = [None, "builtin"]
 else:
