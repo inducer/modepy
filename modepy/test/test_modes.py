@@ -102,6 +102,23 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
 # }}}
 
 
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
+    ])
+@pytest.mark.parametrize("order", [1, 2, 4, 6])
+def test_basis_size_against_space_dim(shape, order):
+    space = mp.space_for_shape(shape, order)
+    for basis in [
+                mp.basis_for_space(space, shape),
+                mp.orthonormal_basis_for_space(space, shape),
+                mp.monomial_basis_for_space(space, shape),
+            ]:
+        assert len(basis.functions) == space.space_dim
+
+
 # {{{ test_basis_orthogonality
 
 @pytest.mark.parametrize(("order", "ebound"), [
