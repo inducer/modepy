@@ -533,9 +533,9 @@ def unreshape_array_for_tensor_product_space(
                 f"{expected_space_dims}, "
                 f"found {ary.shape[axis:axis+n_tp_axes]} instead")
     return ary.reshape(
-            (ary.shape[:axis]
-                + (space.space_dim,)
-                + ary.shape[axis+n_tp_axes:]),
+            (*ary.shape[:axis],
+             space.space_dim,
+             *ary.shape[axis+n_tp_axes:]),
             order="F")
 
 # }}}
