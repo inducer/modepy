@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from numpy.typing import NDArray
+
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -105,7 +107,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             wandering_element,
         )
 
-        points_to_weights: dict[tuple[tuple[int, int], ...], np.ndarray] = {}
+        points_to_weights: dict[tuple[tuple[int, int], ...], NDArray[np.floating]] = {}
 
         for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
@@ -129,8 +131,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
                 + [np.array(x)
                     for x in wandering_element(n, landscape=-1, wanderer=1)])
 
-        nodes: list[np.ndarray] = []
-        weights: list[np.ndarray] = []
+        nodes: list[NDArray[np.floating]] = []
+        weights: list[NDArray[np.floating]] = []
 
         dim_factor = 2**n
         for p, w in points_to_weights.items():

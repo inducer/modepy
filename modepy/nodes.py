@@ -77,7 +77,7 @@ from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 def equidistant_nodes(
         dims: int, n: int,
         node_tuples: Sequence[tuple[int, ...]] | None = None
-        ) -> np.ndarray:
+        ) -> NDArray[np.floating]:
     """
     :arg dims: dimensionality of desired simplex
         (e.g. 1, 2 or 3, for interval, triangle or tetrahedron).
@@ -295,7 +295,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 def warp_and_blend_nodes(
         dims: int, n: int,
-        node_tuples: Sequence[tuple[int, ...]] | None = None) -> np.ndarray:
+        node_tuples: Sequence[tuple[int, ...]] | None = None) -> NDArray[np.floating]:
     """Return interpolation nodes as described in [warburton-nodes]_
 
     .. [warburton-nodes] Warburton, T.
@@ -358,8 +358,8 @@ def warp_and_blend_nodes(
 # {{{ tensor product nodes
 
 def tensor_product_nodes(
-        dims_or_nodes: int | Sequence[np.ndarray],
-        nodes_1d: np.ndarray | None = None) -> np.ndarray:
+        dims_or_nodes: int | Sequence[NDArray[np.floating]],
+        nodes_1d: NDArray[np.floating] | None = None) -> NDArray[np.floating]:
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -383,7 +383,7 @@ def tensor_product_nodes(
         if nodes_1d is None:
             raise ValueError("nodes_1d must be supplied if the first argument "
                                         "is the number of dimensions")
-        nodesets: Sequence[np.ndarray] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
+        nodesets: Sequence[NDArray[np.floating]] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
         dims = dims_or_nodes
     else:
         if nodes_1d is not None:
@@ -406,7 +406,7 @@ def tensor_product_nodes(
         return result.reshape((dims, -1), order="F").copy(order="C")
 
 
-def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
+def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> NDArray[np.floating]:
     """
     :arg n: the degree of polynomial exactly interpolated by the nodes.
         The one-dimensional base quadrature has *n+1* nodes.
@@ -420,7 +420,7 @@ def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
     return tensor_product_nodes(dims, gl_nodes)
 
 
-def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> np.ndarray:
+def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> NDArray[np.floating]:
     """
     :arg n: the degree of polynomial exactly interpolated by the nodes.
         The one-dimensional base quadrature has *n+1* nodes.
@@ -440,19 +440,19 @@ def node_tuples_for_space(space: FunctionSpace) -> Sequence[tuple[int]]:
 
 
 @singledispatch
-def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape) -> np.ndarray:
+def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape) -> NDArray[np.floating]:
     raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
-def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> np.ndarray:
+def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> NDArray[np.floating]:
     raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
 def random_nodes_for_shape(
         shape: Shape, nnodes: int,
-        rng: np.random.Generator | None = None) -> np.ndarray:
+        rng: np.random.Generator | None = None) -> NDArray[np.floating]:
     """
     :arg rng: a :class:`numpy.random.Generator`.
 

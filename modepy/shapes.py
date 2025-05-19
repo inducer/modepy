@@ -223,6 +223,7 @@ from functools import partial, singledispatch
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 # {{{ interface
@@ -244,7 +245,7 @@ class Shape(ABC):
 
 
 @singledispatch
-def unit_vertices_for_shape(shape: Shape) -> np.ndarray:
+def unit_vertices_for_shape(shape: Shape) -> NDArray[np.floating]:
     """
     :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
@@ -265,14 +266,14 @@ class Face:
     """A tuple of indices into the vertices returned by
     :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
     """
-    map_to_volume: Callable[[np.ndarray], np.ndarray]
+    map_to_volume: Callable[[NDArray[np.floating]], NDArray[np.floating]]
     """A :class:`~collections.abc.Callable` that takes an array of
     size `(dim, nnodes)` of unit nodes on the face represented by
     *face_vertices* and maps them to the :attr:`volume_shape`.
     """
 
 
-def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
+def face_normal(face: Face, normalize: bool = True) -> NDArray[np.floating]:
     """
     .. versionadded :: 2021.2.1
     """
@@ -292,7 +293,7 @@ def face_normal(face: Face, normalize: bool = True) -> np.ndarray:
     from operator import xor as outerprod
 
     from pymbolic.geometric_algebra import MultiVector
-    surface_ps: MultiVector = reduce(outerprod, [
+    surface_ps: MultiVector[np.floating] = reduce(outerprod, [
         MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
         for i in range(face.dim)])
 
@@ -403,7 +404,10 @@ def _unit_vertices_for_simplex(shape: Simplex):
     return result
 
 
-def _simplex_face_to_vol_map(face_vertices, p: np.ndarray):
+def _simplex_face_to_vol_map(
+            face_vertices: NDArray[np.integer],
+            p: NDArray[np.floating]
+        ) -> NDArray[np.floating]:
     dim, npoints = face_vertices.shape
     if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
@@ -473,7 +477,10 @@ class _HypercubeFace(Hypercube, Face):
         Face.__init__(self, **kwargs)
 
 
-def _hypercube_face_to_vol_map(face_vertices: np.ndarray, p: np.ndarray):
+def _hypercube_face_to_vol_map(
+            face_vertices: NDArray[np.integer],
+            p: NDArray[np.floating]
+        ) -> NDArray[np.floating]:
     dim, npoints = face_vertices.shape
     if npoints != 2**(dim - 1):
         raise ValueError("'face_vertices' has wrong shape")

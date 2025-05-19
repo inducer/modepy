@@ -52,6 +52,7 @@ THE SOFTWARE.
 
 import numpy as np
 import numpy.linalg as la
+from numpy.typing import NDArray
 
 from modepy.quadrature import Quadrature
 
@@ -119,7 +120,7 @@ class JacobiGaussQuadrature(Quadrature):
     @staticmethod
     def compute_weights_and_nodes(
             N: int, alpha: float, beta: float,  # noqa: N803
-            ) -> tuple[np.ndarray, np.ndarray]:
+            ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
         """
         :arg N: order of the Gauss quadrature (the order of exactly
             integrated polynomials is :math:`2 N + 1`).
@@ -154,13 +155,13 @@ class JacobiGaussQuadrature(Quadrature):
                     f"alpha + beta = 1: ({alpha}, {beta})")
 
         # see Appendix A of Hesthaven/Warburton for these formulas
-        def a(n):
+        def a(n: int) -> np.floating:
             return 2 / (2*n + apb) * np.sqrt(
                 (n * (n+apb) * (n+alpha) * (n+beta))
                 / ((2*n + apb - 1) * (2*n + apb + 1))
                 )
 
-        def b(n):
+        def b(n: int) -> float:
             if n == 0:
                 return -(alpha-beta) / (apb+2)
             else:
@@ -258,7 +259,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 def jacobi_gauss_lobatto_nodes(
         alpha: float, beta: float, N: int,          # noqa: N803
         backend: str | None = None,
-        force_dim_axis: bool = False) -> np.ndarray:
+        force_dim_axis: bool = False) -> NDArray[np.floating]:
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters. There will be *N+1* nodes.
@@ -288,7 +289,7 @@ def jacobi_gauss_lobatto_nodes(
 def legendre_gauss_lobatto_nodes(
         N: int,                     # noqa: N803
         backend: str | None = None,
-        force_dim_axis: bool = False) -> np.ndarray:
+        force_dim_axis: bool = False) -> NDArray[np.floating]:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
     *N+1* is the number of nodes.
 

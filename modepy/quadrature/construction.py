@@ -48,17 +48,18 @@ from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
+from numpy.typing import NDArray
 
 
 # FIXME: Better name?
-Integrand: TypeAlias = Callable[[np.ndarray], np.ndarray]
+Integrand: TypeAlias = Callable[[NDArray[np.inexact]], NDArray[np.inexact]]
 
 
 @dataclass(frozen=True)
 class _ProductIntegrand:
     functions: Sequence[Integrand]
 
-    def __call__(self, points: np.ndarray) -> np.ndarray:
+    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
         return reduce(operator.mul, (f(points) for f in self.functions))
 
 
@@ -66,11 +67,11 @@ class _ProductIntegrand:
 class _ConjugateIntegrand:
     function: Integrand
 
-    def __call__(self, points: np.ndarray) -> np.ndarray:
+    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
         return self.function(points).conj()
 
 
-def _identity_integrand(points: np.ndarray) -> np.ndarray:
+def _identity_integrand(points: NDArray[np.inexact]) -> NDArray[np.inexact]:
     return points
 
 
@@ -87,13 +88,13 @@ class LinearCombinationIntegrand:
     .. autoattribute:: functions
     .. automethod:: __call__
     """
-    coefficients: np.ndarray
+    coefficients: NDArray[np.inexact]
     functions: Sequence[Integrand]
 
     def __post_init__(self):
         assert len(self.coefficients) == len(self.functions)
 
-    def __call__(self, points: np.ndarray) -> np.ndarray:
+    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
         """Evaluate the linear combination of :attr:`functions` with
         :attr:`coefficients` at *points*.
         """
@@ -104,7 +105,7 @@ class LinearCombinationIntegrand:
 
 
 def linearly_combine(
-            coefficients: np.ndarray,
+            coefficients: NDArray[np.inexact],
             functions: Sequence[Integrand]
         ) -> LinearCombinationIntegrand:
     r"""
@@ -150,7 +151,7 @@ def linearly_combine(
 def _mass_matrix(
             integrate: Callable[[Integrand], np.inexact],
             basis: Sequence[Integrand],
-        ) -> np.ndarray:
+        ) -> NDArray[np.inexact]:
     n = len(basis)
     integrals = [
         [
@@ -211,7 +212,7 @@ def orthogonalize_basis(
 class _ComplexToNDAdapter:
     function: Integrand
 
-    def __call__(self, points: np.ndarray) -> np.ndarray:
+    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
         rpoints  = np.array([points.real, points.imag])
         return self.function(rpoints)
 
@@ -231,7 +232,7 @@ def adapt_2d_integrands_to_complex_arg(
 def guess_nodes_vioreanu_rokhlin(
             integrate: Callable[[Integrand], np.inexact],
             onb: Sequence[Integrand],
-        ) -> np.ndarray:
+        ) -> NDArray[np.inexact]:
     r"""
     Let :math:`\Omega\subset\mathbb C` be a convex domain.
     Finds interpolation nodes for :math:`\Omega` based on the
@@ -289,9 +290,9 @@ def guess_nodes_vioreanu_rokhlin(
 
 def find_weights_undetermined_coefficients(
             integrands: Sequence[Integrand],
-            nodes: np.ndarray,
-            reference_integrals: np.ndarray,
-        ) -> np.ndarray:
+            nodes: NDArray[np.inexact],
+            reference_integrals: NDArray[np.inexact],
+        ) -> NDArray[np.inexact]:
     """
     Uses the method of undetermined coefficients to find weights
     for a quadrature rule using *nodes*, for the provided
@@ -341,22 +342,22 @@ class QuadratureResidualJacobian:
     .. autoattribute:: dresid_dnodes
     """
 
-    residual: np.ndarray
+    residual: NDArray[np.inexact]
     """Shaped ``(nintegrands,)``."""
 
-    dresid_dweights: np.ndarray
+    dresid_dweights: NDArray[np.inexact]
     """Shaped ``(nintegrands, nnodes)``."""
 
-    dresid_dnodes: np.ndarray
+    dresid_dnodes: NDArray[np.inexact]
     """Shaped ``(nintegrands, ndim*nnodes)``."""
 
 
 def quad_residual_and_jacobian(
-            nodes: np.ndarray,
-            weights: np.ndarray,
+            nodes: NDArray[np.inexact],
+            weights: NDArray[np.inexact],
             integrands: Sequence[Integrand],
             integrand_derivatives: Sequence[Sequence[Integrand]],
-            reference_integrals: np.ndarray,
+            reference_integrals: NDArray[np.inexact],
         ) -> QuadratureResidualJacobian:
     r"""
     Computes the residual and Jacobian of the objective function
@@ -429,7 +430,7 @@ def quad_residual_and_jacobian(
 
 def quad_gauss_newton_increment(
             qrj: QuadratureResidualJacobian
-        ) -> tuple[np.ndarray, np.ndarray]:
+        ) -> tuple[NDArray[np.inexact], NDArray[np.inexact]]:
     """Return the Gauss-Newton increment based on the residual and Jacobian
     (see :func:`quad_residual_and_jacobian`),
     separated into the weight increment and the nodes increment,
