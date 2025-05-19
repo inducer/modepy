@@ -27,6 +27,7 @@ from collections.abc import Callable
 
 import numpy as np
 import numpy.linalg as la
+from numpy.typing import NDArray
 
 import modepy as mp
 import modepy.quadrature.construction as constr
@@ -78,7 +79,7 @@ def test_orthogonalize_basis() -> None:
         weights=quad.weights,
     )
 
-    def integrate(integrand: Callable[[np.ndarray], np.ndarray]) -> np.inexact:
+    def integrate(integrand: constr.Integrand) -> np.inexact:
         res = base_quad(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -104,7 +105,7 @@ def test_guess_nodes_vr() -> None:
         weights=quad.weights,
     )
 
-    def integrate(integrand: Callable[[np.ndarray], np.ndarray]) -> np.inexact:
+    def integrate(integrand: constr.Integrand) -> np.inexact:
         res = base_quad(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -169,7 +170,7 @@ def test_quad_residual_derivatives() -> None:
         weights=base_quad.weights,
     )
 
-    def integrate(integrand: Callable[[np.ndarray], np.ndarray]) -> np.inexact:
+    def integrate(integrand: constr.Integrand) -> np.inexact:
         res = base_quad_complex(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -251,7 +252,7 @@ def test_quad_gauss_newton() -> None:
         weights=base_quad.weights,
     )
 
-    def integrate(integrand: Callable[[np.ndarray], np.ndarray]) -> np.inexact:
+    def integrate(integrand: constr.Integrand) -> np.inexact:
         res = base_quad_complex(integrand)
         assert isinstance(res, np.inexact)
         return res
