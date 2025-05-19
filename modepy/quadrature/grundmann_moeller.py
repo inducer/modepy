@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from numpy.typing import NDArray
-
 
 __copyright__ = "Copyright (C) 2009-2013 Andreas Kloeckner"
 
@@ -26,10 +24,15 @@ THE SOFTWARE.
 """
 
 from functools import reduce
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from modepy.quadrature import Quadrature, inf
+
+
+if TYPE_CHECKING:
+    from modepy.typing import ArrayF
 
 
 def _extended_euclidean(q: int, r: int) -> tuple[int, int, int]:
@@ -43,16 +46,16 @@ def _extended_euclidean(q: int, r: int) -> tuple[int, int, int]:
         p, a, b = _extended_euclidean(r, q)
         return p, b, a
 
-    Q = (1, 0)  # noqa: N806
-    R = (0, 1)  # noqa: N806
+    big_q = (1, 0)
+    big_r = (0, 1)
 
     while r:
         quot, t = divmod(q, r)
-        T = Q[0] - quot*R[0], Q[1] - quot*R[1]  # noqa: N806
+        T = big_q[0] - quot*big_r[0], big_q[1] - quot*big_r[1]  # noqa: N806
         q, r = r, t
-        Q, R = R, T     # noqa: N806
+        big_q, big_r = big_r, T
 
-    return q, Q[0], Q[1]
+    return q, big_q[0], big_q[1]
 
 
 def _gcd(q: int, r: int) -> int:
@@ -107,7 +110,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             wandering_element,
         )
 
-        points_to_weights: dict[tuple[tuple[int, int], ...], NDArray[np.floating]] = {}
+        points_to_weights: dict[tuple[tuple[int, int], ...], ArrayF] = {}
 
         for i in range(s + 1):
             weight = (-1)**i * 2**(-2*s) \
@@ -131,8 +134,8 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
                 + [np.array(x)
                     for x in wandering_element(n, landscape=-1, wanderer=1)])
 
-        nodes: list[NDArray[np.floating]] = []
-        weights: list[NDArray[np.floating]] = []
+        nodes: list[ArrayF] = []
+        weights: list[ArrayF] = []
 
         dim_factor = 2**n
         for p, w in points_to_weights.items():

@@ -24,9 +24,16 @@ THE SOFTWARE.
 """
 
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
+
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from modepy.typing import ArrayF
 
 
 __doc__ = """Estimate the smoothness of a function represented in a basis
@@ -49,9 +56,9 @@ The method implemented in this module follows this article:
 
 
 def simplex_interp_error_coefficient_estimator_matrix(
-        unit_nodes: NDArray[np.inexact],
+        unit_nodes: ArrayF,
         order: int,
-        n_tail_orders: int) -> NDArray[np.inexact]:
+        n_tail_orders: int) -> ArrayF:
     """Return a matrix :math:`C` that, when multiplied by a vector of nodal values,
     yields the coeffiicients belonging to the basis functions of the *n_tail_orders*
     highest orders.
@@ -106,7 +113,7 @@ def make_mode_number_vector(
 
 def create_decay_baseline(
         mode_number_vector: NDArray[np.integer],
-        n: int) -> NDArray[np.floating]:
+        n: int) -> ArrayF:
     """Create a vector of modal coefficients that exhibit 'optimal'
     (:math:`k^{-N}`) decay.
     """
@@ -115,7 +122,7 @@ def create_decay_baseline(
 
     modal_coefficients = np.asarray(mode_number_vector, dtype=np.float64)**(-n)
     modal_coefficients[zeros] = 1.0  # irrelevant, just keeps log from NaNing
-    modal_coefficients /= la.norm(modal_coefficients)
+    modal_coefficients = modal_coefficients / la.norm(modal_coefficients)
 
     return modal_coefficients
 
@@ -123,7 +130,7 @@ def create_decay_baseline(
 def get_decay_fit_matrix(
         mode_number_vector: NDArray[np.integer],
         ignored_modes: int,
-        weight_vector: NDArray[np.floating]) -> NDArray[np.floating]:
+        weight_vector: ArrayF) -> ArrayF:
     a = np.zeros((len(mode_number_vector), 2), dtype=np.float64)
     a[:, 0] = weight_vector
     a[:, 1] = weight_vector * np.log(mode_number_vector)
@@ -135,7 +142,7 @@ def get_decay_fit_matrix(
     return la.pinv(a)
 
 
-def skyline_pessimize(modal_values: NDArray[np.floating]) -> NDArray[np.floating]:
+def skyline_pessimize(modal_values: ArrayF) -> ArrayF:
     nelements, nmodes = modal_values.shape
 
     result = np.empty_like(modal_values)
@@ -154,8 +161,8 @@ def skyline_pessimize(modal_values: NDArray[np.floating]) -> NDArray[np.floating
 
 
 def fit_modal_decay(
-        coeffs: NDArray[np.inexact], dims: int, n: int,
-        ignored_modes: int = 1) -> tuple[NDArray[np.inexact], NDArray[np.inexact]]:
+        coeffs: ArrayF, dims: int, n: int,
+        ignored_modes: int = 1) -> tuple[ArrayF, ArrayF]:
     """Fit a curve to the modal decay on each element.
 
     :arg coeffs: an array of shape ``(num_elements, num_modes)`` containing modal
@@ -216,8 +223,8 @@ def fit_modal_decay(
 
 
 def estimate_relative_expansion_residual(
-        coeffs: NDArray[np.inexact], dims: int, n: int,
-        ignored_modes: int = 1) -> NDArray[np.floating]:
+        coeffs: ArrayF, dims: int, n: int,
+        ignored_modes: int = 1) -> ArrayF:
     """Use the modal fit to estimate the relative residual of the expansion.
     The arguments to this function exactly match :func:`fit_modal_decay`.
 

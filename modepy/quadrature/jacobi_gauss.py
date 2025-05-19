@@ -50,11 +50,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
 
 from modepy.quadrature import Quadrature
+
+
+if TYPE_CHECKING:
+    from modepy.typing import ArrayF
 
 
 class JacobiGaussQuadrature(Quadrature):
@@ -120,7 +125,7 @@ class JacobiGaussQuadrature(Quadrature):
     @staticmethod
     def compute_weights_and_nodes(
             N: int, alpha: float, beta: float,  # noqa: N803
-            ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+            ) -> tuple[ArrayF, ArrayF]:
         """
         :arg N: order of the Gauss quadrature (the order of exactly
             integrated polynomials is :math:`2 N + 1`).
@@ -259,7 +264,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 def jacobi_gauss_lobatto_nodes(
         alpha: float, beta: float, N: int,          # noqa: N803
         backend: str | None = None,
-        force_dim_axis: bool = False) -> NDArray[np.floating]:
+        force_dim_axis: bool = False) -> ArrayF:
     """Compute the Gauss-Lobatto quadrature
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters. There will be *N+1* nodes.
@@ -289,7 +294,7 @@ def jacobi_gauss_lobatto_nodes(
 def legendre_gauss_lobatto_nodes(
         N: int,                     # noqa: N803
         backend: str | None = None,
-        force_dim_axis: bool = False) -> NDArray[np.floating]:
+        force_dim_axis: bool = False) -> ArrayF:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
     *N+1* is the number of nodes.
 

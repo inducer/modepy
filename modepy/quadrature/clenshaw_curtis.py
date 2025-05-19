@@ -24,15 +24,20 @@ THE SOFTWARE.
 """
 
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
 
 from modepy.quadrature import Quadrature
 
 
+if TYPE_CHECKING:
+    from modepy.typing import ArrayF
+
+
 # {{{ Clenshaw-Curtis
 
-def _make_clenshaw_curtis_nodes_and_weights(n: int) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+def _make_clenshaw_curtis_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     """Nodes and weights of the Clenshaw-Curtis quadrature."""
     if n < 1:
         raise ValueError(f"Clenshaw-Curtis order must be at least 1: n = {n}")
@@ -97,7 +102,7 @@ class ClenshawCurtisQuadrature(Quadrature):
 
 # {{{ Fejer
 
-def _make_fejer1_nodes_and_weights(n: int) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+def _make_fejer1_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     """Nodes and weights of the Fejer quadrature of the first kind."""
     if n < 1:
         raise ValueError(f"Fejer1 order must be at least 1: n = {n}")
@@ -121,7 +126,7 @@ def _make_fejer1_nodes_and_weights(n: int) -> tuple[NDArray[np.floating], NDArra
     return x, w.real
 
 
-def _make_fejer2_nodes_and_weights(n: int) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+def _make_fejer2_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     """Nodes and weights of the Fejer quadrature of the second kind."""
     if n < 2:
         raise ValueError(f"Fejer2 order must be at least 2: n = {n}")

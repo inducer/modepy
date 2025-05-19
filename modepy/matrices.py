@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from numpy.typing import NDArray
-
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -26,17 +24,23 @@ THE SOFTWARE.
 """
 
 
-from collections.abc import Callable, Sequence
-from typing import TypeAlias
+from typing import TYPE_CHECKING
 from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
 
 from modepy.modes import Basis, BasisNotOrthonormal
 from modepy.quadrature import Quadrature, TensorProductQuadrature
-from modepy.shapes import Face
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from numpy.typing import NDArray
+
+    from modepy.shapes import Face
+    from modepy.typing import ArrayF, NodalFunction
 
 
 __doc__ = r"""
@@ -77,16 +81,27 @@ of the basis to return to nodal values.
 .. autofunction:: diff_matrices
 
 .. autofunction:: diff_matrix_permutation
+
+References
+----------
+
+.. class:: NDArray
+
+    See :data:`numpy.typing.NDArray`.
+
+.. currentmodule:: np
+
+.. class:: integer
+
+    See :class:`numpy.integer`.
+
 """
-
-
-NodalFunction: TypeAlias = Callable[[NDArray[np.inexact]], NDArray[np.inexact]]
 
 
 def vandermonde(
             functions: Sequence[NodalFunction],
-            nodes: NDArray[np.inexact]
-        ) -> NDArray[np.inexact]:
+            nodes: ArrayF
+        ) -> ArrayF:
     """Return a (generalized) Vandermonde matrix.
 
     The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
@@ -123,9 +138,9 @@ def vandermonde(
 
 
 def multi_vandermonde(
-            functions: Sequence[Callable[[NDArray[np.inexact]], Sequence[NDArray[np.inexact]]]],
-            nodes: NDArray[np.inexact]
-        ) -> tuple[NDArray[np.inexact], ...]:
+            functions: Sequence[Callable[[ArrayF], Sequence[ArrayF]]],
+            nodes: ArrayF
+        ) -> tuple[ArrayF, ...]:
     """Evaluate multiple (generalized) Vandermonde matrices.
 
     The Vandermonde Matrix is given by :math:`V_{i,j} := f_j(x_i)`
@@ -169,10 +184,10 @@ def multi_vandermonde(
 
 def resampling_matrix(
             basis: Sequence[NodalFunction],
-            new_nodes: NDArray[np.inexact],
-            old_nodes: NDArray[np.inexact],
+            new_nodes: ArrayF,
+            old_nodes: ArrayF,
             least_squares_ok: bool = False
-        ) -> NDArray[np.inexact]:
+        ) -> ArrayF:
     """Return a matrix that maps nodal values on *old_nodes* onto nodal
     values on *new_nodes*.
 
@@ -224,10 +239,10 @@ def resampling_matrix(
 
 def differentiation_matrices(
             basis: Sequence[NodalFunction],
-            grad_basis: Sequence[Callable[[NDArray[np.inexact]], Sequence[NDArray[np.inexact]]]],
-            nodes: NDArray[np.inexact],
-            from_nodes: NDArray[np.inexact] | None = None
-        ) -> tuple[NDArray[np.inexact], ...]:
+            grad_basis: Sequence[Callable[[ArrayF], Sequence[ArrayF]]],
+            nodes: ArrayF,
+            from_nodes: ArrayF | None = None
+        ) -> tuple[ArrayF, ...]:
     """Return matrices carrying out differentiation on nodal values in the
     :math:`(r,s,t)` unit directions. (See :ref:`tri-coords` and
     :ref:`tet-coords`.)
@@ -265,8 +280,8 @@ def differentiation_matrices(
 
 def diff_matrices(
             basis: Basis,
-            nodes: NDArray[np.inexact],
-            from_nodes: NDArray[np.inexact] | None = None
+            nodes: ArrayF,
+            from_nodes: ArrayF | None = None
         ):
     """Like :func:`differentiation_matrices`, but for a given :class:`~modepy.Basis`.
 
@@ -304,8 +319,8 @@ def diff_matrix_permutation(
 
 def inverse_mass_matrix(
             basis: Basis | Sequence[NodalFunction],
-            nodes: NDArray[np.inexact]
-        ) -> NDArray[np.inexact]:
+            nodes: ArrayF
+        ) -> ArrayF:
     """Return a matrix :math:`A=M^{-1}`, which is the inverse of the one returned
     by :func:`mass_matrix`. Requires that the basis is orthonormal with weight 1.
 
@@ -339,8 +354,8 @@ def inverse_mass_matrix(
 
 def mass_matrix(
             basis: Basis | Sequence[NodalFunction],
-            nodes: NDArray[np.inexact]
-        ) -> NDArray[np.inexact]:
+            nodes: ArrayF
+        ) -> ArrayF:
     r"""Return a mass matrix :math:`M`, which obeys
 
     .. math::
@@ -360,9 +375,9 @@ def nodal_quadrature_test_matrix(
         quadrature: Quadrature,
         test_functions: Sequence[NodalFunction],
         nodal_interp_functions: Sequence[NodalFunction],
-        nodes: NDArray[np.inexact] | None = None,
+        nodes: ArrayF | None = None,
         test_function_node_map: NodalFunction | None = None
-    ) -> NDArray[np.inexact]:
+    ) -> ArrayF:
     r"""Using *quadrature*, provide a matrix :math:`A` that satisfies:
 
     .. math::
@@ -403,10 +418,10 @@ def nodal_quadrature_bilinear_form_matrix(
             trial_functions: Sequence[NodalFunction],
             nodal_interp_functions_test: Sequence[NodalFunction],
             nodal_interp_functions_trial: Sequence[NodalFunction],
-            input_nodes: NDArray[np.inexact],
-            output_nodes: NDArray[np.inexact] | None = None,
+            input_nodes: ArrayF,
+            output_nodes: ArrayF | None = None,
             test_function_node_map: NodalFunction | None = None,
-        ) -> NDArray[np.inexact]:
+        ) -> ArrayF:
     r"""Using *quadrature*, provide a matrix :math:`A` defined as:
 
     .. math::
@@ -460,7 +475,7 @@ def nodal_quadrature_bilinear_form_matrix(
 
 def spectral_diag_nodal_mass_matrix(
             quadrature: TensorProductQuadrature
-        ) -> NDArray[np.inexact]:
+        ) -> ArrayF:
     """Return the diagonal mass matrix for use in the spectral element method.
     This mass matrix is exact for Lagrange polynomials with respect to
     Gauss-Legendre (GL) nodes, using GL nodal degrees of freedom.
@@ -483,8 +498,8 @@ def spectral_diag_nodal_mass_matrix(
 
 def modal_quad_mass_matrix(
             quadrature: Quadrature,
-            test_functions: Sequence[Callable[[NDArray[np.inexact]], NDArray[np.inexact]]],
-        ) -> NDArray[np.inexact]:
+            test_functions: Sequence[Callable[[ArrayF], ArrayF]],
+        ) -> ArrayF:
     from warnings import warn
     warn("`modal_quad_mass_matrix` is deprecated and will stop working in "
          "2026.", stacklevel=1)
@@ -498,9 +513,9 @@ def modal_quad_mass_matrix(
 
 def nodal_quad_mass_matrix(
             quadrature: Quadrature,
-            test_functions: Sequence[Callable[[NDArray[np.inexact]], NDArray[np.inexact]]],
-            nodes: NDArray[np.inexact] | None = None,
-        ) -> NDArray[np.inexact]:
+            test_functions: Sequence[Callable[[ArrayF], ArrayF]],
+            nodes: ArrayF | None = None,
+        ) -> ArrayF:
     from warnings import warn
     warn("`nodal_quad_mass_matrix` is deprecated and will stop working in "
          "2026. Consider switching to `nodal_quad_bilinear_form`", stacklevel=1)
@@ -520,7 +535,7 @@ def modal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             trial_functions: Sequence[NodalFunction],
             test_functions: Sequence[NodalFunction]
-        ) -> NDArray[np.inexact]:
+        ) -> ArrayF:
     from warnings import warn
     warn("`modal_mass_matrix_for_face` is deprecated and will stop working in "
          "2026.", stacklevel=1)
@@ -540,9 +555,9 @@ def nodal_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             trial_functions: Sequence[NodalFunction],
             test_functions: Sequence[NodalFunction],
-            volume_nodes: NDArray[np.inexact],
-            face_nodes: NDArray[np.inexact]
-        ) -> NDArray[np.inexact]:
+            volume_nodes: ArrayF,
+            face_nodes: ArrayF
+        ) -> ArrayF:
     from warnings import warn
     warn("`nodal_mass_matrix_for_face` is deprecated and will stop working in "
          "2026. Please use `nodal_quad_bilinear_form` instead.", stacklevel=1)
@@ -565,7 +580,7 @@ def nodal_mass_matrix_for_face(
 def modal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             test_functions: Sequence[NodalFunction],
-        ) -> NDArray[np.inexact]:
+        ) -> ArrayF:
     from warnings import warn
     warn("`modal_quad_mass_matrix_for_face` is deprecated and will stop working "
          "in 2025.", stacklevel=1)
@@ -582,8 +597,8 @@ def modal_quad_mass_matrix_for_face(
 def nodal_quad_mass_matrix_for_face(
             face: Face, face_quad: Quadrature,
             test_functions: Sequence[NodalFunction],
-            volume_nodes: NDArray[np.inexact],
-        ) -> NDArray[np.inexact]:
+            volume_nodes: ArrayF,
+        ) -> ArrayF:
     from warnings import warn
     warn("`nodal_quad_mass_matrix_for_face` is deprecated and will stop working "
          "in 2025. Consider using `nodal_quad_bilinear_form` instead",

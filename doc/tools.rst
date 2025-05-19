@@ -26,4 +26,9 @@ Modal decay/residual
 
 .. automodule:: modepy.tools
 
+Helpers for type annotation
+---------------------------
+
+.. automodule:: modepy.typing
+..
 .. vim: sw=4
