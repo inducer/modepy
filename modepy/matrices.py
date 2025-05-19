@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from numpy.typing import NDArray
+
 
 __copyright__ = "Copyright (C) 2013 Andreas Kloeckner"
 
@@ -277,7 +279,7 @@ def diff_matrices(
 def diff_matrix_permutation(
             node_tuples: Sequence[tuple[int, ...]],
             ref_axis: int
-        ) -> NDArray[np.inexact]:
+        ) -> NDArray[np.integer]:
     """Return a :mod:`numpy` array *permutation* of integers so that::
 
         diff_matrices[ref_axis] == diff_matrices[0][permutation][:, permutation]

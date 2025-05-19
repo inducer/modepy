@@ -92,7 +92,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
 
 def make_mode_number_vector(
         mode_order_tuples: tuple[tuple[int, ...], ...],
-        ignored_modes: int) -> NDArray[np.inexact]:
+        ignored_modes: int) -> NDArray[np.integer]:
     node_cnt = len(mode_order_tuples)
 
     mode_number_vector = np.zeros(node_cnt-ignored_modes, dtype=np.int32)
@@ -113,7 +113,7 @@ def create_decay_baseline(
 
     zeros = mode_number_vector == 0
 
-    modal_coefficients = mode_number_vector**(-n)
+    modal_coefficients = np.asarray(mode_number_vector, dtype=np.float64)**(-n)
     modal_coefficients[zeros] = 1.0  # irrelevant, just keeps log from NaNing
     modal_coefficients /= la.norm(modal_coefficients)
 
@@ -175,8 +175,11 @@ def fit_modal_decay(
     )
     mode_number_vector = make_mode_number_vector(
             tuple(gnitstam(n, dims)), ignored_modes
+            )
+    mode_number_vector_real = make_mode_number_vector(
+            tuple(gnitstam(n, dims)), ignored_modes
             ).astype(np.float64)
-    weight_vector = np.ones_like(mode_number_vector)
+    weight_vector = np.ones_like(mode_number_vector_real)
 
     fit_mat = get_decay_fit_matrix(mode_number_vector, ignored_modes, weight_vector)
 

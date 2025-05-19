@@ -161,14 +161,14 @@ class JacobiGaussQuadrature(Quadrature):
                 / ((2*n + apb - 1) * (2*n + apb + 1))
                 )
 
-        def b(n: int) -> float:
+        def b(n: int) -> np.floating | float:
             if n == 0:
                 return -(alpha-beta) / (apb+2)
             else:
                 return -(alpha**2 - beta**2) / ((2*n + apb) * (2*n + apb + 2))
 
         T = np.zeros((N + 1, N + 1))    # noqa: N806
-        current_a = 0.0
+        current_a: float | np.floating = 0.0
 
         for n in range(N + 1):
             T[n, n] = b(n)
