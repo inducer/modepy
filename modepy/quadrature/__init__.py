@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 
+
 __copyright__ = ("Copyright (C) 2009, 2010, 2013 Andreas Kloeckner, Tim Warburton, "
         "Jan Hesthaven, Xueyu Zhu")
 
@@ -55,6 +56,7 @@ from functools import singledispatch
 from numbers import Number
 
 import numpy as np
+from numpy.typing import NDArray
 from typing_extensions import Never
 
 from modepy.shapes import Shape, Simplex, TensorProductShape
@@ -104,8 +106,8 @@ class Quadrature:
     """The basic interface for a quadrature rule."""
 
     def __init__(self,
-                 nodes: np.ndarray,
-                 weights: np.ndarray,
+                 nodes: NDArray[np.inexact],
+                 weights: NDArray[np.inexact],
                  exact_to: int | _Inf | None = None) -> None:
         """
         :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
@@ -116,11 +118,11 @@ class Quadrature:
             is `None` and will *not* be set as an attribute.
         """
 
-        self.nodes: np.ndarray = nodes
+        self.nodes: NDArray[np.inexact] = nodes
         """An array of shape *(dim, nnodes)*, where *dim* is the dimension
         of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
         """
-        self.weights: np.ndarray = weights
+        self.weights: NDArray[np.inexact] = weights
         """A vector of length *nnodes* that contains the quadrature weights."""
         self._exact_to = exact_to
 
@@ -151,8 +153,8 @@ class Quadrature:
 
     def __call__(
                 self,
-                f: Callable[[np.ndarray], np.ndarray]
-            ) -> np.ndarray | np.inexact:
+                f: Callable[[NDArray[np.inexact]], NDArray[np.inexact]]
+            ) -> NDArray[np.inexact] | np.inexact:
         """Evaluate the callable *f* at the quadrature nodes and return its
         integral.
 

@@ -66,6 +66,7 @@ from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
+from numpy.typing import NDArray
 
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
@@ -294,8 +295,8 @@ def hypercube_submesh(node_tuples):
 
 def plot_element_values(
         n: int,
-        nodes: np.ndarray,
-        values: np.ndarray,
+        nodes: NDArray[np.floating],
+        values: NDArray[np.floating],
         resample_n: int | None = None,
         node_tuples: tuple[int, ...] | None = None,
         show_nodes: bool = False) -> None:
@@ -385,7 +386,7 @@ def _evaluate_lebesgue_function(n, nodes, shape):
 
 def estimate_lebesgue_constant(
         n: int,
-        nodes: np.ndarray,
+        nodes: NDArray[np.inexact],
         shape: shp.Shape | None = None,
         *,
         visualize: bool = False) -> float:
