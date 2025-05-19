@@ -29,6 +29,7 @@ import logging
 import numpy as np
 import numpy.linalg as la
 import pytest
+from numpy.typing import NDArray
 
 from pymbolic.mapper.evaluator import EvaluationMapper
 from pymbolic.mapper.stringifier import (
@@ -92,7 +93,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
             true_result = 1.0 if i == j else 0.0
 
             err = abs(result-true_result)
-            maxerr = max(maxerr, err)
+            maxerr = np.maximum(maxerr, err)
             if abs(result - true_result) > ebound:
                 logger.error("[FAILED] (%g, %g): (%d, %d) error %.5e",
                         alpha, beta, i, j, abs(result - true_result))
@@ -149,7 +150,7 @@ def test_basis_orthogonality(shape, order, ebound):
             result = cub(lambda x: f(x)*g(x))  # noqa: B023
             err = abs(result-true_result)
             logger.info("error %.5e max %.5e", err, maxerr)
-            maxerr = max(maxerr, err)
+            maxerr = np.maximum(maxerr, err)
             if err > ebound:
                 logger.info("bound exceeded at order %d for (f_{%d}, f_{%d}): %.5e",
                         order, i, j, err)
@@ -236,11 +237,11 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
 # {{{ test symbolic modes
 
-class MyStringifyMapper(CSESplittingStringifyMapperMixin, StringifyMapper):
+class MyStringifyMapper(CSESplittingStringifyMapperMixin[[]], StringifyMapper[[]]):
     pass
 
 
-class MyEvaluationMapper(EvaluationMapper):
+class MyEvaluationMapper(EvaluationMapper[NDArray[np.inexact]]):
     def map_if(self, expr):
         return np.where(self.rec(expr.condition),
                 self.rec(expr.then), self.rec(expr.else_))
