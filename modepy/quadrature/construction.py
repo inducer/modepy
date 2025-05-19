@@ -43,7 +43,7 @@ import operator
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import reduce
-from typing import TypeAlias
+from typing import TypeAlias, cast
 from warnings import warn
 
 import numpy as np
@@ -145,7 +145,8 @@ def linearly_combine(
         ncoeff = len(f.coefficients)
         matrix[i, :ncoeff] = f.coefficients
 
-    return LinearCombinationIntegrand(coefficients @ matrix, basis)
+    # cast because ArrayF is mismatched
+    return LinearCombinationIntegrand(cast(ArrayF, coefficients @ matrix), basis)
 
 
 def _mass_matrix(

@@ -405,9 +405,9 @@ def _unit_vertices_for_simplex(shape: Simplex):
 
 
 def _simplex_face_to_vol_map(
-            face_vertices: NDArray[np.integer],
-            p: NDArray[np.floating]
-        ) -> NDArray[np.floating]:
+            face_vertices: ArrayF,
+            p: NDArray[np.integer]
+        ) -> ArrayF:
     dim, npoints = face_vertices.shape
     if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
@@ -478,9 +478,9 @@ class _HypercubeFace(Hypercube, Face):
 
 
 def _hypercube_face_to_vol_map(
-            face_vertices: NDArray[np.integer],
-            p: NDArray[np.floating]
-        ) -> NDArray[np.floating]:
+            face_vertices: ArrayF,
+            p: NDArray[np.integer]
+        ) -> ArrayF:
     dim, npoints = face_vertices.shape
     if npoints != 2**(dim - 1):
         raise ValueError("'face_vertices' has wrong shape")

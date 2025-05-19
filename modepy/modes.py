@@ -490,7 +490,7 @@ def monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> NDArray[np.fl
     assert dim == rst.shape[0]
 
     from pytools import product
-    return product(rst[i] ** order[i] for i in range(dim))
+    return np.asarray(product(cast(ArrayF, rst[i]) ** order[i] for i in range(dim)))
 
 
 def _diff_monomial_1d(r: NDArray[np.floating], o: int) -> NDArray[np.floating]:
@@ -518,9 +518,11 @@ def diff_monomial(
     assert dim == rst.shape[0]
 
     from pytools import product
-    return product(
-        _diff_monomial_1d(rst[i], order[i]) if diff_axis == i else rst[i] ** order[i]
-        for i in range(dim))
+    return np.asarray(product(
+        _diff_monomial_1d(cast(ArrayF, rst[i]), order[i])
+        if diff_axis == i else
+        cast(ArrayF, rst[i]) ** order[i]
+        for i in range(dim)))
 
 
 def grad_monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> tuple[NDArray[np.floating], ...]:
@@ -539,13 +541,13 @@ def grad_monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> tuple[ND
 
     from pytools import product
     return tuple(
-            product(
+            np.asarray(product(
                 (
-                    _diff_monomial_1d(rst[i], order[i])
+                    _diff_monomial_1d(cast(ArrayF, rst[i]), order[i])
                     if j == i else
                     rst[i] ** order[i])
                 for i in range(dim)
-                )
+                ))
             for j in range(dim))
 
 # }}}
