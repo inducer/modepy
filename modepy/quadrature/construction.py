@@ -1,7 +1,6 @@
 """
 .. versionadded:: 2025.2
 
-.. autodata:: Integrand
 .. autoclass:: LinearCombinationIntegrand
 .. autofunction:: linearly_combine
 .. autofunction:: orthogonalize_basis
@@ -11,6 +10,12 @@
 .. autoclass:: QuadratureResidualJacobian
 .. autofunction:: quad_residual_and_jacobian
 .. autofunction:: quad_gauss_newton_increment
+
+References
+----------
+.. class:: NodalFunction
+
+    See :class:`modepy.typing.NodalFunction`.
 """
 
 from __future__ import annotations
@@ -40,38 +45,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 import operator
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import reduce
-from typing import TypeAlias, cast
+from typing import TYPE_CHECKING, cast
 from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
 
 
-# FIXME: Better name?
-Integrand: TypeAlias = Callable[[NDArray[np.inexact]], NDArray[np.inexact]]
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from modepy.typing import ArrayF, NodalFunction
 
 
 @dataclass(frozen=True)
 class _ProductIntegrand:
-    functions: Sequence[Integrand]
+    functions: Sequence[NodalFunction]
 
-    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
+    def __call__(self, points: ArrayF) -> ArrayF:
         return reduce(operator.mul, (f(points) for f in self.functions))
 
 
 @dataclass(frozen=True)
 class _ConjugateIntegrand:
-    function: Integrand
+    function: NodalFunction
 
-    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
+    def __call__(self, points: ArrayF) -> ArrayF:
         return self.function(points).conj()
 
 
-def _identity_integrand(points: NDArray[np.inexact]) -> NDArray[np.inexact]:
+def _identity_integrand(points: ArrayF) -> ArrayF:
     return points
 
 
@@ -88,13 +93,13 @@ class LinearCombinationIntegrand:
     .. autoattribute:: functions
     .. automethod:: __call__
     """
-    coefficients: NDArray[np.inexact]
-    functions: Sequence[Integrand]
+    coefficients: ArrayF
+    functions: Sequence[NodalFunction]
 
     def __post_init__(self):
         assert len(self.coefficients) == len(self.functions)
 
-    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
+    def __call__(self, points: ArrayF) -> ArrayF:
         """Evaluate the linear combination of :attr:`functions` with
         :attr:`coefficients` at *points*.
         """
@@ -105,8 +110,8 @@ class LinearCombinationIntegrand:
 
 
 def linearly_combine(
-            coefficients: NDArray[np.inexact],
-            functions: Sequence[Integrand]
+            coefficients: ArrayF,
+            functions: Sequence[NodalFunction]
         ) -> LinearCombinationIntegrand:
     r"""
     Returns a linear combination of *functions* with coefficients.
@@ -128,7 +133,7 @@ def linearly_combine(
                  stacklevel=2)
         return LinearCombinationIntegrand(coefficients, functions)
 
-    basis: list[Integrand] = []
+    basis: list[NodalFunction] = []
     n = len(lcfunctions)
     matrix = np.zeros((n, n), dtype=np.complex128)
     for i, f in enumerate(lcfunctions):
@@ -146,13 +151,13 @@ def linearly_combine(
         matrix[i, :ncoeff] = f.coefficients
 
     # cast because ArrayF is mismatched
-    return LinearCombinationIntegrand(cast(ArrayF, coefficients @ matrix), basis)
+    return LinearCombinationIntegrand(cast("ArrayF", coefficients @ matrix), basis)
 
 
 def _mass_matrix(
-            integrate: Callable[[Integrand], np.inexact],
-            basis: Sequence[Integrand],
-        ) -> NDArray[np.inexact]:
+            integrate: Callable[[NodalFunction], np.floating],
+            basis: Sequence[NodalFunction],
+        ) -> ArrayF:
     n = len(basis)
     integrals = [
         [
@@ -171,8 +176,8 @@ def _mass_matrix(
 
 
 def orthogonalize_basis(
-            integrate: Callable[[Integrand], np.inexact],
-            basis: Sequence[Integrand],
+            integrate: Callable[[NodalFunction], np.floating],
+            basis: Sequence[NodalFunction],
         ) -> Sequence[LinearCombinationIntegrand]:
     r"""
     Let :math:`\Omega\subset\mathbb C^n` be a domain. (Domains
@@ -211,17 +216,17 @@ def orthogonalize_basis(
 
 @dataclass(frozen=True)
 class _ComplexToNDAdapter:
-    function: Integrand
+    function: NodalFunction
 
-    def __call__(self, points: NDArray[np.inexact]) -> NDArray[np.inexact]:
+    def __call__(self, points: ArrayF) -> ArrayF:
         rpoints  = np.array([points.real, points.imag])
         return self.function(rpoints)
 
 
 def adapt_2d_integrands_to_complex_arg(
-            functions: Sequence[Integrand]
-        ) -> Sequence[Integrand]:
-    r"""Converts a list of :data:`Integrand`\ s taking nodes in real-valued
+            functions: Sequence[NodalFunction]
+        ) -> Sequence[NodalFunction]:
+    r"""Converts a list of :data:`NodalFunction`\ s taking nodes in real-valued
     arrays of shape ``(2, nnodes)`` to ones accepting a single
     complex-valued array of shape ``(nnodes,)``. See
     :func:`guess_nodes_vioreanu_rokhlin`
@@ -231,9 +236,9 @@ def adapt_2d_integrands_to_complex_arg(
 
 
 def guess_nodes_vioreanu_rokhlin(
-            integrate: Callable[[Integrand], np.inexact],
-            onb: Sequence[Integrand],
-        ) -> NDArray[np.inexact]:
+            integrate: Callable[[NodalFunction], np.floating],
+            onb: Sequence[NodalFunction],
+        ) -> ArrayF:
     r"""
     Let :math:`\Omega\subset\mathbb C` be a convex domain.
     Finds interpolation nodes for :math:`\Omega` based on the
@@ -290,10 +295,10 @@ def guess_nodes_vioreanu_rokhlin(
 
 
 def find_weights_undetermined_coefficients(
-            integrands: Sequence[Integrand],
-            nodes: NDArray[np.inexact],
-            reference_integrals: NDArray[np.inexact],
-        ) -> NDArray[np.inexact]:
+            integrands: Sequence[NodalFunction],
+            nodes: ArrayF,
+            reference_integrals: ArrayF,
+        ) -> ArrayF:
     """
     Uses the method of undetermined coefficients to find weights
     for a quadrature rule using *nodes*, for the provided
@@ -343,22 +348,22 @@ class QuadratureResidualJacobian:
     .. autoattribute:: dresid_dnodes
     """
 
-    residual: NDArray[np.inexact]
+    residual: ArrayF
     """Shaped ``(nintegrands,)``."""
 
-    dresid_dweights: NDArray[np.inexact]
+    dresid_dweights: ArrayF
     """Shaped ``(nintegrands, nnodes)``."""
 
-    dresid_dnodes: NDArray[np.inexact]
+    dresid_dnodes: ArrayF
     """Shaped ``(nintegrands, ndim*nnodes)``."""
 
 
 def quad_residual_and_jacobian(
-            nodes: NDArray[np.inexact],
-            weights: NDArray[np.inexact],
-            integrands: Sequence[Integrand],
-            integrand_derivatives: Sequence[Sequence[Integrand]],
-            reference_integrals: NDArray[np.inexact],
+            nodes: ArrayF,
+            weights: ArrayF,
+            integrands: Sequence[NodalFunction],
+            integrand_derivatives: Sequence[Sequence[NodalFunction]],
+            reference_integrals: ArrayF,
         ) -> QuadratureResidualJacobian:
     r"""
     Computes the residual and Jacobian of the objective function
@@ -431,7 +436,7 @@ def quad_residual_and_jacobian(
 
 def quad_gauss_newton_increment(
             qrj: QuadratureResidualJacobian
-        ) -> tuple[NDArray[np.inexact], NDArray[np.inexact]]:
+        ) -> tuple[ArrayF, ArrayF]:
     """Return the Gauss-Newton increment based on the residual and Jacobian
     (see :func:`quad_residual_and_jacobian`),
     separated into the weight increment and the nodes increment,

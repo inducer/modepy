@@ -217,13 +217,19 @@ THE SOFTWARE.
 
 import contextlib
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from numpy.typing import NDArray
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from numpy.typing import NDArray
+
+    from modepy.typing import ArrayF
 
 
 # {{{ interface
@@ -245,7 +251,7 @@ class Shape(ABC):
 
 
 @singledispatch
-def unit_vertices_for_shape(shape: Shape) -> NDArray[np.floating]:
+def unit_vertices_for_shape(shape: Shape) -> ArrayF:
     """
     :returns: an :class:`~numpy.ndarray` of shape `(dim, nvertices)`.
     """
@@ -266,14 +272,14 @@ class Face:
     """A tuple of indices into the vertices returned by
     :func:`unit_vertices_for_shape` for the :attr:`volume_shape`.
     """
-    map_to_volume: Callable[[NDArray[np.floating]], NDArray[np.floating]]
+    map_to_volume: Callable[[ArrayF], ArrayF]
     """A :class:`~collections.abc.Callable` that takes an array of
     size `(dim, nnodes)` of unit nodes on the face represented by
     *face_vertices* and maps them to the :attr:`volume_shape`.
     """
 
 
-def face_normal(face: Face, normalize: bool = True) -> NDArray[np.floating]:
+def face_normal(face: Face, normalize: bool = True) -> ArrayF:
     """
     .. versionadded :: 2021.2.1
     """

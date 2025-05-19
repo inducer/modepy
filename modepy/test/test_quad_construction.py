@@ -23,14 +23,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from collections.abc import Callable
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
 
 import modepy as mp
 import modepy.quadrature.construction as constr
+
+
+if TYPE_CHECKING:
+    from modepy.typing import NodalFunction
 
 
 def test_quad_finder_lincomb() -> None:
@@ -79,7 +83,7 @@ def test_orthogonalize_basis() -> None:
         weights=quad.weights,
     )
 
-    def integrate(integrand: constr.Integrand) -> np.inexact:
+    def integrate(integrand: NodalFunction) -> np.floating:
         res = base_quad(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -105,7 +109,7 @@ def test_guess_nodes_vr() -> None:
         weights=quad.weights,
     )
 
-    def integrate(integrand: constr.Integrand) -> np.inexact:
+    def integrate(integrand: NodalFunction) -> np.floating:
         res = base_quad(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -170,7 +174,7 @@ def test_quad_residual_derivatives() -> None:
         weights=base_quad.weights,
     )
 
-    def integrate(integrand: constr.Integrand) -> np.inexact:
+    def integrate(integrand: NodalFunction) -> np.floating:
         res = base_quad_complex(integrand)
         assert isinstance(res, np.inexact)
         return res
@@ -252,7 +256,7 @@ def test_quad_gauss_newton() -> None:
         weights=base_quad.weights,
     )
 
-    def integrate(integrand: constr.Integrand) -> np.inexact:
+    def integrate(integrand: NodalFunction) -> np.floating:
         res = base_quad_complex(integrand)
         assert isinstance(res, np.inexact)
         return res

@@ -27,6 +27,6 @@ autodoc_member_order = "bysource"
 # FIXME: This would be nice to have, but I was not able to resolve the
 # resulting mess of Sphinx errors.
 #
-# autodoc_type_aliases = {
-#     "Integrand": "modepy.quadrature.construction.Integrand",
-# }
+autodoc_type_aliases = {
+    # "ArrayF": "modepy.typing.ArrayF",
+}

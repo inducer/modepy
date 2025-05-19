@@ -61,17 +61,21 @@ from math import (
     gamma,  # noqa: F401
     sqrt,
 )
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
 from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
-from numpy.typing import NDArray
 
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
 import modepy.shapes as shp
 from modepy.spaces import FunctionSpace, TensorProductSpace
+
+
+if TYPE_CHECKING:
+    from modepy.shapes import Shape
+    from modepy.typing import ArrayF
 
 
 class Monomial:
@@ -295,8 +299,8 @@ def hypercube_submesh(node_tuples):
 
 def plot_element_values(
         n: int,
-        nodes: NDArray[np.floating],
-        values: NDArray[np.floating],
+        nodes: ArrayF,
+        values: ArrayF,
         resample_n: int | None = None,
         node_tuples: tuple[int, ...] | None = None,
         show_nodes: bool = False) -> None:
@@ -386,8 +390,8 @@ def _evaluate_lebesgue_function(n, nodes, shape):
 
 def estimate_lebesgue_constant(
         n: int,
-        nodes: NDArray[np.inexact],
-        shape: shp.Shape | None = None,
+        nodes: ArrayF,
+        shape: Shape | None = None,
         *,
         visualize: bool = False) -> float:
     """Estimate the

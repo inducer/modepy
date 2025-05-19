@@ -111,7 +111,7 @@ def test_tensor_product_diag_mass_matrix(shape: mp.Shape) -> None:
         # in the matrix norm sense!
 
         for mid, func in zip(basis.mode_ids, basis.functions, strict=True):
-            if max(cast(tuple[int, ...], mid)) < order - 1:
+            if max(cast("tuple[int, ...]", mid)) < order - 1:
                 err = np.abs(
                     gll_ref_mass_mat @ func(gll_quad.nodes)
                     - gll_diag_mass_mat @ func(gll_quad.nodes))

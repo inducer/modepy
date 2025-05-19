@@ -23,39 +23,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+
 import math
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import partial, singledispatch
 from typing import (
     TYPE_CHECKING,
-    TypeAlias,
-    TypeVar,
     cast,
 )
 
 import numpy as np
-from numpy.typing import NDArray
 
 from modepy.shapes import Shape, Simplex, TensorProductShape
 from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 
 if TYPE_CHECKING:
-    import pymbolic.primitives
+    from collections.abc import Callable, Hashable, Iterable, Sequence
 
-RealValueT = TypeVar("RealValueT",
-                     NDArray[np.floating],
-                     "pymbolic.primitives.ExpressionNode",
-                     float)
+    from modepy.typing import (
+        ArrayF,
+        BasisFunction,
+        BasisGradient,
+        RealValueT,
+    )
+
 
 """:class:`~typing.TypeVar` for basis function inputs and outputs."""
 
 __doc__ = """This functionality provides sets of basis functions for the
 reference elements in :mod:`modepy.shapes`.
-
-.. autoclass:: RealValueT
 
 .. currentmodule:: modepy
 
@@ -121,6 +119,20 @@ Monomials
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
 .. autofunction:: diff_monomial
+
+References
+----------
+.. class:: RealValueT
+
+    See :class:`modepy.typing.RealValueT`.
+
+.. class:: BasisFunction
+
+    See :class:`modepy.typing.BasisFunction`.
+
+.. class:: BasisGradient
+
+    See :class:`modepy.typing.BasisGradient`.
 """
 
 
@@ -292,7 +304,7 @@ def _rstoab(
     return a, b
 
 
-def pkdo_2d(order: tuple[int, int], rs: NDArray[np.floating]) -> NDArray[np.floating]:
+def pkdo_2d(order: tuple[int, int], rs: ArrayF) -> ArrayF:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -317,7 +329,7 @@ def pkdo_2d(order: tuple[int, int], rs: NDArray[np.floating]) -> NDArray[np.floa
 
 def grad_pkdo_2d(
         order: tuple[int, int],
-        rs: NDArray[np.floating]) -> tuple[RealValueT, RealValueT]:
+        rs: ArrayF) -> tuple[RealValueT, RealValueT]:
     """Evaluate the derivatives of :func:`pkdo_2d`.
 
     :arg order: A tuple *(i, j)* representing the order of the polynomial.
@@ -384,7 +396,7 @@ def _rsttoabc(
     return a, b, c
 
 
-def pkdo_3d(order: tuple[int, int, int], rst: NDArray[np.floating]) -> NDArray[np.floating]:
+def pkdo_3d(order: tuple[int, int, int], rst: ArrayF) -> ArrayF:
     """Evaluate a 2D orthonormal (with weight 1) polynomial on the unit simplex.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -411,7 +423,7 @@ def pkdo_3d(order: tuple[int, int, int], rst: NDArray[np.floating]) -> NDArray[n
 
 def grad_pkdo_3d(
         order: tuple[int, int, int],
-        rst: NDArray[np.floating]) -> tuple[RealValueT, RealValueT, RealValueT]:
+        rst: ArrayF) -> tuple[RealValueT, RealValueT, RealValueT]:
     """Evaluate the derivatives of :func:`pkdo_3d`.
 
     :arg order: A tuple *(i, j, k)* representing the order of the polynomial.
@@ -479,7 +491,7 @@ def grad_pkdo_3d(
 
 # {{{ monomials
 
-def monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> NDArray[np.floating]:
+def monomial(order: tuple[int, ...], rst: ArrayF) -> ArrayF:
     """Evaluate the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -490,10 +502,10 @@ def monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> NDArray[np.fl
     assert dim == rst.shape[0]
 
     from pytools import product
-    return np.asarray(product(cast(ArrayF, rst[i]) ** order[i] for i in range(dim)))
+    return np.asarray(product(cast("ArrayF", rst[i] ** order[i]) for i in range(dim)))
 
 
-def _diff_monomial_1d(r: NDArray[np.floating], o: int) -> NDArray[np.floating]:
+def _diff_monomial_1d(r: ArrayF, o: int) -> ArrayF:
     if o == 0:
         return 0*r
     elif o == 1:
@@ -505,8 +517,8 @@ def _diff_monomial_1d(r: NDArray[np.floating], o: int) -> NDArray[np.floating]:
 def diff_monomial(
             order: tuple[int, ...],
             diff_axis: int,
-            rst: NDArray[np.floating]
-        ) -> NDArray[np.floating]:
+            rst: ArrayF
+        ) -> ArrayF:
     """Evaluate the derivative of the monomial of order *order*
     with respect to the axis *diff_axis* at the points *rst*.
 
@@ -519,13 +531,15 @@ def diff_monomial(
 
     from pytools import product
     return np.asarray(product(
-        _diff_monomial_1d(cast(ArrayF, rst[i]), order[i])
+        _diff_monomial_1d(
+                          cast("ArrayF", rst[i]),
+                          order[i])
         if diff_axis == i else
-        cast(ArrayF, rst[i]) ** order[i]
+        rst[i] ** order[i]
         for i in range(dim)))
 
 
-def grad_monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> tuple[NDArray[np.floating], ...]:
+def grad_monomial(order: tuple[int, ...], rst: ArrayF) -> tuple[ArrayF, ...]:
     """Evaluate the derivative of the monomial of order *order* at the points *rst*.
 
     :arg order: A tuple *(i, j,...)* representing the order of the polynomial.
@@ -543,7 +557,7 @@ def grad_monomial(order: tuple[int, ...], rst: NDArray[np.floating]) -> tuple[ND
     return tuple(
             np.asarray(product(
                 (
-                    _diff_monomial_1d(cast(ArrayF, rst[i]), order[i])
+                    _diff_monomial_1d(cast("ArrayF", rst[i]), order[i])
                     if j == i else
                     rst[i] ** order[i])
                 for i in range(dim)
@@ -569,7 +583,7 @@ class _TensorProductBasisFunction:
     that is mainly meant for debugging and not used internally.
     """
 
-    functions: tuple[Callable[[NDArray[np.floating]], NDArray[np.floating]], ...]
+    functions: tuple[Callable[[ArrayF], ArrayF], ...]
     r"""A :class:`tuple` of callables that can be evaluated on the tensor
     product space :math:`\mathbb{R}^{d_1} \times \cdots \times \mathbb{R}^{d_n}`,
     i.e. one function :math:`f_i` for each :math:`\mathbb{R}^{d_i}` component
@@ -593,7 +607,7 @@ class _TensorProductBasisFunction:
     def ndim(self) -> int:
         return sum(self.dims_per_function)
 
-    def __call__(self, x: NDArray[np.floating]) -> NDArray[np.floating]:
+    def __call__(self, x: ArrayF) -> ArrayF:
         assert x.shape[0] == self.ndim
 
         n = 0
@@ -633,7 +647,7 @@ class _TensorProductGradientBasisFunction:
     """
 
     derivatives: tuple[tuple[
-        Callable[[NDArray[np.floating]], NDArray[np.floating] | tuple[NDArray[np.floating], ...]],
+        Callable[[ArrayF], ArrayF | tuple[ArrayF, ...]],
         ...], ...]
     r"""A :class:`tuple` of :class:`tuple`\ s of callables ``df[i][j]`` that
     evaluate the derivatives of the tensor product. Each ``df[i]`` tuple
@@ -676,10 +690,10 @@ class _TensorProductGradientBasisFunction:
     def ndim(self) -> int:
         return sum(self.dims_per_function)
 
-    def __call__(self, x: NDArray[np.floating]) -> tuple[NDArray[np.floating], ...]:
+    def __call__(self, x: ArrayF) -> tuple[ArrayF, ...]:
         assert x.shape[0] == self.ndim
 
-        result: list[int | NDArray[np.floating]] = [1] * self.ndim
+        result: list[int | ArrayF] = [1] * self.ndim
         n = 0
         for ider, derivative in enumerate(self.derivatives):
             f = 0
@@ -701,7 +715,7 @@ class _TensorProductGradientBasisFunction:
                 f += iaxis
             n += self.dims_per_function[ider]
 
-        return cast(tuple[NDArray[np.floating], ...], tuple(result))
+        return cast("tuple[ArrayF, ...]", tuple(result))
 
     def __repr__(self):
         return (f"{type(self).__name__}(mi={self.multi_index}, "
@@ -711,6 +725,13 @@ class _TensorProductGradientBasisFunction:
 
 
 # {{{ conversion to symbolic
+
+def _unwrap_scalar_obj_array(x: RealValueT) -> RealValueT:
+    if isinstance(x, np.ndarray) and x.dtype.char == "O":
+        assert x.shape == ()
+        return x[()]
+    return x
+
 
 def symbolicize_function(
         f: Callable[[RealValueT], RealValueT | tuple[RealValueT, ...]],
@@ -731,29 +752,14 @@ def symbolicize_function(
 
     result = f(r_sym)
 
-    if dim == 1:
-        # Work around inconsistent 1D stupidity. Grrrr!
-        # (We fed it an object array, and it gave one back, i.e. it treated its
-        # argument as a scalar instead of indexing into it. That tends to
-        # happen for 1D functions. Because we're aiming for future consistency
-        # across 1D/nD, we'll first try to feed *every* basis object arrays and
-        # only recover if it does the wrong/inconsistent thing.)
-        if isinstance(result, np.ndarray) and result.dtype.char == "O":
-            r_sym = p.Variable("r")[0]
-            return f(r_sym)
-        else:
-            return result
-    else:
-        return result
+    if isinstance(result, tuple):
+        return tuple(_unwrap_scalar_obj_array(res_i) for res_i in result)
+    return _unwrap_scalar_obj_array(result)
 
 # }}}
 
 
 # {{{ basis interface
-
-BasisFunction: TypeAlias = Callable[[NDArray[np.floating]], NDArray[np.floating]]
-BasisGradient: TypeAlias = Callable[[NDArray[np.floating]], tuple[NDArray[np.floating], ...]]
-
 
 class BasisNotOrthonormal(Exception):
     """Exception raised when a :class:`Basis` is expected to be orthonormal."""
@@ -841,7 +847,7 @@ def monomial_basis_for_space(space: FunctionSpace, shape: Shape) -> Basis:
 # }}}
 
 
-def zerod_basis(x: NDArray[np.floating]) -> NDArray[np.floating]:
+def zerod_basis(x: ArrayF) -> ArrayF:
     assert len(x) == 0
     x_sub = np.ones(x.shape[1:], x.dtype)
     return 1 + x_sub
@@ -849,13 +855,13 @@ def zerod_basis(x: NDArray[np.floating]) -> NDArray[np.floating]:
 
 # {{{ PN bases
 
-def _pkdo_1d(order: tuple[int], r: NDArray[np.floating]) -> NDArray[np.floating]:
+def _pkdo_1d(order: tuple[int], r: ArrayF) -> ArrayF:
     i, = order
     r0, = r
     return jacobi(0, 0, i, r0)
 
 
-def _grad_pkdo_1d(order: tuple[int], r: NDArray[np.floating]) -> tuple[NDArray[np.floating]]:
+def _grad_pkdo_1d(order: tuple[int], r: ArrayF) -> tuple[ArrayF]:
     i, = order
     r0, = r
     return (grad_jacobi(0, 0, i, r0),)

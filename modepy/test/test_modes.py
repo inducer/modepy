@@ -29,7 +29,6 @@ import logging
 import numpy as np
 import numpy.linalg as la
 import pytest
-from numpy.typing import NDArray
 
 from pymbolic.mapper.evaluator import EvaluationMapper
 from pymbolic.mapper.stringifier import (
@@ -38,6 +37,7 @@ from pymbolic.mapper.stringifier import (
 )
 
 import modepy as mp
+from modepy.typing import ArrayF
 
 
 logger = logging.getLogger(__name__)
@@ -241,7 +241,7 @@ class MyStringifyMapper(CSESplittingStringifyMapperMixin[[]], StringifyMapper[[]
     pass
 
 
-class MyEvaluationMapper(EvaluationMapper[NDArray[np.inexact]]):
+class MyEvaluationMapper(EvaluationMapper[ArrayF]):
     def map_if(self, expr):
         return np.where(self.rec(expr.condition),
                 self.rec(expr.then), self.rec(expr.else_))

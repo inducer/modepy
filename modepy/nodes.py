@@ -32,6 +32,15 @@ Hypercubes
 .. autofunction:: tensor_product_nodes
 .. autofunction:: legendre_gauss_tensor_product_nodes
 .. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
+
+References
+----------
+
+.. currentmodule:: np.random
+
+.. class:: Generator
+
+    See :class:`numpy.random.Generator`.
 """
 
 from __future__ import annotations
@@ -62,8 +71,9 @@ THE SOFTWARE.
 
 # }}}
 
-from collections.abc import Sequence
+
 from functools import partial, singledispatch
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.linalg as la
@@ -72,12 +82,18 @@ from modepy.shapes import Shape, Simplex, TensorProductShape, unit_vertices_for_
 from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from modepy.typing import ArrayF
+
+
 # {{{ equidistant nodes
 
 def equidistant_nodes(
         dims: int, n: int,
         node_tuples: Sequence[tuple[int, ...]] | None = None
-        ) -> NDArray[np.floating]:
+        ) -> ArrayF:
     """
     :arg dims: dimensionality of desired simplex
         (e.g. 1, 2 or 3, for interval, triangle or tetrahedron).
@@ -295,7 +311,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
 
 def warp_and_blend_nodes(
         dims: int, n: int,
-        node_tuples: Sequence[tuple[int, ...]] | None = None) -> NDArray[np.floating]:
+        node_tuples: Sequence[tuple[int, ...]] | None = None) -> ArrayF:
     """Return interpolation nodes as described in [warburton-nodes]_
 
     .. [warburton-nodes] Warburton, T.
@@ -358,8 +374,8 @@ def warp_and_blend_nodes(
 # {{{ tensor product nodes
 
 def tensor_product_nodes(
-        dims_or_nodes: int | Sequence[NDArray[np.floating]],
-        nodes_1d: NDArray[np.floating] | None = None) -> NDArray[np.floating]:
+        dims_or_nodes: int | Sequence[ArrayF],
+        nodes_1d: ArrayF | None = None) -> ArrayF:
     """
     :returns: an array of shape ``(dims, nnodes_1d**dims)``.
 
@@ -383,7 +399,7 @@ def tensor_product_nodes(
         if nodes_1d is None:
             raise ValueError("nodes_1d must be supplied if the first argument "
                                         "is the number of dimensions")
-        nodesets: Sequence[NDArray[np.floating]] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
+        nodesets: Sequence[ArrayF] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
         dims = dims_or_nodes
     else:
         if nodes_1d is not None:
@@ -406,7 +422,7 @@ def tensor_product_nodes(
         return result.reshape((dims, -1), order="F").copy(order="C")
 
 
-def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> NDArray[np.floating]:
+def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> ArrayF:
     """
     :arg n: the degree of polynomial exactly interpolated by the nodes.
         The one-dimensional base quadrature has *n+1* nodes.
@@ -420,7 +436,7 @@ def legendre_gauss_tensor_product_nodes(dims: int, n: int) -> NDArray[np.floatin
     return tensor_product_nodes(dims, gl_nodes)
 
 
-def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> NDArray[np.floating]:
+def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> ArrayF:
     """
     :arg n: the degree of polynomial exactly interpolated by the nodes.
         The one-dimensional base quadrature has *n+1* nodes.
@@ -440,19 +456,19 @@ def node_tuples_for_space(space: FunctionSpace) -> Sequence[tuple[int]]:
 
 
 @singledispatch
-def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape) -> NDArray[np.floating]:
+def equispaced_nodes_for_space(space: FunctionSpace, shape: Shape) -> ArrayF:
     raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
-def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> NDArray[np.floating]:
+def edge_clustered_nodes_for_space(space: FunctionSpace, shape: Shape) -> ArrayF:
     raise NotImplementedError((type(space).__name__, type(shape).__name__))
 
 
 @singledispatch
 def random_nodes_for_shape(
         shape: Shape, nnodes: int,
-        rng: np.random.Generator | None = None) -> NDArray[np.floating]:
+        rng: np.random.Generator | None = None) -> ArrayF:
     """
     :arg rng: a :class:`numpy.random.Generator`.
 
