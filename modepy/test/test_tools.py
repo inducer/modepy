@@ -386,8 +386,8 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
         ax.plot(nodes[0], nodes[1], "ko")
         p = ax.tricontourf(equi_nodes[0], equi_nodes[1], lebesgue, levels=16)
         fig.colorbar(p)
-        ax.set_xlim([-1.1, 1.1])
-        ax.set_ylim([-1.1, 1.1])
+        ax.set_xlim((-1.1, 1.1))
+        ax.set_ylim((-1.1, 1.1))
         ax.set_aspect("equal")
     else:
         raise ValueError(f"unsupported dimension: {dims}")
