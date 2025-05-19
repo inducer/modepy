@@ -84,7 +84,7 @@ def plot_quadrature_rule_nodes(
         quad_nodes = mp.WitherdenVincentQuadrature(order, dims).nodes
         ref_nodes = get_reference_element_nodes("hypercube", dims)
     elif name == "xg":
-        quad_nodes = np.XiaoGimbutasSimplexQuadrature(order, dims).nodes
+        quad_nodes = mp.XiaoGimbutasSimplexQuadrature(order, dims).nodes
         ref_nodes = get_reference_element_nodes("simplex", dims)
     else:
         raise ValueError(f"unknown quadrature: '{name}'")
