@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         ArrayF,
         BasisFunction,
         BasisGradient,
+        RealValue,
         RealValueT,
     )
 
@@ -138,7 +139,7 @@ References
 
 # {{{ helpers for symbolic evaluation
 
-def _cse(expr, prefix):
+def _cse(expr: RealValue, prefix: str) -> RealValue:
     from pymbolic.primitives import CommonSubexpression, ExpressionNode
     if isinstance(expr, ExpressionNode):
         return CommonSubexpression(expr, prefix)
@@ -146,18 +147,25 @@ def _cse(expr, prefix):
         return expr
 
 
-def _where(op_a, comp, op_b, then, else_):
+def _where(
+            op_a: RealValue,
+            comp: str,
+            op_b: RealValue,
+            then: RealValue,
+            else_: RealValue
+        ) -> RealValue:
     from pymbolic.primitives import Comparison, ExpressionNode, If
     if isinstance(op_a, ExpressionNode) or isinstance(op_b, ExpressionNode):
         return If(
-              Comparison(op_a, Comparison.name_to_operator[comp], op_b),
-              then, else_)
+              Comparison(op_a, Comparison.name_to_operator[comp], op_b),   # pyright: ignore[reportArgumentType]
+              then, else_)   # pyright: ignore[reportArgumentType]
 
     import operator
-    comp_op = getattr(operator, comp)
+    comp_op = cast("Callable[[RealValue, RealValue], RealValue]",
+            getattr(operator, comp))
 
     if isinstance(op_a, np.ndarray) or isinstance(op_b, np.ndarray):
-        return np.where(comp_op(op_a, op_b), then, else_)
+        return np.where(comp_op(op_a, op_b), then, else_)   # pyright: ignore[reportArgumentType]
 
     return then if comp_op(op_a, op_b) else else_
 
@@ -750,7 +758,8 @@ def symbolicize_function(
     import pymbolic.primitives as p
     r_sym = p.make_sym_vector(ref_coord_var_name, dim)
 
-    result = f(r_sym)
+    # FIXME: Don't know how to type NDArray[ExpressionNode]
+    result = f(r_sym)  # pyright: ignore[reportArgumentType]
 
     if isinstance(result, tuple):
         return tuple(_unwrap_scalar_obj_array(res_i) for res_i in result)
