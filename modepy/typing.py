@@ -42,7 +42,6 @@ from typing import (
     TYPE_CHECKING,
     TypeAlias,
     TypeVar,
-    Union,  # pyright: ignore[reportDeprecated]
     cast,
 )
 
@@ -59,13 +58,20 @@ if TYPE_CHECKING:
 # https://github.com/microsoft/pyright/discussions/10474
 ArrayF: TypeAlias = NDArray[np.floating]
 
-RealValue: TypeAlias = Union[ArrayF, "pymbolic.primitives.ExpressionNode", float]  # pyright: ignore[reportDeprecated]
+RealValue: TypeAlias = """
+        ArrayF
+        | pymbolic.primitives.ExpressionNode
+        | float
+        | np.floating
+        """
 
 
 RealValueT = TypeVar("RealValueT",
                      ArrayF,
                      "pymbolic.primitives.ExpressionNode",
-                     float)
+                     float,
+                     np.floating,
+                 )
 
 
 BasisFunction: TypeAlias = Callable[[ArrayF], ArrayF]

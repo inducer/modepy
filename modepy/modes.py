@@ -301,7 +301,7 @@ def scaled_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValue
 
 def _rstoab(
         r: RealValueT, s: RealValueT,
-        tol: float = 1.0e-12) -> tuple[RealValueT, RealValueT]:
+        tol: float | np.floating = 1.0e-12) -> tuple[RealValueT, RealValueT]:
     """Transfer from (r, s) -> (a, b) coordinates in triangle."""
 
     # We may divide by zero below (or close to it), but we won't use the
@@ -309,7 +309,7 @@ def _rstoab(
     with np.errstate(all="ignore"):
         a = _where(abs(s-1), "ge", tol, 2*(1+r)/(1-s)-1, -1)
     b = s
-    return a, b
+    return cast("RealValueT", a), b
 
 
 def pkdo_2d(order: tuple[int, int], rs: ArrayF) -> ArrayF:
