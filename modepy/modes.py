@@ -353,7 +353,10 @@ def grad_pkdo_2d(
     * |dubiner-ref|
     """
 
-    a, b = _rstoab(*rs)
+    r, s = rs
+    r: RealValueT
+    s: RealValueT
+    a, b = _rstoab(r, s)
     i, j = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
@@ -393,7 +396,7 @@ def grad_pkdo_2d(
 
 def _rsttoabc(
         r: RealValueT, s: RealValueT, t: RealValueT,
-        tol: float = 1.0e-10) -> tuple[RealValueT, RealValueT, RealValueT]:
+        *, tol: float = 1.0e-10) -> tuple[RealValueT, RealValueT, RealValueT]:
     # We may divide by zero below (or close to it), but we won't use the
     # results because of the conditional. Silence the resulting numpy warnings.
     with np.errstate(all="ignore"):
@@ -419,7 +422,11 @@ def pkdo_3d(order: tuple[int, int, int], rst: ArrayF) -> ArrayF:
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)
+    r: ArrayF
+    s: ArrayF
+    t: ArrayF
+    r, s, t = rst
+    a, b, c = _rsttoabc(r, s, t)
     i, j, k = order
 
     h1 = jacobi(0, 0, i, a)
@@ -447,7 +454,11 @@ def grad_pkdo_3d(
     * |dubiner-ref|
     """
 
-    a, b, c = _rsttoabc(*rst)
+    r, s, t = rst
+    r: RealValueT
+    s: RealValueT
+    t: RealValueT
+    a, b, c = _rsttoabc(r, s, t)
     i, j, k = order
 
     fa = _cse(jacobi(0, 0, i, a), f"leg_{i}")
