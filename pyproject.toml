@@ -54,6 +54,15 @@ Documentation = "https://documen.tician.de/modepy"
 Homepage = "https://mathema.tician.de/software/modepy"
 Repository = "https://github.com/inducer/modepy"
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.git*",
+  "/doc/_build",
+  "/.editorconfig",
+  "/run-*.sh",
+  "/.basedpyright",
+]
+
 [tool.ruff]
 preview = true
 
