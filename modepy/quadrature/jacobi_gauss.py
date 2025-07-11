@@ -208,8 +208,8 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
     """
 
     def __init__(self,
-                 N: int, backend:  # noqa: N803
-                 str | None = None,
+                 N: int,  # noqa: N803
+                 backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
         super().__init__(
                 0, 0, N,
