@@ -333,7 +333,6 @@ class TensorProductShape(Shape):
     bases: tuple[Shape, ...]
     """A :class:`tuple` of base shapes that form the tensor product."""
 
-    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, bases: tuple[Shape, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
@@ -454,7 +453,6 @@ def _faces_for_simplex(shape: Simplex):
 class Hypercube(TensorProductShape):
     """An n-dimensional hypercube (line, square, hexahedron, etc.)."""
 
-    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, dim: int) -> Any:
         if dim == 1:
             return Simplex(1)
@@ -471,7 +469,6 @@ class Hypercube(TensorProductShape):
 
 @dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, dim, **kwargs) -> Any:
         if dim == 1:
             return _SimplexFace(dim=1, **kwargs)
