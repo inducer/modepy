@@ -78,7 +78,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
 
     .. [Grundmann1978] A. Grundmann and H.M. Moeller,
         *Invariant integration formulas for the n-simplex by combinatorial methods*,
-        SIAM J. Numer. Anal. 15 (1978), 282--290.
+        SIAM Journal on Numerical Analysis, vol. 15, pp. 282--290, 1978.
         `DOI <http://dx.doi.org/10.1137/0715019>`__
 
     .. automethod:: __init__

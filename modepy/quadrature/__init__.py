@@ -188,7 +188,7 @@ class ZeroDimensionalQuadrature(Quadrature):
         super().__init__(np.empty((0, 1), dtype=np.float64),
                          np.ones((1,), dtype=np.float64),
                          # NOTE: exact_to is expected to be an int
-                         exact_to=np.inf)   # type: ignore[arg-type]
+                         exact_to=np.inf)
 
 
 class Transformed1DQuadrature(Quadrature):

@@ -351,7 +351,7 @@ def plot_element_values(
             )
 
         ax = pt.subplot(1, 1, 1, projection="3d")
-        ax.plot_trisurf(triangulation, values)  # type: ignore[attr-defined,unused-ignore]
+        ax.plot_trisurf(triangulation, values)
         if show_nodes:
             ax.plot(orig_nodes[0], orig_nodes[1], orig_values, "ko", ms=5)
         pt.show()

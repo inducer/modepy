@@ -77,9 +77,7 @@ RealValueT = TypeVar("RealValueT",
 BasisFunction: TypeAlias = Callable[[ArrayF], ArrayF]
 BasisGradient: TypeAlias = Callable[[ArrayF], tuple[ArrayF, ...]]
 
-
 NodalFunction: TypeAlias = Callable[[ArrayF], ArrayF]
-
 
 NumpyTypeT = TypeVar("NumpyTypeT", bound=np.generic)
 
