@@ -113,7 +113,6 @@ class TensorProductSpace(FunctionSpace):
     bases: tuple[FunctionSpace, ...]
     """A :class:`tuple` of the base spaces that take part in the tensor product."""
 
-    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, bases: tuple[FunctionSpace, ...]) -> Any:
         if len(bases) == 1:
             return bases[0]
@@ -234,7 +233,6 @@ class QN(TensorProductSpace):
         \left \{\prod_{i=1}^d x_i^{n_i}:\max n_i\le N\right\}.
     """
 
-    # NOTE: https://github.com/python/mypy/issues/1020
     def __new__(cls, spatial_dim: int, order: int) -> Any:
         if spatial_dim == 1:
             return PN(spatial_dim, order)

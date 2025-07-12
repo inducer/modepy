@@ -639,7 +639,7 @@ class _TensorProductBasisFunction:
             result = np.ones(x.shape[1:], dtype=(x+np.float32(1)).dtype)
         else:
             # Likely we're evaluating symbolically.
-            result = 1  # type: ignore[assignment]
+            result = 1
 
         for d, function in zip(self.dims_per_function, self.functions, strict=True):
             result *= function(x[n:n + d])

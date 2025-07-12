@@ -86,7 +86,7 @@ def simplex_interp_error_coefficient_estimator_matrix(
         order_vector = np.array([
             # NOTE: basis.mode_ids are declared as `Tuple[Hashable, ...]`, which
             # cannot be summed
-            sum(mode_id) for mode_id in basis.mode_ids  # type: ignore[call-overload]
+            sum(mode_id) for mode_id in basis.mode_ids
             ])
     else:
         order_vector = np.array(basis.mode_ids)
