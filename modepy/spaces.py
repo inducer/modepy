@@ -1,8 +1,10 @@
 """
-.. currentmodule:: modepy
-
 Function Spaces
 ---------------
+
+.. autoclass:: FunctionSpaceT
+
+.. currentmodule:: modepy
 
 .. autoclass:: FunctionSpace
     :members:
@@ -49,14 +51,19 @@ THE SOFTWARE.
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from numbers import Number
-from typing import Any
+from typing import Literal, TypeVar, overload
 
 import numpy as np
+from typing_extensions import override
 
 from modepy.shapes import Shape, Simplex, TensorProductShape
 
 
 # {{{ function spaces
+
+FunctionSpaceT = TypeVar("FunctionSpaceT", bound="FunctionSpace")
+"""An invariant generic variable bound to :class:`FunctionSpace`."""
+
 
 class FunctionSpace(ABC):
     r"""An opaque object representing a finite-dimensional function space
@@ -83,7 +90,8 @@ class FunctionSpace(ABC):
 
 @singledispatch
 def space_for_shape(
-        shape: Shape, order: int | tuple[int, ...]
+        shape: Shape,
+        order: int | tuple[int, ...]
         ) -> FunctionSpace:
     r"""Return an unspecified instance of :class:`FunctionSpace` suitable
     for approximation on *shape* attaining interpolation error of
@@ -113,7 +121,14 @@ class TensorProductSpace(FunctionSpace):
     bases: tuple[FunctionSpace, ...]
     """A :class:`tuple` of the base spaces that take part in the tensor product."""
 
-    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> Any:
+    @overload
+    # pyright-ignore: they overlap, can't be helped.
+    def __new__(cls, bases: tuple[FunctionSpaceT]) -> FunctionSpaceT: ...  # pyright: ignore[reportOverlappingOverload]
+
+    @overload
+    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> TensorProductSpace: ...
+
+    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> FunctionSpace:
         if len(bases) == 1:
             return bases[0]
         else:
@@ -130,6 +145,7 @@ class TensorProductSpace(FunctionSpace):
         return (self.bases,)
 
     @property
+    @override
     def order(self) -> int:
         """Polynomial degree of the functions in the space, if any."""
 
@@ -140,13 +156,16 @@ class TensorProductSpace(FunctionSpace):
             raise AttributeError(f"{type(self).__name__} has no attribute 'order'")
 
     @property
+    @override
     def spatial_dim(self) -> int:
         return sum(space.spatial_dim for space in self.bases)
 
     @property
+    @override
     def space_dim(self) -> int:
         return int(np.prod([space.space_dim for space in self.bases]))
 
+    @override
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
                 f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}, "
@@ -155,7 +174,7 @@ class TensorProductSpace(FunctionSpace):
 
 
 @space_for_shape.register(TensorProductShape)
-def _space_for_tensor_product_shape(
+def space_for_tensor_product_shape(
         shape: TensorProductShape,
         order: int | tuple[int, ...]) -> TensorProductSpace:
     nbases = len(shape.bases)
@@ -190,23 +209,27 @@ class PN(FunctionSpace):
     def __init__(self, spatial_dim: int, order: int) -> None:
         super().__init__()
 
-        self._order = order
-        self._spatial_dim = spatial_dim
+        self._order: int = order
+        self._spatial_dim: int = spatial_dim
 
     @property
+    @override
     def order(self) -> int:
         """Total degree of the polynomials in the space."""
         return self._order
 
     @property
+    @override
     def spatial_dim(self) -> int:
         return self._spatial_dim
 
     @property
+    @override
     def space_dim(self) -> int:
         from math import comb
         return comb(self.order + self.spatial_dim, self.spatial_dim)
 
+    @override
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
                 f"spatial_dim={self.spatial_dim}, order={self.order}"
@@ -214,7 +237,7 @@ class PN(FunctionSpace):
 
 
 @space_for_shape.register(Simplex)
-def _space_for_simplex(shape: Simplex, order: int | tuple[int, ...]) -> PN:
+def space_for_simplex(shape: Simplex, order: int | tuple[int, ...]) -> PN:
     assert isinstance(order, int)
     return PN(shape.dim, order)
 
@@ -233,7 +256,14 @@ class QN(TensorProductSpace):
         \left \{\prod_{i=1}^d x_i^{n_i}:\max n_i\le N\right\}.
     """
 
-    def __new__(cls, spatial_dim: int, order: int) -> Any:
+    @overload
+    # pyright-ignore: they overlap, can't be helped.
+    def __new__(cls, spatial_dim: Literal[1], order: int) -> PN: ...  # pyright: ignore[reportOverlappingOverload]
+
+    @overload
+    def __new__(cls, spatial_dim: int, order: int) -> QN: ...
+
+    def __new__(cls, spatial_dim: int, order: int) -> FunctionSpace:
         if spatial_dim == 1:
             return PN(spatial_dim, order)
         else:
@@ -243,10 +273,12 @@ class QN(TensorProductSpace):
         super().__init__((PN(1, order),) * spatial_dim)
 
     @property
+    @override
     def order(self):
         """Maximum degree of the polynomials in the space."""
         return self.bases[0].order
 
+    @override
     def __repr__(self) -> str:
         return (f"{type(self).__name__}("
                 f"spatial_dim={self.spatial_dim}, order={self.order}"
