@@ -344,7 +344,8 @@ class TensorProductShape(Shape):
     """A :class:`tuple` of base shapes that form the tensor product."""
 
     @overload
-    def __new__(cls, bases: tuple[ShapeT]) -> ShapeT: ...
+    # pyright-ignore: they overlap, can't be helped.
+    def __new__(cls, bases: tuple[ShapeT]) -> ShapeT: ...  # pyright: ignore[reportOverlappingOverload]
 
     @overload
     def __new__(cls, bases: tuple[Shape, ...]) -> TensorProductShape: ...
