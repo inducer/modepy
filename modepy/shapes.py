@@ -573,7 +573,6 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
                     node_dict[add_tuples(current, d2)],
                     ))
 
-        # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
             try_add_line((0,), (1,),)
 
@@ -590,7 +589,6 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
                     node_dict[add_tuples(current, d3)],
                     ))
 
-        # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
             # this is a tessellation of a square into two triangles.
             # subtriangles that fall outside of the master triangle are
@@ -616,7 +614,6 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
                     ))
 
         result = []
-        # https://github.com/PyCQA/flake8-bugbear/issues/175
         for current in node_tuples:  # noqa: B007
             # this is a tessellation of a cube into six tets.
             # subtets that fall outside of the master tet are simply not added.
