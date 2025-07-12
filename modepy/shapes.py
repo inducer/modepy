@@ -4,6 +4,8 @@ r"""
 :mod:`modepy.shapes` provides a generic description of the supported shapes
 (i.e. reference elements).
 
+.. autoclass:: ShapeT
+
 .. currentmodule:: modepy
 
 .. autoclass:: Shape
@@ -219,20 +221,23 @@ import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast, overload
 
 import numpy as np
+from typing_extensions import override
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from numpy.typing import NDArray
-
     from modepy.typing import ArrayF
 
 
 # {{{ interface
+
+ShapeT = TypeVar("ShapeT", bound="Shape")
+"""An invariant generic variable bound to :class:`Shape`."""
+
 
 @dataclass(frozen=True)
 class Shape(ABC):
@@ -290,7 +295,7 @@ def face_normal(face: Face, normalize: bool = True) -> ArrayF:
 
     if face.dim == 0:
         # FIXME Grrrr. Hardcoded special case. Got a better idea?
-        (fv,), = face_vertices
+        fv = face_vertices.item()
         return np.array([np.sign(fv)])
 
     # Compute the outer product of the vectors spanning the surface, obtaining
@@ -299,12 +304,17 @@ def face_normal(face: Face, normalize: bool = True) -> ArrayF:
     from operator import xor as outerprod
 
     from pymbolic.geometric_algebra import MultiVector
-    surface_ps: MultiVector[np.floating] = reduce(outerprod, [
-        MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
-        for i in range(face.dim)])
+
+    surface_ps = cast(
+        "MultiVector[np.floating]",
+        reduce(outerprod, [
+            MultiVector(face_vertices[:, i+1] - face_vertices[:, 0])
+            for i in range(face.dim)
+        ])
+    )
 
     if normalize:
-        surface_ps = surface_ps / np.sqrt(surface_ps.norm_squared())
+        surface_ps = surface_ps / surface_ps.norm_squared() ** 0.5
 
     # Compute the normal as the dual of the surface pseudoscalar.
     return surface_ps.dual().as_vector()
@@ -333,7 +343,13 @@ class TensorProductShape(Shape):
     bases: tuple[Shape, ...]
     """A :class:`tuple` of base shapes that form the tensor product."""
 
-    def __new__(cls, bases: tuple[Shape, ...]) -> Any:
+    @overload
+    def __new__(cls, bases: tuple[ShapeT]) -> ShapeT: ...
+
+    @overload
+    def __new__(cls, bases: tuple[Shape, ...]) -> TensorProductShape: ...
+
+    def __new__(cls, bases: tuple[Shape, ...]) -> Shape:
         if len(bases) == 1:
             return bases[0]
         else:
@@ -358,10 +374,12 @@ class TensorProductShape(Shape):
         object.__setattr__(self, "bases", bases)
 
     @property
+    @override
     def nvertices(self) -> int:
         return int(np.prod([s.nvertices for s in self.bases]))
 
     @property
+    @override
     def nfaces(self) -> int:
         # FIXME: this obviously only works for `shape x segment x segment x ...`
         *segments, shape = sorted(self.bases, key=lambda s: s.dim)
@@ -369,7 +387,7 @@ class TensorProductShape(Shape):
 
 
 @unit_vertices_for_shape.register(TensorProductShape)
-def _unit_vertices_for_tp(shape: TensorProductShape):
+def unit_vertices_for_tp(shape: TensorProductShape) -> ArrayF:
     from modepy.nodes import tensor_product_nodes
     return tensor_product_nodes([
         unit_vertices_for_shape(s) for s in shape.bases
@@ -385,10 +403,12 @@ class Simplex(Shape):
     """An n-dimensional simplex (lines, triangle, tetrahedron, etc.)."""
 
     @property
+    @override
     def nfaces(self) -> int:
         return self.dim + 1
 
     @property
+    @override
     def nvertices(self) -> int:
         return self.dim + 1
 
@@ -399,7 +419,7 @@ class _SimplexFace(Simplex, Face):
 
 
 @unit_vertices_for_shape.register(Simplex)
-def _unit_vertices_for_simplex(shape: Simplex):
+def unit_vertices_for_simplex(shape: Simplex):
     result = np.empty((shape.dim, shape.dim+1), np.float64)
     result.fill(-1)
 
@@ -411,16 +431,16 @@ def _unit_vertices_for_simplex(shape: Simplex):
 
 def _simplex_face_to_vol_map(
             face_vertices: ArrayF,
-            p: NDArray[np.integer]
+            p: ArrayF
         ) -> ArrayF:
-    dim, npoints = face_vertices.shape
+    dim, npoints = cast("tuple[int, int]", face_vertices.shape)
     if npoints != dim:
         raise ValueError("'face_vertices' has wrong shape")
 
     origin = face_vertices[:, 0].reshape(-1, 1)
     face_basis = face_vertices[:, 1:] - origin
 
-    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+    return origin + cast("ArrayF", np.einsum("ij,jk->ik", face_basis, (1 + p) / 2))
 
 
 _SIMPLEX_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
@@ -431,18 +451,18 @@ _SIMPLEX_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
 
 
 @faces_for_shape.register(Simplex)
-def _faces_for_simplex(shape: Simplex):
+def faces_for_simplex(shape: Simplex) -> tuple[Face, ...]:
     # NOTE: order is chosen to maintain a positive orientation
     face_vertex_indices = _SIMPLEX_FACES[shape.dim]
-
     vertices = unit_vertices_for_shape(shape)
-    return [
+
+    return tuple(
             _SimplexFace(
                 dim=shape.dim-1,
                 volume_shape=shape, face_index=iface,
                 volume_vertex_indices=fvi,
                 map_to_volume=partial(_simplex_face_to_vol_map, vertices[:, fvi]))
-            for iface, fvi in enumerate(face_vertex_indices)]
+            for iface, fvi in enumerate(face_vertex_indices))
 
 # }}}
 
@@ -453,7 +473,13 @@ def _faces_for_simplex(shape: Simplex):
 class Hypercube(TensorProductShape):
     """An n-dimensional hypercube (line, square, hexahedron, etc.)."""
 
-    def __new__(cls, dim: int) -> Any:
+    @overload
+    def __new__(cls, dim: Literal[1]) -> Simplex: ...
+
+    @overload
+    def __new__(cls, dim: int) -> Hypercube: ...
+
+    def __new__(cls, dim: int) -> Shape:
         if dim == 1:
             return Simplex(1)
         else:
@@ -469,22 +495,28 @@ class Hypercube(TensorProductShape):
 
 @dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    def __new__(cls, dim, **kwargs) -> Any:
+    @overload
+    def __new__(cls, dim: Literal[1], **kwargs: Any) -> _SimplexFace: ...
+
+    @overload
+    def __new__(cls, dim: int, **kwargs: Any) -> _HypercubeFace: ...
+
+    def __new__(cls, dim: int, **kwargs: Any) -> Face:
         if dim == 1:
             return _SimplexFace(dim=1, **kwargs)
         else:
             return Shape.__new__(cls)
 
-    def __init__(self, **kwargs) -> None:
-        Hypercube.__init__(self, kwargs.pop("dim"))
+    def __init__(self, dim: int, **kwargs: Any) -> None:
+        Hypercube.__init__(self, dim)
         Face.__init__(self, **kwargs)
 
 
 def _hypercube_face_to_vol_map(
             face_vertices: ArrayF,
-            p: NDArray[np.integer]
+            p: ArrayF
         ) -> ArrayF:
-    dim, npoints = face_vertices.shape
+    dim, npoints = cast("tuple[int, int]", face_vertices.shape)
     if npoints != 2**(dim - 1):
         raise ValueError("'face_vertices' has wrong shape")
 
@@ -498,7 +530,7 @@ def _hypercube_face_to_vol_map(
     else:
         raise NotImplementedError(f"_hypercube_face_to_vol_map in {dim} dimensions")
 
-    return origin + np.einsum("ij,jk->ik", face_basis, (1 + p) / 2)
+    return origin + cast("ArrayF", np.einsum("ij,jk->ik", face_basis, (1 + p) / 2))
 
 
 _HYPERCUBE_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
@@ -518,18 +550,18 @@ _HYPERCUBE_FACES: dict[int, tuple[tuple[int, ...], ...]] = {
 
 
 @faces_for_shape.register(Hypercube)
-def _faces_for_hypercube(shape: Hypercube):
+def faces_for_hypercube(shape: Hypercube) -> tuple[Face, ...]:
     # NOTE: order is chosen to maintain a positive orientation
     face_vertex_indices = _HYPERCUBE_FACES[shape.dim]
-
     vertices = unit_vertices_for_shape(shape)
-    return [
+
+    return tuple(
             _HypercubeFace(
                 dim=shape.dim-1,
                 volume_shape=shape, face_index=iface,
                 volume_vertex_indices=fvi,
                 map_to_volume=partial(_hypercube_face_to_vol_map, vertices[:, fvi]))
-            for iface, fvi in enumerate(face_vertex_indices)]
+            for iface, fvi in enumerate(face_vertex_indices))
 
 # }}}
 
@@ -538,7 +570,8 @@ def _faces_for_hypercube(shape: Hypercube):
 
 @singledispatch
 def submesh_for_shape(
-        shape: Shape, node_tuples: Sequence[tuple[int, ...]]
+        shape: Shape,
+        node_tuples: Sequence[tuple[int, ...]]
         ) -> Sequence[tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
     generate a tessellation of the reference element.
@@ -555,8 +588,12 @@ def submesh_for_shape(
 
 
 @submesh_for_shape.register(Simplex)
-def _submesh_for_simplex(shape: Simplex, node_tuples):
+def submesh_for_simplex(
+        shape: Simplex,
+        node_tuples: Sequence[tuple[int, ...]]
+        ) -> Sequence[tuple[int, ...]]:
     from pytools import add_tuples, single_valued
+
     dims = single_valued(len(nt) for nt in node_tuples)
 
     node_dict = {
@@ -564,11 +601,11 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
             for idx, ituple in enumerate(node_tuples)}
 
     if dims == 1:
-        result = []
+        result_line: list[tuple[int, int]] = []
 
-        def try_add_line(d1, d2):
+        def try_add_line(d1: tuple[int], d2: tuple[int]) -> None:
             with contextlib.suppress(KeyError):
-                result.append((
+                result_line.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     ))
@@ -576,14 +613,16 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
         for current in node_tuples:  # noqa: B007
             try_add_line((0,), (1,),)
 
-        return result
+        return result_line
     elif dims == 2:
         # {{{ triangle sub-mesh
-        result = []
+        result_tri: list[tuple[int, int, int]] = []
 
-        def try_add_tri(d1, d2, d3):
+        def try_add_tri(d1: tuple[int, int],
+                        d2: tuple[int, int],
+                        d3: tuple[int, int]) -> None:
             with contextlib.suppress(KeyError):
-                result.append((
+                result_tri.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     node_dict[add_tuples(current, d3)],
@@ -598,22 +637,26 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
             try_add_tri((0, 0), (1, 0), (0, 1))
             try_add_tri((1, 0), (1, 1), (0, 1))
 
-        return result
+        return result_tri
 
         # }}}
     elif dims == 3:
         # {{{ tet sub-mesh
 
-        def try_add_tet(d1, d2, d3, d4):
+        result_tet: list[tuple[int, int, int, int]] = []
+
+        def try_add_tet(d1: tuple[int, int, int],
+                        d2: tuple[int, int, int],
+                        d3: tuple[int, int, int],
+                        d4: tuple[int, int, int]) -> None:
             with contextlib.suppress(KeyError):
-                result.append((
+                result_tet.append((
                     node_dict[add_tuples(current, d1)],
                     node_dict[add_tuples(current, d2)],
                     node_dict[add_tuples(current, d3)],
                     node_dict[add_tuples(current, d4)],
                     ))
 
-        result = []
         for current in node_tuples:  # noqa: B007
             # this is a tessellation of a cube into six tets.
             # subtets that fall outside of the master tet are simply not added.
@@ -627,7 +670,7 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
             try_add_tet((0, 1, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1))
             try_add_tet((0, 1, 1), (1, 1, 1), (1, 0, 1), (1, 1, 0))
 
-        return result
+        return result_tet
 
         # }}}
     else:
@@ -635,15 +678,21 @@ def _submesh_for_simplex(shape: Simplex, node_tuples):
 
 
 @submesh_for_shape.register(TensorProductShape)
-def _submesh_for_hypercube(shape: TensorProductShape, node_tuples):
+def submesh_for_hypercube(
+        shape: TensorProductShape,
+        node_tuples: Sequence[tuple[int, ...]]
+        ) -> Sequence[tuple[int, ...]]:
     from modepy.spaces import space_for_shape
     space = space_for_shape(shape, order=1)
+
     from modepy.nodes import node_tuples_for_space
     vertex_node_tuples = node_tuples_for_space(space)
 
     from pytools import add_tuples
-    result = []
+
+    result: list[tuple[int, ...]] = []
     node_dict = {ituple: idx for idx, ituple in enumerate(node_tuples)}
+
     for current in node_tuples:
         with contextlib.suppress(KeyError):
             result.append(tuple(
