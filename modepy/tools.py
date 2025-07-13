@@ -468,7 +468,8 @@ def estimate_lebesgue_constant(
 
 @runtime_checkable
 class Reshapeable(Protocol):
-    shape: tuple[int, ...]
+    @property
+    def shape(self) -> tuple[int, ...]: ...
 
     def reshape(
             self: ReshapeableT, *newshape: tuple[int, ...], order: str
