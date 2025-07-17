@@ -3988,14 +3988,6 @@
         ],
         "./modepy/quadrature/__init__.py": [
             {
-                "code": "reportImplicitOverride",
-                "range": {
-                    "startColumn": 8,
-                    "endColumn": 14,
-                    "lineCount": 1
-                }
-            },
-            {
                 "code": "reportUnknownArgumentType",
                 "range": {
                     "startColumn": 32,

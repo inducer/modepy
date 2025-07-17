@@ -615,6 +615,24 @@ def test_shape_pickling(dims, shape_cls):
 # }}}
 
 
+def test_inf():
+    from modepy.quadrature import _Inf  # pyright: ignore[reportPrivateUsage]
+
+    with pytest.raises(TypeError):
+        - _Inf()  # pyright: ignore[reportOperatorIssue, reportUnusedExpression]
+
+    def agree(x: bool, y: bool):
+        if x is NotImplemented or y is NotImplemented:
+            return True
+        else:
+            return x == y
+
+    for a in [5, _Inf(), np.inf, -np.inf, "z"]:
+        for b in [5, _Inf(), np.inf, -np.inf, "z"]:
+            assert agree(a.__lt__(b), b.__gt__(a))  # pyright: ignore[reportArgumentType]
+            assert agree(a.__le__(b), b.__ge__(a))  # pyright: ignore[reportArgumentType]
+
+
 # You can test individual routines by typing
 # $ python test_tools.py 'test_routine()'
 

@@ -68,7 +68,7 @@ from numbers import Number
 from typing import TYPE_CHECKING
 
 import numpy as np
-from typing_extensions import Never
+from typing_extensions import Never, override
 
 from modepy.shapes import Shape, Simplex, TensorProductShape
 from modepy.spaces import PN, FunctionSpace, TensorProductSpace
@@ -90,16 +90,52 @@ class QuadratureRuleUnavailable(RuntimeError):
 # Literal(float("inf")) might have been nicer, but alas:
 # https://github.com/python/typing/issues/1160
 class _Inf:
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _Inf)
 
     def __gt__(self, other: object) -> bool:
+        # inf > other?
         if isinstance(other, _Inf):
             return False
-        return bool(isinstance(other, Number))
+        elif isinstance(other, Number):
+            if np.isinf(other):  # pyright: ignore[reportCallIssue, reportArgumentType]
+                return NotImplemented
+            return True
+        else:
+            return NotImplemented
 
     def __ge__(self, other: object) -> bool:
-        return bool(isinstance(other, Number | _Inf))
+        # inf >= other?
+        if isinstance(other, _Inf):
+            return True
+        if isinstance(other, Number):
+            if np.isinf(other):  # pyright: ignore[reportCallIssue, reportArgumentType]
+                return NotImplemented
+            return True
+        else:
+            return NotImplemented
+
+    # Python will add these implicitly, but pyright will not.
+    def __lt__(self, other: object) -> bool:
+        # inf < other?
+        if isinstance(other, _Inf):
+            return False
+        elif isinstance(other, Number):
+            if np.isinf(other):  # pyright: ignore[reportCallIssue, reportArgumentType]
+                return NotImplemented
+            return False
+        else:
+            return NotImplemented
+
+    def __le__(self, other: object) -> bool:
+        # inf <= other?
+        if isinstance(other, _Inf):
+            return True
+        elif isinstance(other, Number):
+            return False
+        else:
+            return NotImplemented
 
     def __add__(self, other: object) -> _Inf:
         if (isinstance(other, float | int | np.integer | np.floating)
