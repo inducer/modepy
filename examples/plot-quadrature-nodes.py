@@ -125,7 +125,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", choices=["cc", "gm", "js", "vr", "wv", "xg"])
+    parser.add_argument("--name",
+                        choices=["cc", "gm", "js", "vr", "wv", "xg"],
+                        default="vr")
     parser.add_argument("--order", type=int, default=4)
     parser.add_argument("--dims", type=int, default=2)
     parser.add_argument("--show", action="store_true")
