@@ -397,24 +397,30 @@ def tensor_product_nodes(
     """
     if isinstance(dims_or_nodes, int):
         if nodes_1d is None:
-            raise ValueError("nodes_1d must be supplied if the first argument "
-                                        "is the number of dimensions")
+            raise ValueError("'nodes_1d' must be supplied if the first argument "
+                             "is the number of dimensions")
+
         nodesets: Sequence[ArrayF] = [nodes_1d.reshape(1, -1)] * dims_or_nodes
         dims = dims_or_nodes
     else:
         if nodes_1d is not None:
-            raise ValueError("nodes_1d must not be supplied if the first argument "
-                    "is a sequence of node arrays")
+            raise ValueError("'nodes_1d' must not be supplied if the first argument "
+                             "is a sequence of node arrays")
+
         nodesets = [(n.reshape(1, -1) if n.ndim == 1 else n) for n in dims_or_nodes]
         dims = sum(n.shape[0] for n in nodesets)
 
-    result = np.empty((dims, *tuple(n.shape[-1] for n in nodesets)))
+    result_dtype = np.result_type(*nodesets) if nodesets else float
+    result_shape = tuple(n.shape[-1] for n in nodesets)
+    result = np.empty((dims, *result_shape), dtype=result_dtype)
 
     d = 0
-    for nodes in nodesets:
-        node_dims, _ = nodes.shape
-        result[d:d+node_dims] = nodes.reshape(nodes.shape + (1,)*(dims-node_dims-d))
-        d += node_dims
+    for i, nodes in enumerate(nodesets):
+        d_i, n_i = nodes.shape
+        bcast_shape = (d_i,) + (1,) * i + (n_i,) + (1,) * (len(nodesets) - i - 1)
+
+        result[d:d + d_i] = nodes.reshape(bcast_shape)
+        d += d_i
 
     if dims == 0:
         return result.reshape(dims, 1)
