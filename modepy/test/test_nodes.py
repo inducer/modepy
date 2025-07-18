@@ -292,6 +292,8 @@ def test_random_nodes_for_tensor_product():
 # }}}
 
 
+# {{{ test_tp_0d
+
 def test_tp_0d():
     import modepy as mp
     shape = mp.Hypercube(0)
@@ -303,6 +305,37 @@ def test_tp_0d():
     ]:
         nodes = node_func(space, shape)
         assert nodes.shape == (0, 1)
+
+
+# }}}
+
+
+# {{{ test_tp_nonhomogeneous_order
+
+
+def test_tp_nonhomogeneous_order() -> None:
+    from itertools import permutations
+
+    import modepy as mp
+    from modepy.tools import reshape_array_for_tensor_product_space
+
+    for dims in permutations([1, 2, 3]):
+        space = mp.TensorProductSpace(tuple(mp.PN(d, 5) for d in dims))
+
+        nodes = nd.tensor_product_nodes([
+            np.arange(
+                dims[i] * space.bases[i].space_dim, dtype=np.float32
+            ).reshape(dims[i], -1)
+            for i in range(3)
+            ])
+        assert nodes.dtype.type == np.float32
+        assert nodes.shape == (6, space.space_dim)
+
+        reshape = reshape_array_for_tensor_product_space(space, nodes)
+        assert np.allclose(reshape[0, :, 0, 0],
+                           np.arange(space.bases[0].space_dim))
+
+# }}}
 
 
 # You can test individual routines by typing
