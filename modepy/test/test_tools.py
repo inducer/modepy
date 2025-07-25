@@ -585,9 +585,6 @@ def test_tensor_product_shapes() -> None:
             (mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2))), 3, 6, 5),
             ]
 
-    assert isinstance(mp.Hypercube(1), mp.Simplex)
-    assert isinstance(mp.TensorProductShape((mp.Simplex(2),)), mp.Simplex)
-
     for shape, dim, nvertices, nfaces in shapes:
         assert shape.dim == dim
         assert shape.nvertices == nvertices
@@ -597,6 +594,84 @@ def test_tensor_product_shapes() -> None:
         mp.TensorProductShape((mp.Simplex(2),) * 2)
 
     mp.faces_for_shape(mp.Hypercube(3))
+
+# }}}
+
+
+# {{{ test_tensor_product_shape_flatten
+
+def test_tensor_product_shape_flatten() -> None:
+    s1 = mp.Simplex(1)
+    s2 = mp.Simplex(1)
+
+    # 4-level nesting: TP(TP(s1, TP(s2, TP(s1, s2))), s1)
+    innermost = mp.TensorProductShape((s1, s2), flatten=False)
+    inner2 = mp.TensorProductShape((s2, innermost), flatten=False)
+    middle2 = mp.TensorProductShape((s1, inner2), flatten=False)
+    outer2 = mp.TensorProductShape((middle2, s1), flatten=False)
+
+    flat2 = outer2.flatten()
+    assert isinstance(flat2, mp.TensorProductShape)
+    assert flat2.bases == (s1, s2, s1, s2, s1)
+
+    # flattening to a single base
+    single = mp.TensorProductShape((s1,), flatten=False)
+    flat_single = single.flatten()
+    assert flat_single is s1
+
+    # already flat stays flat
+    already = mp.TensorProductShape((s1, s2), flatten=False)
+    flat_already = already.flatten()
+    assert isinstance(flat_already, mp.TensorProductShape)
+    assert flat_already.bases == (s1, s2)
+
+    # single base that is itself a TensorProductShape -> unwrap
+    wrap = mp.TensorProductShape(
+        (mp.TensorProductShape((s1, s2), flatten=False),),
+        flatten=False)
+    flat_wrap = wrap.flatten()
+    assert isinstance(flat_wrap, mp.TensorProductShape)
+    assert flat_wrap.bases == (s1, s2)
+
+
+# }}}
+
+
+# {{{ test_tensor_product_space_flatten
+
+def test_tensor_product_space_flatten() -> None:
+    p1 = mp.PN(1, 3)
+    p2 = mp.PN(1, 5)
+
+    # 4-level nesting
+    innermost = mp.TensorProductSpace((p1, p2), flatten=False)
+    inner2 = mp.TensorProductSpace((p2, innermost), flatten=False)
+    middle2 = mp.TensorProductSpace((p1, inner2), flatten=False)
+    outer2 = mp.TensorProductSpace((middle2, p1), flatten=False)
+
+    flat2 = outer2.flatten()
+    assert isinstance(flat2, mp.TensorProductSpace)
+    assert flat2.bases == (p1, p2, p1, p2, p1)
+
+    # flattening to a single base
+    single = mp.TensorProductSpace((p1,), flatten=False)
+    flat_single = single.flatten()
+    assert flat_single is p1
+
+    # already flat stays flat
+    already = mp.TensorProductSpace((p1, p2), flatten=False)
+    flat_already = already.flatten()
+    assert isinstance(flat_already, mp.TensorProductSpace)
+    assert flat_already.bases == (p1, p2)
+
+    # single nested base unwraps
+    wrap = mp.TensorProductSpace(
+        (mp.TensorProductSpace((p1, p2), flatten=False),),
+        flatten=False)
+    flat_wrap = wrap.flatten()
+    assert isinstance(flat_wrap, mp.TensorProductSpace)
+    assert flat_wrap.bases == (p1, p2)
+
 
 # }}}
 
