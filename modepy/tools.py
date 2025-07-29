@@ -29,7 +29,6 @@ Types used in documentation
 
     .. attribute::: shape
     .. method::: reshape
-
 """
 from __future__ import annotations
 

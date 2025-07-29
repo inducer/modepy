@@ -81,20 +81,6 @@ of the basis to return to nodal values.
 .. autofunction:: diff_matrices
 
 .. autofunction:: diff_matrix_permutation
-
-References
-----------
-
-.. class:: NDArray
-
-    See :data:`numpy.typing.NDArray`.
-
-.. currentmodule:: np
-
-.. class:: integer
-
-    See :class:`numpy.integer`.
-
 """
 
 

@@ -5,7 +5,6 @@
 
     A type variable with an upper bound similar to :class:`RealValue`.
 
-
 .. autoclass:: BasisFunction
 .. autoclass:: BasisGradient
 .. autoclass:: NodalFunction

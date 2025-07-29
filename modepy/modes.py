@@ -120,20 +120,6 @@ Monomials
 .. autofunction:: monomial
 .. autofunction:: grad_monomial
 .. autofunction:: diff_monomial
-
-References
-----------
-.. class:: RealValueT
-
-    See :class:`modepy.typing.RealValueT`.
-
-.. class:: BasisFunction
-
-    See :class:`modepy.typing.BasisFunction`.
-
-.. class:: BasisGradient
-
-    See :class:`modepy.typing.BasisGradient`.
 """
 
 
