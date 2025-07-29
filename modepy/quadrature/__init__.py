@@ -12,29 +12,12 @@
 
 .. currentmodule:: modepy.quadrature
 
-.. class:: Quadrature
-
-    See :class:`modepy.Quadrature`.
-
 .. class:: _Inf
 
     A sentinel type for infinite results. Do not use directly. Use
     :func:`isinf` instead.
 
 .. autofunction:: isinf
-
-References
-----------
-
-.. class:: ArrayF
-
-    See :class:`modepy.typing.ArrayF`.
-
-.. currentmodule:: np
-
-.. class:: floating
-
-    See :class:`numpy.floating`.
 """
 
 from __future__ import annotations
@@ -82,7 +65,6 @@ if TYPE_CHECKING:
 
 class QuadratureRuleUnavailable(RuntimeError):
     """
-
     .. versionadded :: 2013.3
     """
 

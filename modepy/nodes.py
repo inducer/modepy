@@ -32,15 +32,6 @@ Hypercubes
 .. autofunction:: tensor_product_nodes
 .. autofunction:: legendre_gauss_tensor_product_nodes
 .. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
-
-References
-----------
-
-.. currentmodule:: np.random
-
-.. class:: Generator
-
-    See :class:`numpy.random.Generator`.
 """
 
 from __future__ import annotations

@@ -10,12 +10,6 @@
 .. autoclass:: QuadratureResidualJacobian
 .. autofunction:: quad_residual_and_jacobian
 .. autofunction:: quad_gauss_newton_increment
-
-References
-----------
-.. class:: NodalFunction
-
-    See :class:`modepy.typing.NodalFunction`.
 """
 
 from __future__ import annotations
