@@ -2,6 +2,7 @@ _build
 .sw[po]
 .*.sw[po]
 *~
+*.inv
 *.pyc
 *.pyo
 *.egg-info
