@@ -133,6 +133,9 @@ zerod = "zerod"
 extend-exclude = []
 
 [tool.basedpyright]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+
 reportImplicitStringConcatenation = "none"
 reportUnnecessaryIsInstance = "none"
 reportUnusedCallResult = "none"
@@ -142,8 +145,6 @@ reportExplicitAny = "none"
 # we care about at this moment.
 # https://github.com/microsoft/pyright/issues/746
 reportImportCycles = "none"
-pythonVersion = "3.10"
-pythonPlatform = "All"
 
 ignore = [
     "contrib",
