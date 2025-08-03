@@ -64,7 +64,7 @@ THE SOFTWARE.
 
 
 from functools import partial, singledispatch
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import numpy.linalg as la
@@ -117,7 +117,7 @@ def equidistant_nodes(
 
 # {{{ warp and blend simplex nodes
 
-def warp_factor(n, output_nodes, scaled=True):
+def warp_factor(n: int, output_nodes: ArrayF, scaled: bool = True) -> ArrayF:
     """Compute warp function at order *n* and evaluate it at
     the nodes *output_nodes*.
     """
@@ -134,10 +134,10 @@ def warp_factor(n, output_nodes, scaled=True):
     Veq = vandermonde(basis, equi_nodes)  # noqa: N806
 
     # create interpolator from equi_nodes to output_nodes
-    eq_to_out = la.solve(Veq.T, vandermonde(basis, output_nodes).T).T
+    eq_to_out = cast("ArrayF", la.solve(Veq.T, vandermonde(basis, output_nodes).T).T)
 
     # compute warp factor
-    warp = np.dot(eq_to_out, warped_nodes - equi_nodes)
+    warp = eq_to_out @ (warped_nodes - equi_nodes)
     if scaled:
         zerof = (abs(output_nodes) < 1.0-1.0e-10)
         sf = 1.0 - (zerof*output_nodes)**2
@@ -148,10 +148,10 @@ def warp_factor(n, output_nodes, scaled=True):
 
 # {{{ 2D nodes
 
-def _2d_equilateral_shift(n, bary, alpha):
+def _2d_equilateral_shift(n: int, bary: ArrayF, alpha: float) -> ArrayF:
     from modepy.tools import EQUILATERAL_VERTICES
-    equi_vertices = EQUILATERAL_VERTICES[2]
 
+    equi_vertices = EQUILATERAL_VERTICES[2]
     result = np.zeros((2, bary.shape[1]))
 
     for i1 in range(3):
@@ -175,11 +175,15 @@ def _2d_equilateral_shift(n, bary, alpha):
     return result
 
 
-_alpha_opt_2d = [0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,
+_alpha_opt_2d: list[float] = [
+        0.0000, 0.0000, 1.4152, 0.1001, 0.2751, 0.9800, 1.0999,
         1.2832, 1.3648, 1.4773, 1.4959, 1.5743, 1.5770, 1.6223, 1.6258]
 
 
-def warp_and_blend_nodes_2d(n, node_tuples=None):
+def warp_and_blend_nodes_2d(
+        n: int,
+        node_tuples: Sequence[tuple[int, ...]] | None = None
+        ) -> ArrayF:
     try:
         alpha = _alpha_opt_2d[n-1]
     except IndexError:
@@ -193,7 +197,7 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
             raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (2, nnodes)
-    unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
+    unit_nodes = cast("ArrayF", (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T)
 
     from modepy.tools import (
         barycentric_to_equilateral,
@@ -211,12 +215,14 @@ def warp_and_blend_nodes_2d(n, node_tuples=None):
 
 # {{{ 3D nodes
 
-_alpha_opt_3d = [
+_alpha_opt_3d: list[float] = [
         0, 0, 0, 0.1002, 1.1332, 1.5608, 1.3413, 1.2577, 1.1603,
         1.10153, 0.6080, 0.4523, 0.8856, 0.8717, 0.9655]
 
 
-def warp_and_blend_nodes_3d(n, node_tuples=None):
+def warp_and_blend_nodes_3d(
+        n: int,
+        node_tuples: Sequence[tuple[int, ...]] | None = None) -> ArrayF:
     try:
         alpha = _alpha_opt_3d[n-1]
     except IndexError:
@@ -230,7 +236,7 @@ def warp_and_blend_nodes_3d(n, node_tuples=None):
             raise ValueError("'node_tuples' list does not have the correct length")
 
     # shape: (3, nnodes)
-    unit_nodes = (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T
+    unit_nodes = cast("ArrayF", (np.array(node_tuples, dtype=np.float64)/n*2 - 1).T)
 
     from modepy.tools import (
         EQUILATERAL_VERTICES,
