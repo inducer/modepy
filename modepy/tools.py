@@ -55,16 +55,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from functools import reduce
-from math import (
-    gamma,  # noqa: F401
-    sqrt,
-)
+import math
 from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
 from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
+from typing_extensions import override
 
 from pytools import MovedFunctionDeprecationWrapper, memoize_method
 
@@ -73,8 +70,17 @@ from modepy.spaces import FunctionSpace, TensorProductSpace
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from numpy.typing import ArrayLike
+
     from modepy.shapes import Shape
     from modepy.typing import ArrayF
+
+
+# NOTE: some places imported gamma from here, but this is deprecated and does
+# not seem to be used anywhere
+gamma = math.gamma
 
 
 class Monomial:
@@ -82,61 +88,64 @@ class Monomial:
 
     .. math::
 
-        \alpha \prod_{i=1}^d \xi_i^{e_i}
+        \alpha \prod_{i = 1}^d \xi_i^{e_i},
 
-    where :math:`e` is the vector *exponents*,
-    :math:`\alpha` is the scalar *factor*,
-    and :math:`xi` is zero at :math:`(-1,\dots,-1)`
-    and and one at :math:`(1,\dots,1)`.
+    where :math:`e` is the vector *exponents*, :math:`\alpha` is the scalar
+    *factor*, and :math:`xi` is zero at :math:`(-1, \dots, -1)` and one at
+    :math:`(1, \dots, 1)`.
     """
-    def __init__(self, exponents, factor=1):
-        self.exponents = exponents
-        self.ones = np.ones((len(self.exponents),))
+
+    exponents: tuple[int, ...]
+    factor: float
+
+    def __init__(self, exponents: Sequence[int], factor: float = 1) -> None:
+        self.exponents = tuple(exponents)
         self.factor = factor
 
-    def __call__(self, xi):
+    def __call__(self, xi: ArrayF) -> ArrayF:
         """Evaluate the monomial at *xi*.
 
         :arg: *xi* has shape *(d, ...)*.
         """
-        from operator import mul
-
         x = (xi+1)/2
-        return self.factor * \
-                reduce(mul, (x[i]**expn
-                    for i, expn in enumerate(self.exponents)))
+        return (self.factor
+                * math.prod(x[i]**expn for i, expn in enumerate(self.exponents)))
 
-    def simplex_integral(self):
+    def simplex_integral(self) -> float:
         r"""Integral over the simplex
-        :math:`\{\mathbf{x} \in [0, 1]^n: \sum x_i \le 1 \}`."""
-        import math
-        from operator import mul
+        :math:`\{\mathbf{x} \in [0, 1]^n: \sum x_i \le 1 \}`.
+        """
+        n = len(self.exponents)
+        m = sum(self.exponents)
+        return (self.factor * 2**n
+                * math.prod(math.factorial(alpha) for alpha in self.exponents)
+                / math.factorial(n + m))
 
-        return (self.factor * 2**len(self.exponents)
-                * reduce(mul, (math.factorial(alpha) for alpha in self.exponents))
-                / math.factorial(len(self.exponents) + sum(self.exponents)))
-
-    def hypercube_integral(self):
+    def hypercube_integral(self) -> float:
         """Integral over the hypercube :math:`[0, 1]^n`."""
         from functools import reduce
+
         return reduce(
                 lambda integral, n: integral * 1 / (n + 1),
                 self.exponents, 1.0)
 
-    def diff(self, coordinate):
+    def diff(self, coordinate: int) -> Monomial:
         diff_exp = list(self.exponents)
-        orig_exp = diff_exp[coordinate]
+        orig_exp = self.exponents[coordinate]
         if orig_exp == 0:
-            return Monomial(diff_exp, 0)
-        diff_exp[coordinate] = orig_exp-1
-        return Monomial(diff_exp, self.factor*orig_exp)
+            return Monomial(diff_exp, factor=0.0)
 
+        diff_exp[coordinate] = orig_exp-1
+        return Monomial(diff_exp, factor=self.factor*orig_exp)
+
+    @override
     def __str__(self) -> str:
         return "{} ({})".format(
             self.factor,
             " + ".join(f"x_{i}^{n}" for i, n in enumerate(self.exponents))
             )
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
@@ -148,11 +157,14 @@ class Monomial:
 # {{{ coordinate mapping
 
 class AffineMap:
-    def __init__(self, a, b):
+    a: ArrayF
+    b: ArrayF
+
+    def __init__(self, a: ArrayLike, b: ArrayLike) -> None:
         self.a = np.asarray(a, dtype=np.float64)
         self.b = np.asarray(b, dtype=np.float64)
 
-    def __call__(self, x):
+    def __call__(self, x: ArrayF) -> ArrayF:
         """Apply the map *self* to a batch of vectors *x*.
 
         :arg x: has shape *(d, npts)* where *d* is the number of dimensions.
@@ -160,16 +172,16 @@ class AffineMap:
         """
 
         # This .T goofiness allows both the nD and the 1D case.
-        return (np.dot(self.a, x).T + self.b).T
+        return ((self.a @ x).T + self.b).T
 
     @property
     @memoize_method
-    def jacobian(self):
+    def jacobian(self) -> np.floating:
         return la.det(self.a)
 
     @property
     @memoize_method
-    def inverse(self):
+    def inverse(self) -> AffineMap:
         """The inverse :class:`AffineMap` of *self*."""
         return AffineMap(la.inv(self.a), -la.solve(self.a, self.b))
 
@@ -181,78 +193,81 @@ class AffineMap:
 EQUILATERAL_TO_UNIT_MAP: dict[int, AffineMap] = {
         1: AffineMap([[1]], [0]),
         2: AffineMap([
-            [1, -1/sqrt(3)],
-            [0,  2/sqrt(3)]],
-            [-1/3,   -1/3]),
+            [1, -1/math.sqrt(3)],
+            [0,  2/math.sqrt(3)]],
+            [-1/3,        -1/3]),
         3: AffineMap([
-            [1, -1/sqrt(3), -1/sqrt(6)],
-            [0,  2/sqrt(3), -1/sqrt(6)],
-            [0,         0,  sqrt(6)/2]],
-            [-1/2,   -1/2,       -1/2])
+            [1, -1/math.sqrt(3), -1/math.sqrt(6)],
+            [0,  2/math.sqrt(3), -1/math.sqrt(6)],
+            [0,              0,  math.sqrt(6)/2]],
+            [-1/2,        -1/2,            -1/2])
         }
 
 
-def equilateral_to_unit(equi):
+def equilateral_to_unit(equi: ArrayF) -> ArrayF:
     return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
 
 
-def unit_vertices(dim):
-    warn("unit_vertices is deprecated. "
-            "Use modepy.unit_vertices_for_shape instead. "
-            "unit_vertices will go away in 2022.",
-            DeprecationWarning, stacklevel=2)
+def unit_vertices(dim: int) -> ArrayF:
+    warn("'unit_vertices' is deprecated. Use 'mp.unit_vertices_for_shape' instead. "
+         "'unit_vertices' will go away in 2022.",
+         DeprecationWarning, stacklevel=2)
 
     return shp.unit_vertices_for_shape(shp.Simplex(dim)).T
 
 
-def barycentric_to_unit(bary):
+def barycentric_to_unit(bary: ArrayF) -> ArrayF:
     """
     :arg bary: shaped ``(dims+1, npoints)``
     """
-    dims = len(bary)-1
-    return np.dot(shp.unit_vertices_for_shape(shp.Simplex(dims)), bary)
+    dims = len(bary) - 1
+    vertices = shp.unit_vertices_for_shape(shp.Simplex(dims))
+
+    return vertices @ bary
 
 
-def unit_to_barycentric(unit):
+def unit_to_barycentric(unit: ArrayF) -> ArrayF:
     """
-    :arg unit: shaped ``(dims,npoints)``
+    :arg unit: shaped ``(dims,npoints)``.
     """
 
     last_bary = 0.5*(unit+1)
-    first_bary = 1-np.sum(last_bary, axis=0)
+    first_bary = 1 - np.sum(last_bary, axis=0)
     return np.vstack([first_bary, last_bary])
 
 
 # /!\ do not reorder these, stuff (node generation) *will* break.
-EQUILATERAL_VERTICES = {
+EQUILATERAL_VERTICES: dict[int, ArrayF] = {
         1: np.array([
             [-1],
             [1],
             ]),
         2: np.array([
-            [-1, -1/sqrt(3)],
-            [1,  -1/sqrt(3)],
-            [0,   2/sqrt(3)],
+            [-1, -1/math.sqrt(3)],
+            [1,  -1/math.sqrt(3)],
+            [0,   2/math.sqrt(3)],
             ]),
         3: np.array([
-            [-1, -1/sqrt(3), -1/sqrt(6)],
-            [1,  -1/sqrt(3), -1/sqrt(6)],
-            [0,   2/sqrt(3), -1/sqrt(6)],
-            [0,          0,   3/sqrt(6)],
+            [-1, -1/math.sqrt(3), -1/math.sqrt(6)],
+            [1,  -1/math.sqrt(3), -1/math.sqrt(6)],
+            [0,   2/math.sqrt(3), -1/math.sqrt(6)],
+            [0,               0,   3/math.sqrt(6)],
             ])
         }
 
 
-def barycentric_to_equilateral(bary):
-    dims = len(bary)-1
-    return np.dot(EQUILATERAL_VERTICES[dims].T, bary)
+def barycentric_to_equilateral(bary: ArrayF) -> ArrayF:
+    dims = len(bary) - 1
+    return EQUILATERAL_VERTICES[dims].T @ bary
 
 # }}}
 
 
 # {{{ submeshes
 
-def simplex_submesh(node_tuples):
+def simplex_submesh(
+        node_tuples: Sequence[tuple[int, ...]]
+    ) -> Sequence[tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
     generate a tessellation of the reference element.
 
@@ -263,13 +278,20 @@ def simplex_submesh(node_tuples):
         :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
         may be used to generate *node_tuples*.
     """
+
+    warn("'simplex_submesh' is deprecated. Use 'mp.submesh_for_shape' instead. "
+         "'simplex_submesh' will go away in 2026.",
+         DeprecationWarning, stacklevel=2)
+
     return shp.submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
 
 
 submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
 
 
-def hypercube_submesh(node_tuples):
+def hypercube_submesh(
+        node_tuples: Sequence[tuple[int, ...]]
+    ) -> Sequence[tuple[int, ...]]:
     """Return a list of tuples of indices into the node list that
     generate a tessellation of the reference element.
 
@@ -284,10 +306,9 @@ def hypercube_submesh(node_tuples):
 
     .. versionadded:: 2020.2
     """
-    warn("hypercube_submesh is deprecated. "
-            "Use submesh_for_shape instead. "
-            "hypercube_submesh will go away in 2022.",
-            DeprecationWarning, stacklevel=2)
+    warn("'hypercube_submesh' is deprecated. Use 'mp.submesh_for_shape' instead. "
+         "'hypercube_submesh' will go away in 2022.",
+         DeprecationWarning, stacklevel=2)
 
     return shp.submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
 
@@ -325,8 +346,8 @@ def plot_element_values(
         basis = mp.orthonormal_basis_for_space(mp.PN(dims, n), mp.Simplex(dims))
         fine_nodes = mp.equidistant_nodes(dims, resample_n)
 
-        values = np.dot(mp.resampling_matrix(
-                 basis.functions, fine_nodes, nodes), values)
+        mat = mp.resampling_matrix(basis.functions, fine_nodes, nodes)
+        values = mat @ values
         nodes = fine_nodes
         n = resample_n
 
@@ -362,7 +383,9 @@ def plot_element_values(
 
 # {{{ lebesgue constant
 
-def _evaluate_lebesgue_function(n, nodes, shape):
+def _evaluate_lebesgue_function(
+        n: int, nodes: ArrayF, shape: Shape
+    ) -> tuple[ArrayF, Sequence[tuple[int, ...]], ArrayF]:
     huge_n = (30 if shape.dim == 2 else 10) * n
 
     from modepy.modes import basis_for_space
@@ -429,7 +452,7 @@ def estimate_lebesgue_constant(
 
     lebesgue_worst, equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(n, nodes, shape)
-    lebesgue_constant = np.max(lebesgue_worst)
+    lebesgue_constant = float(np.max(lebesgue_worst))
 
     if not visualize:
         return lebesgue_constant
@@ -518,7 +541,7 @@ def reshape_array_for_tensor_product_space(
 
 
 def unreshape_array_for_tensor_product_space(
-        space: FunctionSpace, ary: ReshapeableT, axis=-1) -> ReshapeableT:
+        space: FunctionSpace, ary: ReshapeableT, axis: int = -1) -> ReshapeableT:
     """Undoes the effect of :func:`reshape_array_for_tensor_product_space`,
     given the same *space* and *axis*.
     """
