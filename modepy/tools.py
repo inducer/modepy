@@ -57,13 +57,12 @@ THE SOFTWARE.
 
 import math
 from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
-from warnings import warn
 
 import numpy as np
 import numpy.linalg as la
 from typing_extensions import override
 
-from pytools import MovedFunctionDeprecationWrapper, memoize_method
+from pytools import memoize_method
 
 import modepy.shapes as shp
 from modepy.spaces import FunctionSpace, TensorProductSpace
@@ -76,11 +75,6 @@ if TYPE_CHECKING:
 
     from modepy.shapes import Shape
     from modepy.typing import ArrayF
-
-
-# NOTE: some places imported gamma from here, but this is deprecated and does
-# not seem to be used anywhere
-gamma = math.gamma
 
 
 class Monomial:
@@ -208,14 +202,6 @@ def equilateral_to_unit(equi: ArrayF) -> ArrayF:
     return EQUILATERAL_TO_UNIT_MAP[len(equi)](equi)
 
 
-def unit_vertices(dim: int) -> ArrayF:
-    warn("'unit_vertices' is deprecated. Use 'mp.unit_vertices_for_shape' instead. "
-         "'unit_vertices' will go away in 2022.",
-         DeprecationWarning, stacklevel=2)
-
-    return shp.unit_vertices_for_shape(shp.Simplex(dim)).T
-
-
 def barycentric_to_unit(bary: ArrayF) -> ArrayF:
     """
     :arg bary: shaped ``(dims+1, npoints)``
@@ -263,58 +249,6 @@ def barycentric_to_equilateral(bary: ArrayF) -> ArrayF:
 # }}}
 
 
-# {{{ submeshes
-
-def simplex_submesh(
-        node_tuples: Sequence[tuple[int, ...]]
-    ) -> Sequence[tuple[int, ...]]:
-    """Return a list of tuples of indices into the node list that
-    generate a tessellation of the reference element.
-
-    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
-        indicating node positions inside the unit element. The
-        returned list references indices in this list.
-
-        :func:`pytools.generate_nonnegative_integer_tuples_summing_to_at_most`
-        may be used to generate *node_tuples*.
-    """
-
-    warn("'simplex_submesh' is deprecated. Use 'mp.submesh_for_shape' instead. "
-         "'simplex_submesh' will go away in 2026.",
-         DeprecationWarning, stacklevel=2)
-
-    return shp.submesh_for_shape(shp.Simplex(len(node_tuples[0])), node_tuples)
-
-
-submesh = MovedFunctionDeprecationWrapper(simplex_submesh)
-
-
-def hypercube_submesh(
-        node_tuples: Sequence[tuple[int, ...]]
-    ) -> Sequence[tuple[int, ...]]:
-    """Return a list of tuples of indices into the node list that
-    generate a tessellation of the reference element.
-
-    :arg node_tuples: A list of tuples *(i, j, ...)* of integers
-        indicating node positions inside the unit element. The
-        returned list references indices in this list.
-
-        :func:`pytools.generate_nonnegative_integer_tuples_below`
-        may be used to generate *node_tuples*.
-
-    See also :func:`simplex_submesh`.
-
-    .. versionadded:: 2020.2
-    """
-    warn("'hypercube_submesh' is deprecated. Use 'mp.submesh_for_shape' instead. "
-         "'hypercube_submesh' will go away in 2022.",
-         DeprecationWarning, stacklevel=2)
-
-    return shp.submesh_for_shape(shp.Hypercube(len(node_tuples[0])), node_tuples)
-
-# }}}
-
-
 # {{{ plotting helpers
 
 def plot_element_values(
@@ -322,28 +256,27 @@ def plot_element_values(
         nodes: ArrayF,
         values: ArrayF,
         resample_n: int | None = None,
-        node_tuples: tuple[int, ...] | None = None,
         show_nodes: bool = False) -> None:
     """
     :arg n: order of the polynomial basis.
     :arg nodes: nodes at which to evaluate the basis.
     :arg values: values at the given nodes.
     :arg resample_n: an order to use to resample the given nodes and values.
-    :arg node_tuples: *UNUSED*.
     :arg show_nodes: if *True*, the original nodes (before resampling) are also
         shown. This is only useful when resampling is used.
     """
-    if node_tuples is not None:
-        warn("Passing in 'node_tuples' is deprecated.",
-             DeprecationWarning, stacklevel=2)
-
     dims = len(nodes)
     orig_nodes = nodes
     orig_values = values
 
+    import modepy as mp
+
+    shape = mp.Simplex(dims)
+    space = mp.space_for_shape(shape, n)
+    submesh = mp.submesh_for_shape(shape, mp.node_tuples_for_space(space))
+
     if resample_n is not None:
-        import modepy as mp
-        basis = mp.orthonormal_basis_for_space(mp.PN(dims, n), mp.Simplex(dims))
+        basis = mp.orthonormal_basis_for_space(space, shape)
         fine_nodes = mp.equidistant_nodes(dims, resample_n)
 
         mat = mp.resampling_matrix(basis.functions, fine_nodes, nodes)
@@ -351,32 +284,27 @@ def plot_element_values(
         nodes = fine_nodes
         n = resample_n
 
-    from pytools import (
-        generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
-    )
-
     if dims == 1:
         import matplotlib.pyplot as pt
 
         pt.plot(nodes[0], values)
         if show_nodes:
             pt.plot(orig_nodes[0], orig_values, "x")
-        pt.show()
     elif dims == 2:
         import matplotlib.pyplot as pt
         import matplotlib.tri as tri
 
-        triangulation = tri.Triangulation(
-            nodes[0], nodes[1], triangles=submesh(list(gnitstam(n, 2)))
-            )
-
+        triangulation = tri.Triangulation(nodes[0], nodes[1], triangles=submesh)
         ax = pt.subplot(1, 1, 1, projection="3d")
+
         ax.plot_trisurf(triangulation, values)
         if show_nodes:
             ax.plot(orig_nodes[0], orig_nodes[1], orig_values, "ko", ms=5)
-        pt.show()
+
     else:
         raise RuntimeError(f"unsupported dimensionality {dims}")
+
+    pt.show()
 
 # }}}
 
@@ -388,14 +316,13 @@ def _evaluate_lebesgue_function(
     ) -> tuple[ArrayF, Sequence[tuple[int, ...]], ArrayF]:
     huge_n = (30 if shape.dim == 2 else 10) * n
 
-    from modepy.modes import basis_for_space
-    from modepy.nodes import node_tuples_for_space
-    from modepy.spaces import space_for_shape
-    space = space_for_shape(shape, n)
-    huge_space = space_for_shape(shape, huge_n)
+    import modepy as mp
 
-    basis = basis_for_space(space, shape)
-    equi_node_tuples = node_tuples_for_space(huge_space)
+    space = mp.space_for_shape(shape, n)
+    huge_space = mp.space_for_shape(shape, huge_n)
+
+    basis = mp.basis_for_space(space, shape)
+    equi_node_tuples = mp.node_tuples_for_space(huge_space)
     equi_nodes = (np.array(equi_node_tuples, dtype=np.float64)/huge_n*2 - 1).T
     assert equi_nodes.shape[0] == nodes.shape[0]
 
@@ -413,7 +340,7 @@ def _evaluate_lebesgue_function(
 def estimate_lebesgue_constant(
         n: int,
         nodes: ArrayF,
-        shape: Shape | None = None,
+        shape: Shape,
         *,
         visualize: bool = False) -> float:
     """Estimate the
@@ -440,15 +367,8 @@ def estimate_lebesgue_constant(
         Renamed *domain* to *shape*.
     """
     dim = len(nodes)
-    if shape is None:
-        from warnings import warn
-        warn("Not passing shape is deprecated and will stop working "
-                "in 2022.", DeprecationWarning, stacklevel=2)
-        from modepy.shapes import Simplex
-        shape = Simplex(dim)
-    else:
-        if shape.dim != dim:
-            raise ValueError(f"expected {shape.dim}-dimensional nodes")
+    if shape.dim != dim:
+        raise ValueError(f"expected {shape.dim}-dimensional nodes")
 
     lebesgue_worst, equi_node_tuples, equi_nodes = \
             _evaluate_lebesgue_function(n, nodes, shape)
