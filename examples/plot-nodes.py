@@ -18,7 +18,9 @@ unit = mp.warp_and_blend_nodes(dims, n)
 
 if False:
     from modepy.tools import estimate_lebesgue_constant
-    lebesgue = estimate_lebesgue_constant(n, unit, visualize=True)
+
+    shape = mp.Simplex(dims)
+    lebesgue = estimate_lebesgue_constant(n, unit, shape, visualize=True)
 
 equi = barycentric_to_equilateral(unit_to_barycentric(unit))
 
