@@ -1,0 +1,34 @@
+name: JOSS Paper
+on:
+    push:
+        paths:
+        - doc/paper/**
+        - .github/workflows/joss.yml
+    schedule:
+        - cron:  '17 3 * * 0'
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    paper:
+        runs-on: ubuntu-latest
+        name: Paper Draft
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Build draft PDF
+              uses: openjournals/openjournals-draft-action@master
+              with:
+                journal: joss
+                paper-path: doc/paper/paper.md
+
+            - name: Upload
+              uses: actions/upload-artifact@v4
+              with:
+                name: paper
+                path: doc/paper/paper.pdf
+
+# vim: sw=4
