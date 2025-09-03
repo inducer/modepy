@@ -178,8 +178,8 @@ mappings back to the reference element.
 ## Modes and Spaces
 
 To perform calculus operations, each reference element can be equipped with
-(finite-dimensional) function spaces described by the `FunctionSpace` class.
-These represent a finite-dimensional space functions $\phi_i: D \to
+function spaces described by the `FunctionSpace` class.
+These represent a finite-dimensional space of functions $\phi_i: D \to
 \mathbb{R}$, where $D$ is the reference element domain, but make no specific
 choice of basis. The function spaces mirror the shape definitions and are
 intended to work in tandem. In fact, the `space_for_shape` function provides a
