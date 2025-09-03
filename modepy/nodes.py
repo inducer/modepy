@@ -74,7 +74,7 @@ from modepy.spaces import PN, FunctionSpace, TensorProductSpace
 
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from modepy.typing import ArrayF
 
@@ -523,16 +523,20 @@ def _edge_clustered_nodes_for_pn(space: PN, shape: Simplex):
 
 
 @random_nodes_for_shape.register(Simplex)
-def _random_nodes_for_simplex(shape: Simplex, nnodes: int, rng=None):
+def _random_nodes_for_simplex(
+            shape: Simplex,
+            nnodes: int,
+            rng: np.random.Generator | None = None
+        ):
     if rng is None:
         rng = np.random.default_rng()
 
     result = np.zeros((shape.dim, nnodes))
-    nnodes_obtained = 0
+    nnodes_obtained: int = 0
     while True:
         new_nodes = rng.uniform(-1.0, 1.0, size=(shape.dim, nnodes-nnodes_obtained))
         new_nodes = new_nodes[:, new_nodes.sum(axis=0) < 2-shape.dim]
-        nnew_nodes = new_nodes.shape[1]
+        nnew_nodes = cast("int", new_nodes.shape[1])
         result[:, nnodes_obtained:nnodes_obtained+nnew_nodes] = new_nodes
         nnodes_obtained += nnew_nodes
 
@@ -549,7 +553,7 @@ def _node_tuples_for_tp(space: TensorProductSpace):
     from pytools import generate_nonnegative_integer_tuples_below as gnitb
     tuples_for_space = [node_tuples_for_space(s) for s in space.bases]
 
-    def concat(tuples):
+    def concat(tuples: Iterable[tuple[int, ...]]):
         return sum(tuples, ())
 
     # ensure that these start numbering (0,0), (1,0), (i.e. x-axis first)
@@ -595,7 +599,11 @@ def _edge_clustered_nodes_for_tp(
 
 
 @random_nodes_for_shape.register(TensorProductShape)
-def _random_nodes_for_tp(shape: TensorProductShape, nnodes: int, rng=None):
+def _random_nodes_for_tp(
+            shape: TensorProductShape,
+            nnodes: int,
+            rng: np.random.Generator | None = None
+        ):
     if rng is None:
         rng = np.random.default_rng()
 
