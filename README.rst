@@ -7,7 +7,7 @@ modepy: Basis Functions, Node Sets, Quadratures
 .. image:: https://github.com/inducer/modepy/actions/workflows/ci.yml/badge.svg
     :alt: Github Build Status
     :target: https://github.com/inducer/modepy/actions/workflows/ci.yml
-.. image:: https://badge.fury.io/py/modepy.png
+.. image:: https://badge.fury.io/py/modepy.svg
     :alt: Python Package Index Release Page
     :target: https://pypi.org/project/modepy/
 .. image:: https://zenodo.org/badge/9846038.svg
@@ -50,14 +50,16 @@ element context. Features include:
 
 Its roots closely followed the approach taken in the book
 
-  Hesthaven, Jan S., and Tim Warburton. "Nodal Discontinuous Galerkin Methods:
-  Algorithms, Analysis, and Applications". 1st ed. Springer, 2007.
-  `Book web page <http://nudg.org>`_
+    J. S. Hesthaven and T. Warburton (2007).
+    *Nodal Discontinuous Galerkin Methods: Algorithms, Analysis, and Applications*
+    (1st ed.).
+    `doi:10.1007/978-0-387-72067-8 <https://doi.org/10.1007/978-0-387-72067-8>`__.
 
 but much has been added beyond that basic functionality.
 
 Resources:
 
-* `documentation <http://documen.tician.de/modepy>`_
-* `wiki home page <http://wiki.tiker.net/ModePy>`_
-* `source code via git <http://github.com/inducer/modepy>`_
+* `Documentation <https://documen.tician.de/modepy>`__.
+* `Source code <https://github.com/inducer/modepy>`__.
+* `Bug tracker <https://github.com/inducer/modepy/issues>`__.
+* `PyPI <https://pypi.org/project/modepy/>`__.
