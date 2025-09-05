@@ -35,10 +35,15 @@ Example
 
 Here's an idea of code that uses :mod:`modepy`:
 
-.. literalinclude:: ../examples/derivative.py
+.. literalinclude:: ../examples/prism-forms.py
+    :language: python
+    :linenos:
+    :lines: 3-
+    :lineno-start: 3
+    :caption: Example code that constructs a prism domain and computes a weak derivative on it.
 
 This file is included in the :mod:`modepy` distribution as
-:download:`examples/derivative.py <../examples/derivative.py>`.
+:download:`examples/prism-forms.py <../examples/prism-forms.py>`.
 
 modepy around the web
 ---------------------
