@@ -29,6 +29,7 @@ functionality.
     *Nodal Discontinuous Galerkin Methods: Algorithms, Analysis, and Applications*
     (1st ed.).
     `doi:10.1007/978-0-387-72067-8 <https://doi.org/10.1007/978-0-387-72067-8>`__.
+    `(source code) <https://github.com/tcew/nodal-dg>`__
 
 Example
 -------
