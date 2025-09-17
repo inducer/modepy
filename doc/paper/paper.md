@@ -41,108 +41,67 @@ bibliography: paper.bib
 
 # Summary
 
-`modepy` provides a means for constructing geometric shapes for reference
-elements, equipping them with appropriate approximation spaces, and numerically
-performing calculus operations (derivatives, integrals) on those spaces.
+`modepy` is a Python library for defining reference elements, equipping them
+with appropriate approximation spaces, and numerically performing calculus
+operations (derivatives, integrals) on those spaces. It is written in pure
+modern Python 3, offering comprehensive type annotations and full documentation
+with minimal runtime dependencies (NumPy being a primary dependency). 
 
 `modepy` focuses on high-order accuracy -- given an element size $h$, this
 refers to the asymptotic decay of the approximation error as $O(h^n)$, for $n
-\ge 3$, assuming sufficient smoothness of the solution being approximated. If
-we consider a problem in $d$ dimensions, the number of unknowns scales as
-$O(h^{-d})$. In the absence of high-order approximation, say at $n=1$, even
-modest accuracy increases (e.g. an additional significant digit) can incur
-significant cost (a $1000\times$ increase in the problem size in 3D).
-Therefore, if accuracy is desired at manageable cost, high-order methods are
-crucial.
-
-A popular approach for accurate approximation of functions on geometrically
-complex domains is the use of *unstructured discretizations*, which represent
-the geometry as a typically disjoint union (a "mesh") of primitive geometric
-shapes, most often simplices and quadrilaterals. Given the means to perform
-calculus operations on these *reference elements* and mapping functions from
-them to the *global* elements, calculus operations become available on the
-entire domain. Notably, one can approximate the reference-to-global coordinate
-mapping function itself with the same high-order machinery. Altogether, this
-paves the way for the solution of integral and (partial) differential
+\ge 3$, assuming sufficient smoothness of the solution being approximated -- at
+manageable computational cost. These capabilities enable High-Performance
+Computing (HPC) approaches to solving integral and (partial) differential
 equations. Those, in turn, can be used to model many phenomena in the physical
-world, including fluid flow, electromagnetism, and solid mechanics. The finite
-element method (FEM) is a popular example of this, including its continuous and
-discontinuous flavors. Further examples include collocation, spectral, and
-Nyström methods.
+world, including fluid flow, electromagnetism, and solid mechanics. A popular
+example of this is the finite element method (FEM), including its continuous
+and discontinuous flavors, but general collocation, spectral, and Nyström
+methods are also supported. As such, `modepy` has been used to construct FEM
+solvers [@Grudge; @PyNucleus] and integral equation solvers [@Pytential] that
+run on both CPUs and GPUs.
 
-`modepy` has been used to construct FEM solvers [@Grudge; @PyNucleus] and
-integral equation solvers [@Pytential]. It is written in pure modern Python 3,
-offering comprehensive type annotations and full documentation with minimal
-runtime dependencies, of which numpy is perhaps the most significant. Versions
-going back to as early as 2013 offer broad compatibility with older versions of
-Python, including Python 2.7.
-
-`modepy` is licensed under the MIT license and available on Github at
-<https://github.com/inducer/modepy/>.
+`modepy` is licensed under the MIT license and available on GitHub at
+<https://github.com/inducer/modepy/>. Versions dating back to 2013 maintain
+broad compatibility with older versions of Python, including Python 2.7,
+ensuring broad accessibility.
 
 # Statement of need
 
 High-order accurate calculus operations on unstructured discretizations are
-crucial to many solvers of differential and integral equations, but their uses
-can also extend to computer graphics and Computer-Aided Design (CAD). This
-functionality is often embedded in an ad-hoc manner in larger codes, leading to
-limited scope and a lack of reusability. `modepy` addresses this need by
-providing a robust, reusable, generalizable, and composable implementation.
-FIAT [@FIAT] is an early software tool aiming to address a similar need. It
-offers a comprehensive set of finite elements and basis functions, but largely
-focuses on tabulation. FInAT [@FInAT], a somewhat recent refinement, adds a
-focus on algebraic expressions for basis functions, exposing details needed for
-efficient tensor product evaluation. Both are, however, tightly interwoven into
-the FENiCS/Firedrake ecosystems (e.g. by depending on UFL, the "Unified Form
-Language" used for the expression of variational forms). `StartUpDG.jl`
-[@StartUpDG] provides functionality with some overlap with `modepy`, but with a
-focus on the needs of discontinuous Galerkin FEM. `QuadPy` [@QuadPy] also has
-some overlap with `modepy`, in that it can provide quadrature rules, and, while
-it has comprehensive coverage, it is regrettably no longer open-source, and it
-lacks `modepy`'s composability. `minterpy` [@Wicaksono2025], meanwhile, deals
-exclusively with polynomial interpolation, with a focus on sparse grids.
+crucial to differential and integral equations solvers, as well as computer
+graphics and Computer-Aided Design (CAD) applications. This functionality is
+often embedded in an ad-hoc manner in larger codes, restricting scope and
+reusability. `modepy` addresses this need by providing a reusable,
+generalizable, and composable implementation.
 
-A significant complicating factor in providing a flexible implementation is
-that numerical solvers for differential equations (and likely many other
-candidate users) must satisfy rigorous cost constraints, as simulation fidelity
-is always traded off against computational cost. As a result, such software
-commonly adopts cutting-edge high-performance computing (HPC) techniques, such
-as GPU computation and distributed-memory approaches. To facilitate separation
-of those concerns from the numerical methods, `modepy` adopts a two-pronged
-approach. In many cases, it suffices for operations to be represented as data
-in matrix or tabular form, so that no actual execution of `modepy` code is
-needed in a cost-constrained setting.
+There are several other candidate libraries in the literature with similar
+goals, but important limitations. FInAT [@FInAT] (and the earlier [@FIAT]) is a
+offers reference elements and basis functions, but is tightly coupled to the
+FENiCS/Firedrake ecosystem. Similarly, `StartUpDG.jl` [@StartUpDG] has a focus
+on the needs of discontinuous Galerkin FEM in the Trixi framework. `QuadPy`
+[@QuadPy] provides access to quadrature rules, but it is no longer open source
+and lacks `modepy`'s composability. `minterpy` [@Wicaksono2025], meanwhile,
+deals exclusively with polynomial interpolation, with a focus on sparse grids.
 
-A prominent exception to this is the evaluation of basis functions. To
-facilitate this, `modepy` allows its function evaluation to be "traced" (in the
-sense of lazy/deferred evaluation), so that an expression graph can be
-obtained. This graph is represented with the help of the `pymbolic` [@Pymbolic]
-software library. This, in turn, can interoperate with Python ASTs
-[@Python_AST], SymPy [@SymPy], SymEngine [@SymEngine], as well as a number of
-other pieces of software for symbolic computation. Another case where a purely
-data-driven approach falls short is the setting of tensor-product elements. In
-this case, for example, a mass matrix $\boldsymbol M$ with entries
-$$
-M_{ij}=\int_{[-1,1]^d} \phi_i(\boldsymbol r)\phi_j(\boldsymbol r) \mathrm{d}\boldsymbol r
-$$
-permits a Kronecker product factorization
-$$
-\boldsymbol M = \boldsymbol M^{1D}\otimes \cdots \otimes \boldsymbol M^{1D},
-\qquad \text{with} \qquad
-M^{1D}_{ij} = \int_{[-1,1]} \phi_i(r)\phi_j(r) \mathrm{d}r,
-$$
-assuming a suitable index order of nodes $\boldsymbol{r}_i$ and basis functions
-$\{\phi_i\}$. In $d$ dimensions, the use of this factorization reduces the
-asymptotic complexity of a matrix-vector product $\boldsymbol M \boldsymbol u$
-from $O(N_p^{2d})$ to $O(N_p^{d+1})$, where $N_p$ is the number of degrees of
-freedom in one dimension, and $d$ is the number of dimensions. To take
-advantage of this factorization, an abstraction such as `modepy`'s must expose
-additional information, including numbering of degrees of freedom. In
-`modepy`'s case, this is accomplished via reshaping operation that converts
-arrays of degrees of freedom back and forth between a flat (one-dimensional)
-and a structured ($d$-dimensional) representation. This reshaping is applicable
-to any array type (including GPU or other high-performance arrays) as long as
-`numpy`-compatible reshaping is supported.
+To facilitate separation of concerns from the chosen numerical methods,
+`modepy` adopts a two-pronged approach that allows flexibility in trading
+simulation fidelity against computation cost. First, it usually suffices for
+operations to be represented as data in matrix or tabular form, so that no
+actual execution of `modepy` code is needed in a cost-constrained setting. For
+example, nodes and bilinear forms on reference elements can generally be
+pre-computed and tabulated. 
+
+However, this data-driven approach falls short in the setting of tensor product
+elements. In this case, for example, a mass matrix $\boldsymbol M$ permits a
+Kronecker product factorization that significantly reduces the asymptotic
+complexity of a matrix-vector product in higher dimensions. `modepy` exposes
+additional information that allows reshaping degrees of freedom arrays to take
+advantage of such factorizations. Another prominent exception is the evaluation
+of basis functions. To facilitate efficient evaluation, `modepy` allows its
+functions to be "traced", in the sense of lazy or deferred evaluation. The
+resulting expression graph is represented by the `pymbolic` [@Pymbolic]
+software library, that can interoperate with Python ASTs [@Python_AST], SymPy
+[@SymPy], SymEngine [@SymEngine], etc., for straightforward code generation.
 
 # Overview
 
