@@ -43,39 +43,37 @@ bibliography: paper.bib
 
 `modepy` is a Python library for defining reference elements, equipping them
 with appropriate approximation spaces, and numerically performing calculus
-operations (derivatives, integrals) on those spaces. It is written in pure
-modern Python 3, offering comprehensive type annotations and full documentation
-with minimal runtime dependencies (NumPy being a primary dependency). 
+operations (derivatives, integrals) on those spaces. It is written in pure,
+type-annotated Python 3, offering comprehensive documentation
+and minimal runtime dependencies (mainly NumPy).
 
-`modepy` focuses on high-order accuracy -- given an element size $h$, this
-refers to the asymptotic decay of the approximation error as $O(h^n)$, for $n
-\ge 3$, assuming sufficient smoothness of the solution being approximated -- at
-manageable computational cost. These capabilities enable High-Performance
-Computing (HPC) approaches to solving integral and (partial) differential
-equations. Those, in turn, can be used to model many phenomena in the physical
-world, including fluid flow, electromagnetism, and solid mechanics. A popular
-example of this is the finite element method (FEM), including its continuous
-and discontinuous flavors, but general collocation, spectral, and Nyström
-methods are also supported. As such, `modepy` has been used to construct FEM
-solvers [@Grudge; @PyNucleus] and integral equation solvers [@Pytential] that
-run on both CPUs and GPUs.
+`modepy` focuses on high-order accuracy --- given an element size $h$, this refers to
+the asymptotic decay of the approximation error as $O(h^n)$, for $n \ge 3$, assuming
+sufficient smoothness of the solution being approximated. For a problem in $d$
+dimensions, the number of unknowns scales as $O(h^{-d})$. Therefore, if accuracy is
+desired at manageable cost, high-order methods are crucial.
 
-`modepy` is licensed under the MIT license and available on GitHub at
-<https://github.com/inducer/modepy/>. Versions dating back to 2013 maintain
-broad compatibility with older versions of Python, including Python 2.7,
-ensuring broad accessibility.
+A popular approach (e.g. in the finite element method, or FEM) for accurate
+approximation of functions on geometrically complex domains is the use of *unstructured
+discretizations*, which represent the geometry as a typically disjoint union (a "mesh")
+of primitive geometric shapes, most often simplices and quadrilaterals. Given the means
+to perform calculus operations on these *reference elements* and mapping functions
+from them to the *global* elements, calculus operations become available on the entire
+domain.  These primitives are chiefly useful in the numerical solution of integral and
+(partial) differential equations. Additional applications include computer graphics,
+CAD, and robotics. Those, in turn, can be used to model many physical phenomena,
+including fluid flow, electromagnetism, and solid mechanics. `modepy` has been used to
+construct FEM solvers [@Grudge; @PyNucleus] and integral equation solvers [@Pytential]
+that run on both CPUs and GPUs.
 
 # Statement of need
 
-High-order accurate calculus operations on unstructured discretizations are
-crucial to differential and integral equations solvers, as well as computer
-graphics and Computer-Aided Design (CAD) applications. This functionality is
-often embedded in an ad-hoc manner in larger codes, restricting scope and
-reusability. `modepy` addresses this need by providing a reusable,
-generalizable, and composable implementation.
+`modepy`'s functionality, as outlined above, is often embedded in an ad-hoc manner
+in larger codes, restricting scope and reusability. `modepy` addresses this need by
+providing a reusable, generalizable, and composable implementation.
 
-There are several other candidate libraries in the literature with similar
-goals, but important limitations. FInAT [@FInAT] (and the earlier [@FIAT]) is a
+There are several other libraries in the literature with similar
+goals, but important limitations and differences. FInAT [@FInAT] (and the earlier [@FIAT]) is a
 offers reference elements and basis functions, but is tightly coupled to the
 FENiCS/Firedrake ecosystem. Similarly, `StartUpDG.jl` [@StartUpDG] has a focus
 on the needs of discontinuous Galerkin FEM in the Trixi framework. `QuadPy`
@@ -83,33 +81,33 @@ on the needs of discontinuous Galerkin FEM in the Trixi framework. `QuadPy`
 and lacks `modepy`'s composability. `minterpy` [@Wicaksono2025], meanwhile,
 deals exclusively with polynomial interpolation, with a focus on sparse grids.
 
-To facilitate separation of concerns from the chosen numerical methods,
-`modepy` adopts a two-pronged approach that allows flexibility in trading
-simulation fidelity against computation cost. First, it usually suffices for
-operations to be represented as data in matrix or tabular form, so that no
-actual execution of `modepy` code is needed in a cost-constrained setting. For
-example, nodes and bilinear forms on reference elements can generally be
-pre-computed and tabulated. 
+The solvers served by `modepy` typically have tight cost constraints, often adopting HPC
+techniques (GPU, MPI, etc.). To facilitate separation of implementation/high-performance
+concerns from the core numerical method, `modepy` adopts a two-pronged approach. First,
+if it suffices to represent operations as data in matrix or tabular form, execution
+of `modepy` code is not needed in a cost-constrained setting. For example, nodes and
+bilinear forms on reference elements can generally be pre-computed and tabulated.
+Second, if this tabulation approach falls short, `modepy` provides data structures to
+reveal additional internal structure.
 
-However, this data-driven approach falls short in the setting of tensor product
-elements. In this case, for example, a mass matrix $\boldsymbol M$ permits a
-Kronecker product factorization that significantly reduces the asymptotic
-complexity of a matrix-vector product in higher dimensions. `modepy` exposes
-additional information that allows reshaping degrees of freedom arrays to take
-advantage of such factorizations. Another prominent exception is the evaluation
-of basis functions. To facilitate efficient evaluation, `modepy` allows its
-functions to be "traced", in the sense of lazy or deferred evaluation. The
-resulting expression graph is represented by the `pymbolic` [@Pymbolic]
-software library, that can interoperate with Python ASTs [@Python_AST], SymPy
-[@SymPy], SymEngine [@SymEngine], etc., for straightforward code generation.
+Tensor product elements provide an example of this. In this instance, many operator
+matrices permit a Kronecker product factorization that significantly reduces the
+asymptotic complexity of a matrix-vector product in higher dimensions [@Orszag1980].
+`modepy` exposes functionality that allows reshaping degrees of freedom arrays to take
+advantage of such factorizations. Another prominent example is the evaluation of basis
+functions at points known only at runtime. To facilitate efficient evaluation, `modepy`
+allows its functions to be "traced", in the sense of lazy or deferred evaluation.
+The resulting expression graph is represented by the `pymbolic` [@Pymbolic] software
+library, that can interoperate with Python ASTs [@Python_AST], SymPy [@SymPy], SymEngine
+[@SymEngine], etc., for straightforward generation of high-performance code.
 
 # Overview
 
-The high-level concepts available in `modepy` are shapes (i.e. a reference
-domain), modes (i.e. the basis functions), and nodes (i.e. the degrees of
+The high-level concepts available in `modepy` are shapes (i.e. reference
+domains), modes (i.e. the basis functions), and nodes (i.e. the degrees of
 freedom). These are implemented in a user-extensible fashion using the
 `singledispatch` mechanism, with inspiration taken from common idiomatic usage
-in Julia [@Bezanson2017]. 
+in Julia [@Bezanson2017].
 
 ## Shapes
 
@@ -117,8 +115,8 @@ The geometry of a reference element is described in `modepy` by the `Shape`
 class. Built-in support exists for `Simplex` and `Hypercube` geometries,
 encompassing the commonly used interval, triangle, tetrahedron, quadrilateral,
 and hexahedral shapes (see \autoref{FigureSimplices}). `TensorProductShape` can
-be used to compose additional shapes, that are useful in specific applications
-and sometimes generated by meshing software (such as `gmsh` [@Geuzaine2009]). 
+be used to compose additional shapes (e.g. prims, as generated by,
+e.g. `gmsh` [@Geuzaine2009]).
 
 ![Domains corresponding to the one-, two-, and three-dimensional simplices.](images/simplices.png){#FigureSimplices width="80%"}
 
@@ -131,14 +129,9 @@ the reference element domain, and no specific choice of basis.  Predefined
 choices include the `PN` space, containing polynomials of total degree at most
 `order`, and the `QN` space, containing polynomials of maximum degree at most
 `order`. As with shapes, these spaces can be combined using
-`TensorProductSpace`.
-
-The basis is provided in the form of a `Basis` class, which allows access to
-the basis functions, their derivatives (per axis) and opaque `mode_ids`. As
-noted before, the basis functions and their derivatives can be evaluated
-directly or can be traced using the `pymbolic` library to aid in code
-generation. Various standard basis functions are provided, such as the
-monomials, general Jacobi polynomials, and the
+`TensorProductSpace`. A `Basis` objects is available separately,
+giving access to basis functions and their derivatives, for, e.g.,
+the monomials, general Jacobi polynomials, and the
 Proriol-Koornwinder-Dubiner-Owens (PKDO) basis from [@Dubiner1991] (see
 \autoref{FigurePKDO}).
 
@@ -146,17 +139,11 @@ Proriol-Koornwinder-Dubiner-Owens (PKDO) basis from [@Dubiner1991] (see
 
 ## Nodes
 
-A final component in an FEM discretization (or 'Ciarlet triple' [@Brenner2007,
-Section 3.1]) is a set of 'degrees of freedom' ('DOFs') that uniquely define a
-certain function in the span of a basis. `modepy` provides easy access to modal
+A final component in an FEM discretization [@Brenner2007,
+Section 3.1] is a set of 'degrees of freedom' ('DOFs') that uniquely identify a
+certain function in the span of a basis. `modepy` supports modal
 DOFs (i.e. basis coefficients) and nodal DOFs (i.e. function or derivative
-values at a point). As equispaced nodal DOFs are not usable in the high-order
-setting [@Trefethen2020], `modepy` offers access to many types of nodes with
-better properties for each reference element. It can also construct custom
-nodes sets for a given set of basis functions in 2D via a procedure based on
-eigenvalues of multiplication operators [@Vioreanu2014].
-
-On simplices, the "warp-and-blend" nodes [@Warburton2007] are available, and on
+values at a point). On simplices, the "warp-and-blend" nodes [@Warburton2007] are available, and on
 the hypercube, standard tensor product nodes are constructed from
 one-dimensional Legendre-Gauss(-Lobatto) nodes. `modepy` can also directly
 interoperate with the `recursivenodes` library described in [@Isaac2020], which
@@ -164,39 +151,20 @@ offers additional well-conditioned nodes on the simplex.
 
 ## Quadrature
 
-Besides the standard building blocks above, `modepy` also offers a wide array
-of quadrature rules that can be used on each reference element. The quadrature
-rules are provided as implementations of the `Quadrature` superclass. For the
-interval, a broad selection of quadrature rules are present: Clenshaw--Curtis,
-Fejér, and Jacobi-Gauss(-Lobatto). Additionally, several state-of-the-art
-higher-dimensional rules are available:
-
-* Grundmann--Möller [@Grundmann1978] rules for the $n$-simplex.
-* Vioreanu--Rokhlin [@Vioreanu2014] rules for the two- and
-  three-dimensional simplex (see \autoref{FigureQuadrature}). 
-* Xiao--Gimbutas [@Xiao2010] rules for the two- and three-dimensional
-  simplex.
-* Jáskowiec--Sukumar [@Jaskowiec2021] rules for the tetrahedron.
-* Witherden--Vincent [@Witherden2015] rules for the two- and
-  three-dimensional hypercube (see \autoref{FigureQuadrature}).
+`modepy` also offers a wide array of quadrature rules that can be used on each
+reference element. For the interval, Clenshaw--Curtis, Fejér, and Jacobi-Gauss(-Lobatto)
+are on offer. Many more state-of-the-art rules are available, typically up to high
+order [@Grundmann1978;@Vioreanu2014;@Xiao2010;@Jaskowiec2021;@Witherden2015] (see
+\autoref{FigureQuadrature}). There is also functionality [@Vioreanu2014] to allow
+constructing novel quadratures on a given domain.
 
 ![(left) Vioreanu--Rokhlin quadrature points of order 11 and (right) Witherden--Vincent quadrature points of order 11.](images/quadrature_rules.png){#FigureQuadrature width="50%"}
 
-Most of the rules for simplices and hypercubes are available to high order
-(i.e. $\ge 20$). However, `modepy` also has functionality that allows
-constructing desired quadrature nodes on a given domain. This can be found in
-`modepy.quadrature.construction`.
-
 ## Matrices
 
-While `modepy` is sufficiently flexible to accommodate different applications,
-it also provides functionality specific to FEM needs. In particular, it allows
-constructing a variety of matrix operators that define necessary resampling
-operators and bilinear forms used in FEM codes. A specific bilinear form matrix
-can be obtained using `nodal_quadrature_bilinear_form_matrix`, which requires
-providing the usual test functions, trial functions and corresponding nodes for
-the input and output. This allows constructing very general families of
-bilinear forms with or without oversampling. 
+`modepy`'s functionality is rounded out by various tabulation/matrix generation
+functions, including the ability to tabulate operator matrices for fairly general
+bilinear forms.
 
 # Acknowledgements
 
