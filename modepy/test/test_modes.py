@@ -228,7 +228,7 @@ def test_basis_grad(dim, shape_cls, order, basis_getter):
 
         tol = 1e-8
         if eoc_rec.max_error() >= tol:
-            logger.info("\n%s", str(eoc_rec))
+            logger.info("\n%s", eoc_rec)
 
         assert (eoc_rec.max_error() < tol or eoc_rec.order_estimate() >= 1.5)
 
