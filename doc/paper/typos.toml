@@ -1,0 +1,7 @@
+[files]
+extend-exclude = ["*.bib"]
+
+
+[default.extend-words]
+# the space
+PN = "PN"
