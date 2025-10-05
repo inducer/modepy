@@ -273,7 +273,7 @@ class TensorProductQuadrature(Quadrature):
 
 class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
     """A tensor product using only :class:`~modepy.LegendreGaussQuadrature`
-    one-dimenisonal rules.
+    one-dimensional rules.
     """
 
     def __init__(self,
@@ -287,7 +287,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
 
 class LegendreGaussLobattoTensorProductQuadrature(TensorProductQuadrature):
     """A tensor product using only :class:`~modepy.LegendreGaussLobattoQuadrature`
-    one-dimenisonal rules.
+    one-dimensional rules.
     """
 
     def __init__(self,
