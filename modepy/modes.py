@@ -189,7 +189,7 @@ def jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
                 * gamma(alpha+1) * gamma(beta+1) / gamma(alpha+beta+1))
 
     # Storage for recursive construction
-    pl = [1.0/math.sqrt(gamma0) + 0*x]
+    pl: list[RealValueT] = [1.0/math.sqrt(gamma0) + 0*x]
 
     if n == 0:
         return pl[0]
@@ -257,7 +257,7 @@ def scaled_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValue
     """
     from math import factorial, gamma, sqrt
 
-    eps = 100 * np.finfo((np.float32(0) + np.asarray(x)).dtype).eps
+    eps = float(100 * np.finfo((np.float32(0) + np.asarray(x)).dtype).eps)
     if n == 0 and abs(alpha + beta + 1) < eps:
         # maxima claims limit(1/(x*gamma(x)),x, 0) == 1
         scaling = (
