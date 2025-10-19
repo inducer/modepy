@@ -314,7 +314,7 @@ def face_normal(face: Face, normalize: bool = True) -> ArrayF:
     )
 
     if normalize:
-        surface_ps = surface_ps / surface_ps.norm_squared() ** 0.5
+        surface_ps = surface_ps / np.sqrt(surface_ps.norm_squared())
 
     # Compute the normal as the dual of the surface pseudoscalar.
     return surface_ps.dual().as_vector()
