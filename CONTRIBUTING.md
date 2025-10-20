@@ -36,9 +36,9 @@ source .venv/bin/activate
 These commands may differ slightly based on your operating system, so for more
 information see the [official
 documentation](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#create-and-use-virtual-environments).
-Using other tools, such as [uv](https://docs.astral.sh/uv/pip/environments/) or
-[conda](https://docs.conda.io/projects/conda/en/latest/index.html), is also a
-good idea.
+`modepy` uses standard Python packaging techniques and as such is also
+compatible with additional tools, such as [uv](https://docs.astral.sh/uv/pip/environments/) or
+[conda](https://docs.conda.io/projects/conda/en/latest/index.html).
 
 ### Development ("editable") install
 
@@ -69,15 +69,16 @@ exact cause. For example, consider adding
 ### Coding style
 
 `modepy` uses [ruff](https://github.com/astral-sh/ruff) to check for coding
-style and other issues. In general, the library follows the [PEP
-8](https://peps.python.org/pep-0008/) rules as much as possible.
+style and other issues. The library follows a variant of the  [PEP
+8](https://peps.python.org/pep-0008/) rules as checked by the linter.
 
 Furthermore, we aim for (close to) full type annotated code. This is checked
 with [basedpyright](https://docs.basedpyright.com/latest/).
 
 ### Pull Requests
 
-Pull requests are very welcome, of course! If you are trying to develop a
+The suggested way to contribute to modepy is through pull requests
+on Github. If you are aiming to develop a
 larger feature, we recommend opening an issue first to discuss if it is
 appropriate for inclusion and any additional implementation details.
 
@@ -86,9 +87,10 @@ To get your PR merged, we require that
 * **All** linting tests must pass (`ruff`, `typos`, and any other future additions).
 * New functionality should be documented and tested appropriately.
 
-As type annotations are still a work in progress in a considerable part of the
-Python ecosystem, we try to be flexible as well. However, new code should
-include type annotations, even if they are not completely correct.
+Any new code added to the repository is expected to have sufficient type
+annotations to pass `basedpyright`. In specific cases (and with adequate
+justification), additions to the existing baseline of typing deficiencies may
+be allowable.
 
 ### Documentation
 
@@ -108,8 +110,9 @@ example of `modepy` usage, also consider adding it to the `examples` folder.
 ### License
 
 By contributing, you agree that your contributions will be licensed under the
-same license as the project (the MIT license). You should also make sure to add
-your name to the files you contributed code to.
+same license as the project (the MIT license). You will retain copyright to your
+contribution. To facilitate appropriate tracking, please add your name to
+the license header that should be present at the top of each file.
 
 ## Testing
 
