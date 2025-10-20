@@ -7,6 +7,13 @@ The latest version of `modepy` is available on PyPI. It can be installed with
 pip install modepy
 ```
 
+It is also available on
+[conda-forge](https://github.com/conda-forge/modepy-feedstock) and can be
+installed from there using, e.g.,
+```sh
+conda install modepy
+```
+
 ### Obtaining the source
 
 For development, we recommend cloning the [Git
@@ -37,7 +44,8 @@ These commands may differ slightly based on your operating system, so for more
 information see the [official
 documentation](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#create-and-use-virtual-environments).
 `modepy` uses standard Python packaging techniques and as such is also
-compatible with additional tools, such as [uv](https://docs.astral.sh/uv/pip/environments/) or
+compatible with additional tools, such as
+[uv](https://docs.astral.sh/uv/pip/environments/) or
 [conda](https://docs.conda.io/projects/conda/en/latest/index.html).
 
 ### Development ("editable") install
@@ -77,10 +85,10 @@ with [basedpyright](https://docs.basedpyright.com/latest/).
 
 ### Pull Requests
 
-The suggested way to contribute to modepy is through pull requests
-on Github. If you are aiming to develop a
-larger feature, we recommend opening an issue first to discuss if it is
-appropriate for inclusion and any additional implementation details.
+The suggested way to contribute to modepy is through pull requests on Github.
+If you are aiming to develop a larger feature, we recommend opening an issue
+first to discuss if it is appropriate for inclusion and any additional
+implementation details.
 
 To get your PR merged, we require that
 * **All** unit tests pass.
@@ -110,8 +118,8 @@ example of `modepy` usage, also consider adding it to the `examples` folder.
 ### License
 
 By contributing, you agree that your contributions will be licensed under the
-same license as the project (the MIT license). You will retain copyright to your
-contribution. To facilitate appropriate tracking, please add your name to
+same license as the project (the MIT license). You will retain copyright to
+your contribution. To facilitate appropriate tracking, please add your name to
 the license header that should be present at the top of each file.
 
 ## Testing
