@@ -1,27 +1,24 @@
 Installation
 ============
 
-This command should install :mod:`modepy`::
+The latest version of ``modepy`` is available on PyPI. It can be installed with
+
+.. code:: sh
 
     pip install modepy
 
-If you are installing :mod:`modepy` into a global environment, you may need
-additional permissions (e.g. :command:`sudo`). If you do not have
-`pip <https://pypi.python.org/pypi/pip>`__ installed, you can easily get it
-using::
+It is also available on
+`conda-forge <https://github.com/conda-forge/modepy-feedstock>`__ and can be
+installed from there using, e.g.,
 
-    python -m ensurepip
+.. code:: sh
 
-For a more manual installation: download the source, unpack it, and run::
+    conda install modepy
 
-    python -m pip install .
-
-or (for development purposes)::
-
-    python -m pip install --editable .
-
-This will also install any required dependencies like :mod:`numpy` if they are
-not available already.
+For additional information about obtaining ``modepy``, setting up a development
+environment, and requirements for contributing see the
+`CONTRIBUTING.md <https://github.com/inducer/modepy/blob/main/CONTRIBUTING.md>`__
+file included with the source code.
 
 User-visible Changes
 ====================
