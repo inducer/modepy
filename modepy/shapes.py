@@ -221,7 +221,7 @@ import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast, overload
+from typing import TYPE_CHECKING, TypeVar, cast
 
 import numpy as np
 from typing_extensions import override
@@ -343,25 +343,23 @@ class TensorProductShape(Shape):
     bases: tuple[Shape, ...]
     """A :class:`tuple` of base shapes that form the tensor product."""
 
-    @overload
-    # pyright-ignore: they overlap, can't be helped.
-    def __new__(cls, bases: tuple[ShapeT]) -> ShapeT: ...  # pyright: ignore[reportOverlappingOverload]
-
-    @overload
-    def __new__(cls, bases: tuple[Shape, ...]) -> TensorProductShape: ...
-
-    def __new__(cls, bases: tuple[Shape, ...]) -> Shape:
-        if len(bases) == 1:
-            return bases[0]
-        else:
-            return Shape.__new__(cls)
-
-    def __init__(self, bases: tuple[Shape, ...]) -> None:
+    def __init__(self,
+                 bases: tuple[Shape, ...],
+                 flatten: bool = True) -> None:
         # flatten input shapes
-        bases = sum((
-            s.bases if isinstance(s, TensorProductShape) else (s,)
-            for s in bases
-            ), ())
+        if flatten:
+            from warnings import warn
+
+            if any(isinstance(s, TensorProductShape) for s in bases):
+                warn(f"Automatic flattening in the '{type(self).__name__}' constructor "
+                    "is deprecated and will be set to False in 2026. Use "
+                    f"'{type(self).__name__}.flatten()' instead to manually flatten.",
+                    DeprecationWarning, stacklevel=2)
+
+            bases = sum((
+                s.bases if isinstance(s, TensorProductShape) else (s,)
+                for s in bases
+                ), ())
 
         nsegments = len([s for s in bases if s.dim == 1])
         if nsegments < len(bases) - 1:
@@ -384,7 +382,27 @@ class TensorProductShape(Shape):
     def nfaces(self) -> int:
         # FIXME: this obviously only works for `shape x segment x segment x ...`
         *segments, shape = sorted(self.bases, key=lambda s: s.dim)
-        return shape.nfaces + len(segments) * segments[0].nfaces
+        nfaces = segments[0].nfaces if segments else 0
+        return shape.nfaces + len(segments) * nfaces
+
+    def flatten(self) -> Shape:
+        """Flattens a tensor product shape into its component pieces.
+
+        This function recursively removes tensor product shapes from
+        :attr:`TensorProductShape.bases`. If only a single shape remains in the
+        tensor product, then it is returned directly.
+        """
+        bases: list[Shape] = []
+        for s in self.bases:
+            if isinstance(s, TensorProductShape):
+                s = s.flatten()
+
+            bases.extend(s.bases if isinstance(s, TensorProductShape) else [s])
+
+        if len(bases) == 1:
+            return bases[0]
+        else:
+            return TensorProductShape(tuple(bases))
 
 
 @unit_vertices_for_shape.register(TensorProductShape)
@@ -470,24 +488,12 @@ def faces_for_simplex(shape: Simplex) -> tuple[Face, ...]:
 
 # {{{ hypercube
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class Hypercube(TensorProductShape):
     """An n-dimensional hypercube (line, square, hexahedron, etc.)."""
 
-    @overload
-    def __new__(cls, dim: Literal[1]) -> Simplex: ...
-
-    @overload
-    def __new__(cls, dim: int) -> Hypercube: ...
-
-    def __new__(cls, dim: int) -> Shape:
-        if dim == 1:
-            return Simplex(1)
-        else:
-            return Shape.__new__(cls)
-
     def __init__(self, dim: int) -> None:
-        super().__init__((Simplex(1),) * dim)
+        super().__init__((Simplex(1),) * dim, flatten=False)
 
     def __getnewargs__(self):
         # NOTE: ensures Hypercube is picklable
@@ -496,21 +502,19 @@ class Hypercube(TensorProductShape):
 
 @dataclass(frozen=True, init=False)
 class _HypercubeFace(Hypercube, Face):
-    @overload
-    def __new__(cls, dim: Literal[1], **kwargs: Any) -> _SimplexFace: ...
-
-    @overload
-    def __new__(cls, dim: int, **kwargs: Any) -> _HypercubeFace: ...
-
-    def __new__(cls, dim: int, **kwargs: Any) -> Face:
-        if dim == 1:
-            return _SimplexFace(dim=1, **kwargs)
-        else:
-            return Shape.__new__(cls)
-
-    def __init__(self, dim: int, **kwargs: Any) -> None:
+    def __init__(self,
+                 dim: int,
+                 volume_shape: Shape,
+                 face_index: int,
+                 volume_vertex_indices: tuple[int, ...],
+                 map_to_volume: Callable[[ArrayF], ArrayF],
+                 ) -> None:
         Hypercube.__init__(self, dim)
-        Face.__init__(self, **kwargs)
+        Face.__init__(self,
+                      volume_shape=volume_shape,
+                      face_index=face_index,
+                      volume_vertex_indices=volume_vertex_indices,
+                      map_to_volume=map_to_volume)
 
 
 def _hypercube_face_to_vol_map(
