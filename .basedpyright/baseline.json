@@ -1538,6 +1538,22 @@
         ],
         "./modepy/modes.py": [
             {
+                "code": "reportCallIssue",
+                "range": {
+                    "startColumn": 15,
+                    "endColumn": 57,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownVariableType",
+                "range": {
+                    "startColumn": 15,
+                    "endColumn": 57,
+                    "lineCount": 1
+                }
+            },
+            {
                 "code": "reportUnknownVariableType",
                 "range": {
                     "startColumn": 4,
@@ -1677,14 +1693,6 @@
                 "code": "reportUnknownArgumentType",
                 "range": {
                     "startColumn": 16,
-                    "endColumn": 73,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportUnknownMemberType",
-                "range": {
-                    "startColumn": 22,
                     "endColumn": 73,
                     "lineCount": 1
                 }
@@ -4030,14 +4038,6 @@
                 }
             },
             {
-                "code": "reportUnknownMemberType",
-                "range": {
-                    "startColumn": 20,
-                    "endColumn": 27,
-                    "lineCount": 1
-                }
-            },
-            {
                 "code": "reportAny",
                 "range": {
                     "startColumn": 19,
@@ -4066,6 +4066,14 @@
                 "range": {
                     "startColumn": 23,
                     "endColumn": 74,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownMemberType",
+                "range": {
+                    "startColumn": 58,
+                    "endColumn": 65,
                     "lineCount": 1
                 }
             },
@@ -4654,6 +4662,22 @@
             {
                 "code": "reportUnknownMemberType",
                 "range": {
+                    "startColumn": 11,
+                    "endColumn": 38,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownVariableType",
+                "range": {
+                    "startColumn": 11,
+                    "endColumn": 40,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownMemberType",
+                "range": {
                     "startColumn": 13,
                     "endColumn": 40,
                     "lineCount": 1
@@ -4816,10 +4840,26 @@
                 }
             },
             {
+                "code": "reportUnknownMemberType",
+                "range": {
+                    "startColumn": 27,
+                    "endColumn": 34,
+                    "lineCount": 1
+                }
+            },
+            {
                 "code": "reportUnknownVariableType",
                 "range": {
                     "startColumn": 8,
                     "endColumn": 14,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownMemberType",
+                "range": {
+                    "startColumn": 28,
+                    "endColumn": 35,
                     "lineCount": 1
                 }
             },
@@ -9774,6 +9814,22 @@
                 "range": {
                     "startColumn": 27,
                     "endColumn": 30,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownVariableType",
+                "range": {
+                    "startColumn": 16,
+                    "endColumn": 35,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownMemberType",
+                "range": {
+                    "startColumn": 38,
+                    "endColumn": 69,
                     "lineCount": 1
                 }
             },
