@@ -6,7 +6,7 @@ tags:
   - approximation theory
 authors:
   - given-names: Andreas
-    surname: Klöckner
+    surname: Kloeckner
     corresponding: true
     orcid: 0000-0003-1228-519X
     affiliation: 1
@@ -14,15 +14,15 @@ authors:
     surname: Fikl
     orcid: 0000-0002-0552-5936
     affiliation: 2
-  - given-names: Jacob Xiaoyu
+  - given-names: Xiaoyu
     surname: Wei
     orcid: 0000-0001-7063-7865
     affiliation: 3
-  - given-names: Thomas H.
+  - given-names: Thomas
     surname: Gibson
     orcid: 0000-0002-7978-6848
     affiliation: 4
-  - given-names: Addison J.
+  - given-names: Addison
     surname: Alvey-Blanco
     affiliation: 1
 affiliations:
