@@ -15,12 +15,10 @@ authors:
   orcid: "https://orcid.org/0000-0002-7978-6848"
 - family-names: "Alvey-Blanco"
   given-names: "Addison"
-- family-names: "Wala"
-  given-names: "Matt"
 
 title: "modepy"
-version: 2025.1
-doi: 10.5281/zenodo.14624221
-date-released: 2025-01-09
+version: 2026.1
+doi: 10.5281/zenodo.18304836
+date-released: 2026-01-19
 url: "https://github.com/inducer/modepy"
 license: MIT
