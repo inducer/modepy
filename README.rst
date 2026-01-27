@@ -13,6 +13,9 @@ modepy: Basis Functions, Node Sets, Quadratures
 .. image:: https://zenodo.org/badge/9846038.svg
     :alt: Zenodo DOI for latest release
     :target: https://zenodo.org/doi/10.5281/zenodo.11105051
+.. image:: https://joss.theoj.org/papers/10.21105/joss.09294/status.svg
+    :alt: Paper in the Journal of Open Source Software
+    :target: https://doi.org/10.21105/joss.09294
 
 ``modepy`` helps you create well-behaved high-order discretizations on
 simplices (i.e. segments, triangles and tetrahedra) and tensor products of
