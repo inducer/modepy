@@ -125,10 +125,10 @@ space of functions $\phi_i: D \to \mathbb{R}$, where $D$ is the reference elemen
 domain, and no specific choice of basis. Predefined choices include the `PN` space,
 containing polynomials of total degree at most $N$, and the `QN` space, containing
 polynomials of maximum degree at most $N$. As with shapes, these spaces can be
-combined using `TensorProductSpace`. A `Basis` objects is available separately,
+combined using `TensorProductSpace`. A `Basis` object is available separately,
 giving access to basis functions and their derivatives, for, e.g., the monomials,
 general Jacobi polynomials, and the Proriol-Koornwinder-Dubiner-Owens (PKDO) basis
-from [@Dubiner1991] (see \autoref{FigurePKDO}).
+from @Dubiner1991 (see \autoref{FigurePKDO}).
 
 ![PKDO basis functions for the triangle.](images/pkdo-2d.png){#FigurePKDO width="80%"}
 
@@ -140,7 +140,7 @@ a basis. `modepy` supports modal DOFs (i.e. basis coefficients) and nodal DOFs (
 function or derivative values at a point). On simplices, the "warp-and-blend" nodes
 [@Warburton2007] are available, and on the hypercube, standard tensor product nodes
 are constructed from one-dimensional Legendre-Gauss(-Lobatto) nodes. `modepy` can also
-directly interoperate with the `recursivenodes` library described in [@Isaac2020],
+directly interoperate with the `recursivenodes` library described in @Isaac2020,
 which offers additional well-conditioned nodes on the simplex.
 
 ## Quadrature
