@@ -22,3 +22,33 @@ doi: 10.5281/zenodo.18304836
 date-released: 2026-01-19
 url: "https://github.com/inducer/modepy"
 license: MIT
+
+preferred-citation:
+  authors:
+  - family-names: Kloeckner
+    given-names: Andreas
+    orcid: "https://orcid.org/0000-0003-1228-519X"
+  - family-names: Fikl
+    given-names: Alexandru
+    orcid: "https://orcid.org/0000-0002-0552-5936"
+  - family-names: Wei
+    given-names: Xiaoyu
+    orcid: "https://orcid.org/0000-0001-7063-7865"
+  - family-names: Gibson
+    given-names: Thomas
+    orcid: "https://orcid.org/0000-0002-7978-6848"
+  - family-names: Alvey-Blanco
+    given-names: Addison
+  date-published: 2026-01-27
+  doi: 10.21105/joss.09294
+  issn: 2475-9066
+  issue: 117
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 9294
+  title: "modepy: Basis Functions, Interpolation, and Quadrature (not
+    just) for Finite Elements"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.09294"
+  volume: 11
