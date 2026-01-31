@@ -131,7 +131,7 @@ nd = "nd"
 zerod = "zerod"
 
 [tool.typos.files]
-extend-exclude = []
+extend-exclude = ["doc/paper/paper.bib"]
 
 [tool.basedpyright]
 pythonVersion = "3.10"
