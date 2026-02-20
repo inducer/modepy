@@ -92,6 +92,7 @@ extend-ignore = [
     "E402", # module level import not at the top of file
     "N818", # error suffix in exception names
     "RUF067", # no code in __init__ *shrug*
+    "TRY004",
 ]
 allowed-confusables = ["‐", "–"]
 
@@ -102,6 +103,8 @@ multiline-quotes = "double"
 
 [tool.ruff.lint.per-file-ignores]
 "modepy/quadrature/jaskowiec_sukumar_tet_data.py" = ["E202", "E203"]
+"modepy/test/test_*.py" = ["S102"]
+"doc/conf.py" = ["S102"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

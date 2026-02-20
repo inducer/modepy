@@ -122,9 +122,7 @@ def create_decay_baseline(
 
     modal_coefficients = np.asarray(mode_number_vector, dtype=np.float64)**(-n)
     modal_coefficients[zeros] = 1.0  # irrelevant, just keeps log from NaNing
-    modal_coefficients = modal_coefficients / la.norm(modal_coefficients)
-
-    return modal_coefficients
+    return modal_coefficients / la.norm(modal_coefficients)
 
 
 def get_decay_fit_matrix(
@@ -152,8 +150,7 @@ def skyline_pessimize(modal_values: ArrayF) -> ArrayF:
         cur_val = max(my_modes[-1], my_modes[-2])
 
         for imode in range(nmodes-1, -1, -1):
-            if my_modes[imode] > cur_val:
-                cur_val = my_modes[imode]
+            cur_val = max(cur_val, my_modes[imode])
 
             result[iel, imode] = cur_val
 
