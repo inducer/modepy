@@ -60,7 +60,7 @@ from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.linalg as la
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from pytools import memoize_method
 
@@ -292,7 +292,7 @@ def plot_element_values(
             pt.plot(orig_nodes[0], orig_values, "x")
     elif dims == 2:
         import matplotlib.pyplot as pt
-        import matplotlib.tri as tri
+        from matplotlib import tri
 
         triangulation = tri.Triangulation(nodes[0], nodes[1], triangles=submesh)
         ax = pt.subplot(1, 1, 1, projection="3d")
@@ -414,8 +414,8 @@ class Reshapeable(Protocol):
     def shape(self) -> tuple[int, ...]: ...
 
     def reshape(
-            self: ReshapeableT, *newshape: tuple[int, ...], order: str
-            ) -> ReshapeableT:
+            self, *newshape: tuple[int, ...], order: str
+            ) -> Self:
         ...
 
 

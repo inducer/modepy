@@ -5,7 +5,7 @@ import sys
 
 
 with open(sys.argv[1]) as inf:
-    lines = [ln.strip() for ln in inf.readlines() if ln.strip()]
+    lines = [ln.strip() for ln in inf if ln.strip()]
 
 rule_name = sys.argv[2]
 
