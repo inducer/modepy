@@ -152,9 +152,7 @@ def skyline_pessimize(modal_values: ArrayF) -> ArrayF:
         cur_val = max(my_modes[-1], my_modes[-2])
 
         for imode in range(nmodes-1, -1, -1):
-            if my_modes[imode] > cur_val:
-                cur_val = my_modes[imode]
-
+            cur_val = max(cur_val, my_modes[imode])
             result[iel, imode] = cur_val
 
     return result

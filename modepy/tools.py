@@ -292,7 +292,7 @@ def plot_element_values(
             pt.plot(orig_nodes[0], orig_values, "x")
     elif dims == 2:
         import matplotlib.pyplot as pt
-        import matplotlib.tri as tri
+        from matplotlib import tri
 
         triangulation = tri.Triangulation(nodes[0], nodes[1], triangles=submesh)
         ax = pt.subplot(1, 1, 1, projection="3d")
