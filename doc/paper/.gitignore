@@ -1,0 +1,5 @@
+.inara
+joss
+*.pdf
+*.tex
+latex.out
