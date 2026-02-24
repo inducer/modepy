@@ -235,6 +235,14 @@ def _sausage_degree_from_map_name(map_name: str) -> int | None:
     return degree
 
 
+def _map_preserves_exact_to(map_name: str) -> bool:
+    if map_name == "identity":
+        return True
+
+    sausage_degree = _sausage_degree_from_map_name(map_name)
+    return sausage_degree == 1
+
+
 @lru_cache(maxsize=16)
 def _strip_map_parameter_m(rho: float) -> float:
     if rho <= 1.0:
@@ -430,7 +438,8 @@ class Transplanted1DQuadrature(Quadrature):
         if force_dim_axis:
             mapped_nodes = np.reshape(mapped_nodes, (1, mapped_nodes.shape[0]))
 
-        super().__init__(mapped_nodes, mapped_weights)
+        exact_to = quadrature._exact_to if _map_preserves_exact_to(map_name) else None
+        super().__init__(mapped_nodes, mapped_weights, exact_to=exact_to)
 
         self.base_quadrature = quadrature
         self.map_name = map_name
