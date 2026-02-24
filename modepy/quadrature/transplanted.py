@@ -245,15 +245,15 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
 
     m = _strip_map_parameter_m(rho)
     m4 = m**0.25
-    K = float(ellipk(m))
+    k = float(ellipk(m))
 
-    omega = 2.0 * K * np.arcsin(s) / np.pi
+    omega = 2.0 * k * np.arcsin(s) / np.pi
     sn, cn, dn, _ = ellipj(omega, m)
 
     g = np.arctanh(m4 * sn) / np.arctanh(m4)
     gp = (
         2.0
-        * K
+        * k
         * m4
         * cn
         * dn
@@ -292,7 +292,8 @@ def map_trefethen_transplant(
 
     Reference:
         N. Hale and L. N. Trefethen, "New Quadrature Formulas from
-        Conformal Maps," SIAM J. Numer. Anal. 46(2), 930-948 (2008),
+        Conformal Maps," SIAM Journal on Numerical Analysis 46(2),
+        930-948 (2008),
         doi:10.1137/07068607X.
 
         D. Kosloff and H. Tal-Ezer, "A Modified Chebyshev Pseudospectral
@@ -334,7 +335,8 @@ class Transplanted1DQuadrature(Quadrature):
 
     Reference:
         N. Hale and L. N. Trefethen, "New Quadrature Formulas from
-        Conformal Maps," SIAM J. Numer. Anal. 46(2), 930-948 (2008),
+        Conformal Maps," SIAM Journal on Numerical Analysis 46(2),
+        930-948 (2008),
         doi:10.1137/07068607X.
 
         D. Kosloff and H. Tal-Ezer, "A Modified Chebyshev Pseudospectral

@@ -137,7 +137,7 @@ References
 ~~~~~~~~~~
 
 * N. Hale and L. N. Trefethen, *New Quadrature Formulas from Conformal
-  Maps*, ``SIAM J. Numer. Anal.`` 46(2), 930-948 (2008),
+  Maps*, ``SIAM Journal on Numerical Analysis`` 46(2), 930-948 (2008),
   doi:10.1137/07068607X.
 * D. Kosloff and H. Tal-Ezer, *A Modified Chebyshev Pseudospectral Method
   with an O(N^{-1}) Time Step Restriction*,
