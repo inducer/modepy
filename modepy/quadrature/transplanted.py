@@ -55,8 +55,9 @@ Parameter notes:
 """
 
 from functools import lru_cache
-from math import isfinite
-from typing import TYPE_CHECKING, Any
+from importlib import import_module
+from math import asin, isfinite, log, sqrt
+from typing import TYPE_CHECKING, Protocol, cast
 
 import numpy as np
 
@@ -64,7 +65,51 @@ from modepy.quadrature import Quadrature
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from modepy.typing import ArrayF
+
+
+class _RootScalarResult(Protocol):
+    converged: bool
+    root: float
+
+
+class _RootScalarFn(Protocol):
+    def __call__(
+        self,
+        f: Callable[[float], float],
+        *,
+        bracket: tuple[float, float],
+        method: str,
+    ) -> _RootScalarResult: ...
+
+
+class _EllipkFn(Protocol):
+    def __call__(self, x: float) -> float: ...
+
+
+class _EllipjFn(Protocol):
+    def __call__(
+        self, u: ArrayF, m: float
+    ) -> tuple[ArrayF, ArrayF, ArrayF, ArrayF]: ...
+
+
+def _scipy_attr(module_name: str, attr_name: str) -> object:
+    try:
+        module = import_module(module_name)
+    except ImportError as exc:
+        raise RuntimeError(
+            "The Trefethen strip map requires scipy. "
+            "Install modepy with scipy support to use map_name='strip'."
+        ) from exc
+
+    try:
+        return cast("object", getattr(module, attr_name))
+    except AttributeError as exc:
+        raise RuntimeError(
+            f"scipy module '{module_name}' is missing required attribute '{attr_name}'"
+        ) from exc
 
 
 def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
@@ -72,22 +117,23 @@ def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
 
     Returns ``(s, 1)``.
     """
-    return s.copy(), np.ones_like(s)
+    return np.array(s, dtype=np.float64, copy=True), np.ones_like(s, dtype=np.float64)
 
 
-def _arcsin_taylor_coefficients(max_odd_degree: int) -> ArrayF:
+def _arcsin_taylor_coefficients(max_odd_degree: int) -> tuple[float, ...]:
     if max_odd_degree < 1 or max_odd_degree % 2 == 0:
         raise ValueError(f"sausage degree must be positive and odd: {max_odd_degree}")
 
     nterms = (max_odd_degree + 1) // 2
-    coeffs = np.empty(nterms, dtype=np.float64)
-    coeffs[0] = 1.0
+    coeffs = [1.0]
 
     for k in range(1, nterms):
         km1 = k - 1
-        coeffs[k] = coeffs[km1] * (2.0 * km1 + 1.0) ** 2 / (2.0 * k * (2.0 * km1 + 3.0))
+        coeffs.append(
+            coeffs[km1] * (2.0 * km1 + 1.0) ** 2 / (2.0 * k * (2.0 * km1 + 3.0))
+        )
 
-    return coeffs
+    return tuple(coeffs)
 
 
 def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
@@ -99,10 +145,10 @@ def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
     :arg degree: positive odd degree in ``{1, 3, 5, ...}``.
     """
     coeffs = _arcsin_taylor_coefficients(degree)
-    denom = float(np.sum(coeffs))
+    denom = float(sum(coeffs))
 
-    g = np.zeros_like(s)
-    gp = np.zeros_like(s)
+    g = np.zeros_like(s, dtype=np.float64)
+    gp = np.zeros_like(s, dtype=np.float64)
 
     for k, c_k in enumerate(coeffs):
         power = 2 * k + 1
@@ -161,10 +207,10 @@ def map_kosloff_tal_ezer(
         doi:10.1006/jcph.1993.1044.
     """
     alpha = _kte_alpha(rho=rho, alpha=alpha)
-    denom = np.arcsin(alpha)
+    denom = asin(alpha)
 
-    g = np.arcsin(alpha * s) / denom
-    gp = alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2))
+    g = np.asarray(np.arcsin(alpha * s) / denom, dtype=np.float64)
+    gp = np.asarray(alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2)), dtype=np.float64)
 
     return g, gp
 
@@ -189,27 +235,15 @@ def _sausage_degree_from_map_name(map_name: str) -> int | None:
     return degree
 
 
-def _require_scipy_for_strip_map() -> tuple[Any, Any, Any]:
-    try:
-        from scipy.optimize import root_scalar
-        from scipy.special import ellipj, ellipk
-    except ImportError as exc:
-        raise RuntimeError(
-            "The Trefethen strip map requires scipy. "
-            "Install modepy with scipy support to use map_name='strip'."
-        ) from exc
-
-    return root_scalar, ellipj, ellipk
-
-
 @lru_cache(maxsize=16)
 def _strip_map_parameter_m(rho: float) -> float:
     if rho <= 1.0:
         raise ValueError(f"strip map parameter rho must be > 1: {rho}")
 
-    root_scalar, _, ellipk = _require_scipy_for_strip_map()
+    root_scalar = cast("_RootScalarFn", _scipy_attr("scipy.optimize", "root_scalar"))
+    ellipk = cast("_EllipkFn", _scipy_attr("scipy.special", "ellipk"))
 
-    target = 4.0 * np.log(rho) / np.pi
+    target = 4.0 * log(rho) / np.pi
 
     def f(m: float) -> float:
         return float(ellipk(1.0 - m) / ellipk(m) - target)
@@ -241,23 +275,35 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
     if np.any(np.abs(s) >= 1.0):
         raise ValueError("strip map expects interior nodes, i.e. abs(s) < 1")
 
-    _, ellipj, ellipk = _require_scipy_for_strip_map()
+    ellipj = cast("_EllipjFn", _scipy_attr("scipy.special", "ellipj"))
+    ellipk = cast("_EllipkFn", _scipy_attr("scipy.special", "ellipk"))
 
     m = _strip_map_parameter_m(rho)
-    m4 = m**0.25
+    m4 = sqrt(sqrt(m))
     k = float(ellipk(m))
 
     omega = 2.0 * k * np.arcsin(s) / np.pi
-    sn, cn, dn, _ = ellipj(omega, m)
+    sn_jacobi, cn_jacobi, dn_jacobi, _ = ellipj(omega, m)
+    sn = np.asarray(sn_jacobi, dtype=np.float64)
+    cn = np.asarray(cn_jacobi, dtype=np.float64)
+    dn = np.asarray(dn_jacobi, dtype=np.float64)
 
-    g = np.arctanh(m4 * sn) / np.arctanh(m4)
-    gp = (
-        2.0
-        * k
-        * m4
-        * cn
-        * dn
-        / (np.pi * np.sqrt(1.0 - s**2) * (1.0 - np.sqrt(m) * sn**2) * np.arctanh(m4))
+    g = np.asarray(np.arctanh(m4 * sn) / np.arctanh(m4), dtype=np.float64)
+    gp = np.asarray(
+        (
+            2.0
+            * k
+            * m4
+            * cn
+            * dn
+            / (
+                np.pi
+                * np.sqrt(1.0 - s**2)
+                * (1.0 - np.sqrt(m) * sn**2)
+                * np.arctanh(m4)
+            )
+        ),
+        dtype=np.float64,
     )
 
     return g, gp
@@ -345,6 +391,12 @@ class Transplanted1DQuadrature(Quadrature):
         doi:10.1006/jcph.1993.1044.
     """
 
+    base_quadrature: Quadrature
+    map_name: str
+    strip_rho: float
+    kte_rho: float
+    kte_alpha: float | None
+
     def __init__(
         self,
         quadrature: Quadrature,
@@ -356,10 +408,10 @@ class Transplanted1DQuadrature(Quadrature):
     ) -> None:
         base_nodes = quadrature.nodes
         if base_nodes.ndim == 1:
-            nodes_1d = base_nodes
+            nodes_1d = np.asarray(base_nodes, dtype=np.float64)
             force_dim_axis = False
         elif base_nodes.ndim == 2 and base_nodes.shape[0] == 1:
-            nodes_1d = base_nodes[0]
+            nodes_1d = np.asarray(base_nodes[0], dtype=np.float64)
             force_dim_axis = True
         else:
             raise ValueError(
@@ -376,7 +428,7 @@ class Transplanted1DQuadrature(Quadrature):
         mapped_weights = quadrature.weights * jacobian
 
         if force_dim_axis:
-            mapped_nodes = mapped_nodes.reshape(1, -1)
+            mapped_nodes = np.reshape(mapped_nodes, (1, mapped_nodes.shape[0]))
 
         super().__init__(mapped_nodes, mapped_weights)
 
