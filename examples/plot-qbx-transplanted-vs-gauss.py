@@ -1,31 +1,31 @@
-from functools import lru_cache
-import warnings
+from __future__ import annotations
 
+# pyright: reportMissingImports=false
+import warnings
+from functools import lru_cache
+from itertools import pairwise
+
+import matplotlib.pyplot as plt
+import meshmode.mesh.generation as mgen
 import numpy as np
 import pyopencl as cl
 import pyopencl.tools as cl_tools
 from arraycontext import flatten
-import matplotlib.pyplot as plt
-
-import meshmode.mesh.generation as mgen
-import modepy as mp
-
 from meshmode.discretization import Discretization
 from meshmode.discretization.poly_element import (
     PolynomialGivenNodesElementGroup,
 )
-from modepy.quadrature import Transformed1DQuadrature
-
 from pytential import GeometryCollection, bind, sym
 from pytential.array_context import PyOpenCLArrayContext
 from pytential.qbx import QBXLayerPotentialSource
-
 from scipy.optimize import root_scalar
 from scipy.special import ellipk
-
 from sumpy.expansion.local import LineTaylorLocalExpansion
 from sumpy.kernel import LaplaceKernel
 from sumpy.qbx import LayerPotential
+
+import modepy as mp
+from modepy.quadrature import Transformed1DQuadrature
 
 
 NPANELS, MODE = 8, 8
@@ -137,8 +137,7 @@ def make_mesh_and_t(panel_edges: np.ndarray, npts: int, unit_nodes: np.ndarray):
 
 def source_ds_weights(quad: mp.Quadrature, panel_edges: np.ndarray) -> np.ndarray:
     dtw = np.concatenate([
-        Transformed1DQuadrature(quad, a, b).weights
-        for a, b in zip(panel_edges[:-1], panel_edges[1:], strict=True)
+        Transformed1DQuadrature(quad, a, b).weights for a, b in pairwise(panel_edges)
     ])
     return (2.0 * np.pi) * dtw
 
@@ -168,7 +167,10 @@ def auto_strip_rho(actx, panel_edges: np.ndarray) -> float:
     target_half_width = STRIP_SAFETY * eta_min
     rho = strip_rho_for_half_width(target_half_width)
     print(
-        f"auto strip rho: eta_min={eta_min:.6f}, target_half_width={target_half_width:.6f}, rho={rho:.4f}"
+        "auto strip rho: "
+        f"eta_min={eta_min:.6f}, "
+        f"target_half_width={target_half_width:.6f}, "
+        f"rho={rho:.4f}"
     )
     return rho
 
@@ -209,7 +211,9 @@ def main() -> None:
         STRIP_RHO if STRIP_RHO is not None else auto_strip_rho(actx, panel_edges)
     )
     print(
-        f"using strip rho={strip_rho:.4f} (half-width={strip_half_width(strip_rho):.6f})"
+        "using strip "
+        f"rho={strip_rho:.4f} "
+        f"(half-width={strip_half_width(strip_rho):.6f})"
     )
 
     lknl = LaplaceKernel(2)
