@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import numpy.linalg as la
@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from modepy.typing import ArrayF
+
 
 logger = logging.getLogger(__name__)
 
@@ -128,24 +129,29 @@ def test_transplanted_legendre_gauss_quadrature(map_name: str) -> None:
         force_dim_axis=True,
     )
 
+    base_nodes = cast("ArrayF", np.asarray(base.nodes[0], dtype=np.float64))
+    trans_nodes = cast("ArrayF", np.asarray(transplanted.nodes[0], dtype=np.float64))
+    base_weights = cast("ArrayF", np.asarray(base.weights, dtype=np.float64))
+    trans_weights = cast("ArrayF", np.asarray(transplanted.weights, dtype=np.float64))
+
     assert transplanted.nodes.shape == base.nodes.shape
     assert transplanted.weights.shape == base.weights.shape
 
     from modepy.quadrature.transplanted import map_trefethen_transplant
 
     mapped_nodes, mapped_jacobian = map_trefethen_transplant(
-        base.nodes[0], map_name=map_name
+        base_nodes, map_name=map_name
     )
 
-    assert la.norm(transplanted.nodes[0] - mapped_nodes, np.inf) < 1.0e-14
+    assert la.norm(trans_nodes - mapped_nodes, np.inf) < 1.0e-14
     assert (
-        la.norm(transplanted.weights - base.weights * mapped_jacobian, np.inf) < 1.0e-14
+        la.norm(trans_weights - base_weights * mapped_jacobian, np.inf) < 1.0e-14
     )
 
     # Sausage maps are polynomial maps, so integrating constants
     # should remain exact.
     if map_name.startswith("sausage_d"):
-        err = abs(np.sum(transplanted.weights) - 2.0)
+        err = abs(float(np.sum(trans_weights)) - 2.0)
         assert err < 1.0e-14
 
 
@@ -159,9 +165,12 @@ def test_transplanted_strip_map_quadrature() -> None:
         force_dim_axis=True,
     )
 
-    assert np.all(np.diff(transplanted.nodes[0]) > 0)
-    assert np.all(transplanted.weights > 0)
-    assert abs(np.sum(transplanted.weights) - 2.0) < 1.0e-9
+    strip_nodes = cast("ArrayF", np.asarray(transplanted.nodes[0], dtype=np.float64))
+    strip_weights = cast("ArrayF", np.asarray(transplanted.weights, dtype=np.float64))
+
+    assert np.all(np.diff(strip_nodes) > 0)
+    assert np.all(strip_weights > 0)
+    assert abs(float(np.sum(strip_weights)) - 2.0) < 1.0e-9
 
 
 def test_transplanted_strip_map_rejects_endpoint_rules() -> None:
