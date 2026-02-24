@@ -357,4 +357,9 @@ def _quadrature_for_tp(
 
 # }}}
 
+from modepy.quadrature.transplanted import (
+    Transplanted1DQuadrature,
+    TransplantedLegendreGaussQuadrature,
+)
+
 # vim: foldmethod=marker

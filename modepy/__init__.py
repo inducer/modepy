@@ -71,6 +71,8 @@ from modepy.quadrature import (
     Quadrature,
     QuadratureRuleUnavailable,
     TensorProductQuadrature,
+    Transplanted1DQuadrature,
+    TransplantedLegendreGaussQuadrature,
     ZeroDimensionalQuadrature,
     quadrature_for_space,
 )
@@ -137,6 +139,8 @@ __all__ = [
     "TensorProductQuadrature",
     "TensorProductShape",
     "TensorProductSpace",
+    "Transplanted1DQuadrature",
+    "TransplantedLegendreGaussQuadrature",
     "VioreanuRokhlinSimplexQuadrature",
     "WitherdenVincentQuadrature",
     "XiaoGimbutasSimplexQuadrature",
