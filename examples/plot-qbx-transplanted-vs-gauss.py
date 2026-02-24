@@ -2,9 +2,11 @@ from __future__ import annotations
 
 # Optional QBX dependencies (meshmode/pytential/sumpy) are not installed in CI.
 # pyright: basic, reportMissingImports=false
+import tempfile
 import warnings
 from functools import lru_cache
 from itertools import pairwise
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import meshmode.mesh.generation as mgen
@@ -40,7 +42,7 @@ MAPS = [
     ("sausage_d5", "sausage_d5"),
     ("sausage_d9", "sausage_d9"),
 ]
-OUT = "/tmp/qbx-transplanted-vs-gauss-2d.png"
+OUT = Path(tempfile.gettempdir()) / "qbx-transplanted-vs-gauss-2d.png"
 
 STRIP_RHO: float | None = None
 STRIP_SAFETY = 0.5
