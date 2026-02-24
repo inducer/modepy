@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-# pyright: reportMissingImports=false
+# Optional QBX dependencies (meshmode/pytential/sumpy) are not installed in CI.
+# pyright: basic, reportMissingImports=false
 import warnings
 from functools import lru_cache
 from itertools import pairwise
