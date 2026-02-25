@@ -92,7 +92,9 @@ def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
 
 def _arcsin_taylor_coefficients(max_odd_degree: int) -> tuple[float, ...]:
     if max_odd_degree < 1 or max_odd_degree % 2 == 0:
-        raise ValueError(f"sausage degree must be positive and odd: {max_odd_degree}")
+        raise ValueError(
+            f"sausage must use positive odd degree, got: {max_odd_degree}"
+        )
 
     nterms = (max_odd_degree + 1) // 2
     coeffs = [1.0]
@@ -128,23 +130,6 @@ def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
     return g / denom, gp / denom
 
 
-def _default_kte_alpha(rho: float) -> float:
-    if rho <= 1.0:
-        raise ValueError(f"KTE parameter rho must be > 1: {rho}")
-
-    return float(2.0 / (rho + 1.0 / rho))
-
-
-def _kte_alpha(*, rho: float, alpha: float | None) -> float:
-    if alpha is None:
-        alpha = _default_kte_alpha(rho)
-
-    if not (0.0 < alpha < 1.0) or not isfinite(alpha):
-        raise ValueError(f"KTE parameter alpha must satisfy 0 < alpha < 1: {alpha}")
-
-    return float(alpha)
-
-
 def map_kosloff_tal_ezer(
     s: ArrayF,
     *,
@@ -176,7 +161,16 @@ def map_kosloff_tal_ezer(
         Computational Physics 104(2), 457-469 (1993),
         doi:10.1006/jcph.1993.1044.
     """
-    alpha = _kte_alpha(rho=rho, alpha=alpha)
+    if alpha is None:
+        if rho <= 1.0:
+            raise ValueError(f"KTE parameter rho must be > 1: {rho}")
+
+        alpha = float(2.0 / (rho + 1.0 / rho))
+
+    if not (0.0 < alpha < 1.0) or not isfinite(alpha):
+        raise ValueError(f"KTE parameter alpha must satisfy 0 < alpha < 1: {alpha}")
+
+    alpha = float(alpha)
     denom = asin(alpha)
 
     g = np.asarray(np.arcsin(alpha * s) / denom, dtype=np.float64)
