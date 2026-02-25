@@ -111,8 +111,6 @@ from modepy.version import VERSION_TEXT as __version__  # noqa: N811
 
 
 GaussLegendreQuadrature = LegendreGaussQuadrature
-Transplanted1DQuadrature = transplanted_1d_quadrature
-TransplantedLegendreGaussQuadrature = transplanted_legendre_gauss_quadrature
 
 __all__ = [
     "PN",
@@ -143,8 +141,6 @@ __all__ = [
     "TensorProductQuadrature",
     "TensorProductShape",
     "TensorProductSpace",
-    "Transplanted1DQuadrature",
-    "TransplantedLegendreGaussQuadrature",
     "VioreanuRokhlinSimplexQuadrature",
     "WitherdenVincentQuadrature",
     "XiaoGimbutasSimplexQuadrature",
