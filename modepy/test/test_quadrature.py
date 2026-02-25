@@ -46,8 +46,9 @@ def test_transformed_quadrature():
 
     def gaussian_density(x, mu, sigma):
         return (
-            1 / (sigma * np.sqrt(2*np.pi))
-            * np.exp(-np.sum((x-mu)**2, axis=0) / (2 * sigma**2))
+            1
+            / (sigma * np.sqrt(2 * np.pi))
+            * np.exp(-np.sum((x - mu) ** 2, axis=0) / (2 * sigma**2))
         )
 
     from modepy.quadrature import Transformed1DQuadrature
@@ -56,8 +57,10 @@ def test_transformed_quadrature():
     mu = 17
     sigma = 12
     tq = Transformed1DQuadrature(
-            LegendreGaussQuadrature(20, force_dim_axis=True),
-            left=mu - 6*sigma, right=mu + 6*sigma)
+        LegendreGaussQuadrature(20, force_dim_axis=True),
+        left=mu - 6 * sigma,
+        right=mu + 6 * sigma,
+    )
 
     result = tq(lambda x: gaussian_density(x, mu, sigma))
     assert abs(result - 1) < 1.0e-9
@@ -72,10 +75,13 @@ else:
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
-@pytest.mark.parametrize("quad_type", [
-                             mp.LegendreGaussQuadrature,
-                             mp.LegendreGaussLobattoQuadrature,
-                         ])
+@pytest.mark.parametrize(
+    "quad_type",
+    [
+        mp.LegendreGaussQuadrature,
+        mp.LegendreGaussLobattoQuadrature,
+    ],
+)
 def test_gauss_quadrature(backend, quad_type):
     for s in range(9 + 1):
         if quad_type == mp.LegendreGaussLobattoQuadrature and s == 0:
@@ -84,13 +90,14 @@ def test_gauss_quadrature(backend, quad_type):
 
         quad = quad_type(s, backend=backend, force_dim_axis=True)
 
-        assert quad.nodes.shape[1] == s+1
+        assert quad.nodes.shape[1] == s + 1
         for deg in range(quad.exact_to + 1):
+
             def f(x):
                 return np.sum(x**deg, axis=0)  # noqa: B023
 
             i_f = quad(f)
-            i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
+            i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))
             err = abs(i_f - i_f_true)
             assert err < 3.0e-15, (s, deg, err, i_f, i_f_true)
 
@@ -100,30 +107,38 @@ def test_clenshaw_curtis_quadrature() -> None:
 
     for s in range(1, 9 + 1):
         quad = ClenshawCurtisQuadrature(s, force_dim_axis=True)
-        assert quad.nodes.shape[1] == s+1
+        assert quad.nodes.shape[1] == s + 1
         for deg in range(quad.exact_to + 1):
+
             def f(x):
                 return x**deg  # noqa: B023
 
             i_f = quad(f)
-            i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
+            i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))
             err = abs(i_f - i_f_true)
             assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
 
 
-@pytest.mark.parametrize("map_name", [
-    "identity",
-    "sausage_d5",
-    "sausage_d9",
-    "sausage_d17",
-    "kte",
-    "kosloff_tal_ezer",
-])
-def test_transplanted_legendre_gauss_quadrature(map_name: str) -> None:
+@pytest.mark.parametrize(
+    ("map_name", "sausage_degree"),
+    [
+        ("identity", 9),
+        ("sausage", 5),
+        ("sausage", 9),
+        ("sausage", 17),
+        ("kte", 9),
+        ("kosloff_tal_ezer", 9),
+    ],
+)
+def test_transplanted_legendre_gauss_quadrature(
+    map_name: str,
+    sausage_degree: int,
+) -> None:
     base = mp.LegendreGaussQuadrature(15, force_dim_axis=True)
-    transplanted = mp.TransplantedLegendreGaussQuadrature(
+    transplanted = mp.transplanted_legendre_gauss_quadrature(
         15,
         map_name=map_name,
+        sausage_degree=sausage_degree,
         force_dim_axis=True,
     )
 
@@ -138,17 +153,17 @@ def test_transplanted_legendre_gauss_quadrature(map_name: str) -> None:
     from modepy.quadrature.transplanted import map_trefethen_transplant
 
     mapped_nodes, mapped_jacobian = map_trefethen_transplant(
-        base_nodes, map_name=map_name
+        base_nodes,
+        map_name=map_name,
+        sausage_degree=sausage_degree,
     )
 
     assert la.norm(trans_nodes - mapped_nodes, np.inf) < 1.0e-14
-    assert (
-        la.norm(trans_weights - base_weights * mapped_jacobian, np.inf) < 1.0e-14
-    )
+    assert la.norm(trans_weights - base_weights * mapped_jacobian, np.inf) < 1.0e-14
 
     # Sausage maps are polynomial maps, so integrating constants
     # should remain exact.
-    if map_name.startswith("sausage_d"):
+    if map_name == "sausage":
         err = abs(float(np.sum(trans_weights)) - 2.0)
         assert err < 1.0e-14
 
@@ -156,7 +171,7 @@ def test_transplanted_legendre_gauss_quadrature(map_name: str) -> None:
 def test_transplanted_strip_map_quadrature() -> None:
     pytest.importorskip("scipy")
 
-    transplanted = mp.TransplantedLegendreGaussQuadrature(
+    transplanted = mp.transplanted_legendre_gauss_quadrature(
         32,
         map_name="strip",
         strip_rho=1.4,
@@ -175,15 +190,18 @@ def test_transplanted_strip_map_rejects_endpoint_rules() -> None:
     pytest.importorskip("scipy")
 
     with pytest.raises(ValueError, match="interior nodes"):
-        mp.Transplanted1DQuadrature(
+        mp.transplanted_1d_quadrature(
             mp.ClenshawCurtisQuadrature(5, force_dim_axis=True), map_name="strip"
         )
 
 
 def test_transplanted_sausage_map_rejects_even_degrees() -> None:
     with pytest.raises(ValueError, match="positive odd degree"):
-        mp.TransplantedLegendreGaussQuadrature(
-            8, map_name="sausage_d4", force_dim_axis=True
+        mp.transplanted_legendre_gauss_quadrature(
+            8,
+            map_name="sausage",
+            sausage_degree=4,
+            force_dim_axis=True,
         )
 
 
@@ -194,7 +212,11 @@ def test_transplanted_sausage_map_name_matches_direct_map() -> None:
 
     for degree in [5, 9, 17]:
         g, gp = map_sausage(s, degree=degree)
-        g_ref, gp_ref = map_trefethen_transplant(s, map_name=f"sausage_d{degree}")
+        g_ref, gp_ref = map_trefethen_transplant(
+            s,
+            map_name="sausage",
+            sausage_degree=degree,
+        )
         assert la.norm(g - g_ref, np.inf) < 1.0e-15
         assert la.norm(gp - gp_ref, np.inf) < 1.0e-15
 
@@ -243,17 +265,20 @@ def test_fejer_quadrature(kind: int) -> None:
             return x**deg  # noqa: B023
 
         i_f = quad(f)
-        i_f_true = 1 / (deg+1) * (1 - (-1)**(deg + 1))
+        i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))
         err = abs(i_f - i_f_true)
         assert err < 2.0e-15, (s, deg, err, i_f, i_f_true)
 
 
-@pytest.mark.parametrize(("quad_class", "highest_order"), [
-    (mp.XiaoGimbutasSimplexQuadrature, None),
-    (mp.JaskowiecSukumarQuadrature, None),
-    (mp.VioreanuRokhlinSimplexQuadrature, None),
-    (mp.GrundmannMoellerSimplexQuadrature, 3),
-    ])
+@pytest.mark.parametrize(
+    ("quad_class", "highest_order"),
+    [
+        (mp.XiaoGimbutasSimplexQuadrature, None),
+        (mp.JaskowiecSukumarQuadrature, None),
+        (mp.VioreanuRokhlinSimplexQuadrature, None),
+        (mp.GrundmannMoellerSimplexQuadrature, 3),
+    ],
+)
 @pytest.mark.parametrize("dim", [2, 3])
 def test_simplex_quadrature(quad_class, highest_order, dim) -> None:
     """Check that quadratures on simplices works as advertised"""
@@ -279,6 +304,7 @@ def test_simplex_quadrature(quad_class, highest_order, dim) -> None:
 
         if 0:
             import matplotlib.pyplot as pt
+
             pt.plot(quad.nodes[0], quad.nodes[1])
             pt.show()
 
@@ -297,10 +323,13 @@ def test_simplex_quadrature(quad_class, highest_order, dim) -> None:
 
 
 @pytest.mark.parametrize("dim", [2, 3])
-@pytest.mark.parametrize(("quad_class", "max_order"), [
-    (mp.WitherdenVincentQuadrature, np.inf),
-    (mp.LegendreGaussTensorProductQuadrature, 6),
-    ])
+@pytest.mark.parametrize(
+    ("quad_class", "max_order"),
+    [
+        (mp.WitherdenVincentQuadrature, np.inf),
+        (mp.LegendreGaussTensorProductQuadrature, 6),
+    ],
+)
 def test_hypercube_quadrature(dim, quad_class, max_order):
     from pytools import (
         generate_nonnegative_integer_tuples_summing_to_at_most as gnitstam,
@@ -314,8 +343,9 @@ def test_hypercube_quadrature(dim, quad_class, max_order):
         int_exact = 2**dim * f.hypercube_integral()
 
         error = abs(int_approx - int_exact) / abs(int_exact)
-        logger.info("%s: %.5e %.5e / rel error %.5e",
-                comb, int_approx, int_exact, error)
+        logger.info(
+            "%s: %.5e %.5e / rel error %.5e", comb, int_approx, int_exact, error
+        )
 
         return error
 
@@ -329,8 +359,9 @@ def test_hypercube_quadrature(dim, quad_class, max_order):
 
         assert np.all(quad.weights > 0)
 
-        logger.info("quadrature: %s %d %d",
-                quad_class.__name__.lower(), order, quad.exact_to)
+        logger.info(
+            "quadrature: %s %d %d", quad_class.__name__.lower(), order, quad.exact_to
+        )
         for comb in gnitstam(quad.exact_to, dim):
             assert _check_monomial(quad, comb) < 5.0e-15
 
@@ -354,6 +385,7 @@ def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
     assert basis.orthonormality_weight() == 1
 
     from math import factorial
+
     shape_volume = 2**shape.dim / factorial(shape.dim)
 
     # integrals are orthogonal to the constant
@@ -363,8 +395,10 @@ def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
 
     newton_cotes_weights = la.solve(vdm.T, integrals)
 
-    assert (la.norm(newton_cotes_weights - mass_weights, np.inf)
-            / la.norm(newton_cotes_weights, np.inf)) < 1e-13
+    assert (
+        la.norm(newton_cotes_weights - mass_weights, np.inf)
+        / la.norm(newton_cotes_weights, np.inf)
+    ) < 1e-13
 
 
 # You can test individual routines by typing
@@ -372,10 +406,12 @@ def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         exec(sys.argv[1])
     else:
         from pytest import main
+
         main([__file__])
 
 # vim: fdm=marker
