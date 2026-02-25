@@ -71,8 +71,6 @@ from modepy.quadrature import (
     Quadrature,
     QuadratureRuleUnavailable,
     TensorProductQuadrature,
-    Transplanted1DQuadrature,
-    TransplantedLegendreGaussQuadrature,
     ZeroDimensionalQuadrature,
     quadrature_for_space,
 )
@@ -90,6 +88,10 @@ from modepy.quadrature.jacobi_gauss import (
     LegendreGaussQuadrature,
 )
 from modepy.quadrature.jaskowiec_sukumar import JaskowiecSukumarQuadrature
+from modepy.quadrature.transplanted import (
+    transplanted_1d_quadrature,
+    transplanted_legendre_gauss_quadrature,
+)
 from modepy.quadrature.vioreanu_rokhlin import VioreanuRokhlinSimplexQuadrature
 from modepy.quadrature.witherden_vincent import WitherdenVincentQuadrature
 from modepy.quadrature.xiao_gimbutas import XiaoGimbutasSimplexQuadrature
@@ -109,6 +111,8 @@ from modepy.version import VERSION_TEXT as __version__  # noqa: N811
 
 
 GaussLegendreQuadrature = LegendreGaussQuadrature
+Transplanted1DQuadrature = transplanted_1d_quadrature
+TransplantedLegendreGaussQuadrature = transplanted_legendre_gauss_quadrature
 
 __all__ = [
     "PN",
@@ -181,6 +185,8 @@ __all__ = [
     "submesh_for_shape",
     "symbolicize_function",
     "tensor_product_nodes",
+    "transplanted_1d_quadrature",
+    "transplanted_legendre_gauss_quadrature",
     "unit_vertices_for_shape",
     "vandermonde",
     "warp_and_blend_nodes",

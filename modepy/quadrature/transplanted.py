@@ -7,11 +7,11 @@ r"""
 Transplanted quadrature applies a smooth map :math:`x=g(s)` to an existing
 one-dimensional rule on :math:`[-1,1]`.
 
-Given base nodes/weights :math:`(s_i, w_i)`, the transplanted rule is
+Given base nodes/weights :math:`(s_i, w_i^{(s)})`, the transplanted rule is
 
 .. math::
 
-    x_i = g(s_i), \qquad \tilde w_i = w_i g'(s_i),
+    x_i = g(s_i), \qquad \tilde w_i = w_i^{(s)} g'(s_i),
 
 so that
 
@@ -20,38 +20,8 @@ so that
     \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s)) g'(s)\,ds
     \approx \sum_i \tilde w_i f(x_i).
 
-The map dispatcher :func:`map_trefethen_transplant` recognizes these map names:
-
-* ``"identity"``
-* ``"sausage_d{odd}"`` (for example ``"sausage_d5"``, ``"sausage_d9"``,
-  ``"sausage_d17"``)
-* ``"kte"`` or ``"kosloff_tal_ezer"``
-* ``"strip"``
-
-Parameter notes:
-
-* ``strip_rho`` controls the strip-map conformal parameter, with ``strip_rho > 1``.
-* ``kte_rho`` controls the default KTE parameterization through
-  :math:`\alpha = 2 / (\rho + \rho^{-1})`, with ``kte_rho > 1``.
-* ``kte_alpha`` explicitly sets :math:`\alpha` (must satisfy ``0 < kte_alpha < 1``)
-  and overrides ``kte_rho``.
-
-.. note::
-
-    The strip map requires interior nodes (``abs(s) < 1``). Endpoint-including
-    base rules (for example Gauss-Lobatto or Clenshaw-Curtis) are therefore not
-    valid with ``map_name="strip"``.
-
-.. autofunction:: map_identity
-.. autofunction:: map_sausage
-.. autofunction:: map_kosloff_tal_ezer
-.. autofunction:: map_strip
-.. autofunction:: map_trefethen_transplant
-
-.. currentmodule:: modepy
-
-.. autoclass:: Transplanted1DQuadrature
-.. autoclass:: TransplantedLegendreGaussQuadrature
+For map names, parameters, examples, and references, see
+:ref:`quadrature-transplanted-1d`.
 """
 
 from functools import lru_cache
@@ -117,7 +87,7 @@ def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
 
     Returns ``(s, 1)``.
     """
-    return np.array(s, dtype=np.float64, copy=True), np.ones_like(s, dtype=np.float64)
+    return np.array(s, copy=True), np.ones_like(s)
 
 
 def _arcsin_taylor_coefficients(max_odd_degree: int) -> tuple[float, ...]:
@@ -145,10 +115,10 @@ def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
     :arg degree: positive odd degree in ``{1, 3, 5, ...}``.
     """
     coeffs = _arcsin_taylor_coefficients(degree)
-    denom = float(sum(coeffs))
+    denom = np.asarray(sum(coeffs), dtype=s.dtype)
 
-    g = np.zeros_like(s, dtype=np.float64)
-    gp = np.zeros_like(s, dtype=np.float64)
+    g = np.zeros_like(s)
+    gp = np.zeros_like(s)
 
     for k, c_k in enumerate(coeffs):
         power = 2 * k + 1
@@ -210,9 +180,23 @@ def map_kosloff_tal_ezer(
     denom = asin(alpha)
 
     g = np.asarray(np.arcsin(alpha * s) / denom, dtype=np.float64)
-    gp = np.asarray(alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2)), dtype=np.float64)
+    gp = np.asarray(
+        alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2)),
+        dtype=np.float64,
+    )
 
     return g, gp
+
+
+def _map_preserves_exact_to(map_name: str, *, sausage_degree: int) -> bool:
+    if map_name == "identity":
+        return True
+
+    legacy_sausage_degree = _sausage_degree_from_map_name(map_name)
+    if legacy_sausage_degree is not None:
+        return legacy_sausage_degree == 1
+
+    return map_name == "sausage" and sausage_degree == 1
 
 
 def _sausage_degree_from_map_name(map_name: str) -> int | None:
@@ -225,22 +209,7 @@ def _sausage_degree_from_map_name(map_name: str) -> int | None:
             f"unsupported sausage map '{map_name}'. Expected format: sausage_d{{odd}}"
         )
 
-    degree = int(degree_text)
-    if degree < 1 or degree % 2 == 0 or not isfinite(degree):
-        raise ValueError(
-            f"unsupported sausage degree in '{map_name}'. "
-            "Expected a positive odd degree, e.g. sausage_d5"
-        )
-
-    return degree
-
-
-def _map_preserves_exact_to(map_name: str) -> bool:
-    if map_name == "identity":
-        return True
-
-    sausage_degree = _sausage_degree_from_map_name(map_name)
-    return sausage_degree == 1
+    return int(degree_text)
 
 
 @lru_cache(maxsize=16)
@@ -321,6 +290,7 @@ def map_trefethen_transplant(
     s: ArrayF,
     map_name: str,
     *,
+    sausage_degree: int = 9,
     strip_rho: float = 1.4,
     kte_rho: float = 1.4,
     kte_alpha: float | None = None,
@@ -328,8 +298,9 @@ def map_trefethen_transplant(
     """Map 1D nodes to a Trefethen transplanted quadrature rule.
 
     :arg s: nodes on :math:`[-1, 1]`.
-    :arg map_name: one of ``identity``, ``sausage_d{odd}``, ``kte``,
+    :arg map_name: one of ``identity``, ``sausage``, ``kte``,
         ``kosloff_tal_ezer``, ``strip``.
+    :arg sausage_degree: odd polynomial degree for ``map_name="sausage"``.
     :arg strip_rho: strip-map parameter for ``map_name="strip"``.
     :arg kte_rho: KTE parameter for ``map_name in {"kte", "kosloff_tal_ezer"}``
         when ``kte_alpha`` is not supplied.
@@ -340,27 +311,21 @@ def map_trefethen_transplant(
     The supported maps are:
 
     * ``identity``: :func:`map_identity`
-    * ``sausage_d{odd}``: :func:`map_sausage`
+    * ``sausage``: :func:`map_sausage`
+    * ``sausage_d{odd}`` (legacy alias): :func:`map_sausage`
     * ``kte`` / ``kosloff_tal_ezer``: :func:`map_kosloff_tal_ezer`
     * ``strip``: :func:`map_strip`
 
-    Reference:
-        N. Hale and L. N. Trefethen, "New Quadrature Formulas from
-        Conformal Maps," SIAM Journal on Numerical Analysis 46(2),
-        930-948 (2008),
-        doi:10.1137/07068607X.
-
-        D. Kosloff and H. Tal-Ezer, "A Modified Chebyshev Pseudospectral
-        Method with an O(N^{-1}) Time Step Restriction," Journal of
-        Computational Physics 104(2), 457-469 (1993),
-        doi:10.1006/jcph.1993.1044.
     """
     if map_name == "identity":
         return map_identity(s)
 
-    sausage_degree = _sausage_degree_from_map_name(map_name)
-    if sausage_degree is not None:
+    if map_name == "sausage":
         return map_sausage(s, sausage_degree)
+
+    legacy_sausage_degree = _sausage_degree_from_map_name(map_name)
+    if legacy_sausage_degree is not None:
+        return map_sausage(s, legacy_sausage_degree)
 
     if map_name == "strip":
         return map_strip(s, rho=strip_rho)
@@ -371,11 +336,19 @@ def map_trefethen_transplant(
     raise ValueError(
         "unsupported map_name "
         f"'{map_name}'. Expected one of: "
-        "identity, sausage_d{odd}, kte, kosloff_tal_ezer, strip"
+        "identity, sausage, sausage_d{odd}, kte, kosloff_tal_ezer, strip"
     )
 
 
-class Transplanted1DQuadrature(Quadrature):
+def transplanted_1d_quadrature(
+    quadrature: Quadrature,
+    map_name: str = "sausage",
+    *,
+    sausage_degree: int = 9,
+    strip_rho: float = 1.4,
+    kte_rho: float = 1.4,
+    kte_alpha: float | None = None,
+) -> Quadrature:
     r"""Map an existing 1D quadrature rule using a Trefethen transplant map.
 
     The transformed rule approximates
@@ -386,92 +359,65 @@ class Transplanted1DQuadrature(Quadrature):
 
     by mapping existing nodes :math:`s_i` and scaling existing weights :math:`w_i`
     with :math:`g'(s_i)`.
-
-    Reference:
-        N. Hale and L. N. Trefethen, "New Quadrature Formulas from
-        Conformal Maps," SIAM Journal on Numerical Analysis 46(2),
-        930-948 (2008),
-        doi:10.1137/07068607X.
-
-        D. Kosloff and H. Tal-Ezer, "A Modified Chebyshev Pseudospectral
-        Method with an O(N^{-1}) Time Step Restriction," Journal of
-        Computational Physics 104(2), 457-469 (1993),
-        doi:10.1006/jcph.1993.1044.
     """
-
-    base_quadrature: Quadrature
-    map_name: str
-    strip_rho: float
-    kte_rho: float
-    kte_alpha: float | None
-
-    def __init__(
-        self,
-        quadrature: Quadrature,
-        map_name: str = "sausage_d9",
-        *,
-        strip_rho: float = 1.4,
-        kte_rho: float = 1.4,
-        kte_alpha: float | None = None,
-    ) -> None:
-        base_nodes = quadrature.nodes
-        if base_nodes.ndim == 1:
-            nodes_1d = np.asarray(base_nodes, dtype=np.float64)
-            force_dim_axis = False
-        elif base_nodes.ndim == 2 and base_nodes.shape[0] == 1:
-            nodes_1d = np.asarray(base_nodes[0], dtype=np.float64)
-            force_dim_axis = True
-        else:
-            raise ValueError(
-                "Transplanted1DQuadrature requires a one-dimensional base quadrature"
-            )
-
-        mapped_nodes, jacobian = map_trefethen_transplant(
-            nodes_1d,
-            map_name=map_name,
-            strip_rho=strip_rho,
-            kte_rho=kte_rho,
-            kte_alpha=kte_alpha,
+    base_nodes = quadrature.nodes
+    if base_nodes.ndim == 1:
+        nodes_1d = np.asarray(base_nodes)
+        force_dim_axis = False
+    elif base_nodes.ndim == 2 and base_nodes.shape[0] == 1:
+        nodes_1d = cast("ArrayF", base_nodes[0])
+        force_dim_axis = True
+    else:
+        raise ValueError(
+            "transplanted_1d_quadrature requires a one-dimensional base quadrature"
         )
-        mapped_weights = quadrature.weights * jacobian
 
-        if force_dim_axis:
-            mapped_nodes = np.reshape(mapped_nodes, (1, mapped_nodes.shape[0]))
+    mapped_nodes, jacobian = map_trefethen_transplant(
+        nodes_1d,
+        map_name=map_name,
+        sausage_degree=sausage_degree,
+        strip_rho=strip_rho,
+        kte_rho=kte_rho,
+        kte_alpha=kte_alpha,
+    )
+    mapped_weights = quadrature.weights * jacobian
 
-        exact_to = quadrature._exact_to if _map_preserves_exact_to(map_name) else None
-        super().__init__(mapped_nodes, mapped_weights, exact_to=exact_to)
+    if force_dim_axis:
+        mapped_nodes = np.reshape(mapped_nodes, (1, mapped_nodes.shape[0]))
 
-        self.base_quadrature = quadrature
-        self.map_name = map_name
-        self.strip_rho = strip_rho
-        self.kte_rho = kte_rho
-        self.kte_alpha = kte_alpha
+    exact_to = None
+    if _map_preserves_exact_to(map_name, sausage_degree=sausage_degree):
+        try:
+            exact_to = quadrature.exact_to
+        except AttributeError:
+            exact_to = None
+
+    return Quadrature(mapped_nodes, mapped_weights, exact_to=exact_to)
 
 
-class TransplantedLegendreGaussQuadrature(Transplanted1DQuadrature):
+def transplanted_legendre_gauss_quadrature(
+    n: int,
+    map_name: str = "sausage",
+    *,
+    sausage_degree: int = 9,
+    strip_rho: float = 1.4,
+    kte_rho: float = 1.4,
+    kte_alpha: float | None = None,
+    backend: str | None = None,
+    force_dim_axis: bool = False,
+) -> Quadrature:
     r"""Legendre-Gauss quadrature transplanted by a Trefethen map."""
+    from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
-    def __init__(
-        self,
-        N: int,  # noqa: N803
-        map_name: str = "sausage_d9",
-        *,
-        strip_rho: float = 1.4,
-        kte_rho: float = 1.4,
-        kte_alpha: float | None = None,
-        backend: str | None = None,
-        force_dim_axis: bool = False,
-    ) -> None:
-        from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
-
-        super().__init__(
-            LegendreGaussQuadrature(
-                N,
-                backend=backend,
-                force_dim_axis=force_dim_axis,
-            ),
-            map_name=map_name,
-            strip_rho=strip_rho,
-            kte_rho=kte_rho,
-            kte_alpha=kte_alpha,
-        )
+    return transplanted_1d_quadrature(
+        LegendreGaussQuadrature(
+            n,
+            backend=backend,
+            force_dim_axis=force_dim_axis,
+        ),
+        map_name=map_name,
+        sausage_degree=sausage_degree,
+        strip_rho=strip_rho,
+        kte_rho=kte_rho,
+        kte_alpha=kte_alpha,
+    )
