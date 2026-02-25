@@ -44,11 +44,11 @@ logger = logging.getLogger(__name__)
 def test_transformed_quadrature():
     """Test 1D quadrature on arbitrary intervals"""
 
-    def gaussian_density(x, mu, sigma):
-        return (
-            1
-            / (sigma * np.sqrt(2 * np.pi))
-            * np.exp(-np.sum((x - mu) ** 2, axis=0) / (2 * sigma**2))
+    def gaussian_density(x: ArrayF, mu: float, sigma: float) -> ArrayF:
+        sq_dist = cast("ArrayF", np.sum((x - mu) ** 2, axis=0))
+        return cast(
+            "ArrayF",
+            1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-sq_dist / (2 * sigma**2)),
         )
 
     from modepy.quadrature import Transformed1DQuadrature
@@ -337,10 +337,14 @@ def test_hypercube_quadrature(dim, quad_class, max_order):
 
     from modepy.tools import Monomial
 
-    def _check_monomial(quad, comb):
+    def _check_monomial(quad: mp.Quadrature, comb: tuple[int, ...]) -> float:
         f = Monomial(comb)
-        int_approx = quad(f)
-        int_exact = 2**dim * f.hypercube_integral()
+        int_approx_obj = quad(f)
+        if isinstance(int_approx_obj, np.ndarray):
+            int_approx = float(int_approx_obj.item())
+        else:
+            int_approx = float(int_approx_obj)
+        int_exact = cast("float", 2**dim * f.hypercube_integral())
 
         error = abs(int_approx - int_exact) / abs(int_exact)
         logger.info(
@@ -357,15 +361,15 @@ def test_hypercube_quadrature(dim, quad_class, max_order):
             logger.info("UNAVAILABLE at order %d", order)
             break
 
+        quad_exact_to = cast("int", quad.exact_to)
+
         assert np.all(quad.weights > 0)
 
-        logger.info(
-            "quadrature: %s %d %d", quad_class.__name__.lower(), order, quad.exact_to
-        )
-        for comb in gnitstam(quad.exact_to, dim):
+        logger.info("quadrature: order %d %d", order, quad_exact_to)
+        for comb in gnitstam(quad_exact_to, dim):
             assert _check_monomial(quad, comb) < 5.0e-15
 
-        comb = (0,) * (dim - 1) + (quad.exact_to + 1,)
+        comb = (0,) * (dim - 1) + (quad_exact_to + 1,)
         assert _check_monomial(quad, comb) > 5.0e-15
 
         order += 2
@@ -394,6 +398,8 @@ def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
     integrals[0] = shape_volume * basis.functions[0](np.zeros(shape.dim))
 
     newton_cotes_weights = la.solve(vdm.T, integrals)
+    mass_weights = cast("ArrayF", mass_weights)
+    newton_cotes_weights = cast("ArrayF", newton_cotes_weights)
 
     assert (
         la.norm(newton_cotes_weights - mass_weights, np.inf)
