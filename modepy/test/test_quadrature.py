@@ -352,6 +352,8 @@ def test_hypercube_quadrature(dim: int,
             logger.info("UNAVAILABLE at order %d", order)
             break
 
+        quad_exact_to = cast("int", quad.exact_to)
+
         assert np.all(quad.weights > 0)
 
         logger.info("quadrature: %s %d %d",
@@ -359,7 +361,7 @@ def test_hypercube_quadrature(dim: int,
         for comb in gnitstam(quad.exact_to, dim):
             assert _check_monomial(quad, comb) < 5.0e-15
 
-        comb = (0,) * (dim - 1) + (quad.exact_to + 1,)
+        comb = (0,) * (dim - 1) + (quad_exact_to + 1,)
         assert _check_monomial(quad, comb) > 5.0e-15
 
         order += 2
@@ -388,6 +390,8 @@ def test_mass_quadrature_is_newton_cotes(shape: mp.Shape, order: int) -> None:
     integrals[0] = shape_volume * basis.functions[0](np.zeros(shape.dim))
 
     newton_cotes_weights = la.solve(vdm.T, integrals)
+    mass_weights = cast("ArrayF", mass_weights)
+    newton_cotes_weights = cast("ArrayF", newton_cotes_weights)
 
     assert (
         la.norm(newton_cotes_weights - mass_weights, np.inf)
