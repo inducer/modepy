@@ -36,11 +36,11 @@ QBX_ORDER = 20
 ASSOC_TOL = 0.05
 NPTS = list(range(4, 30))
 MAPS = [
-    ("gauss", None),
-    ("kte", "kte"),
-    ("strip", "strip"),
-    ("sausage_d5", "sausage_d5"),
-    ("sausage_d9", "sausage_d9"),
+    ("gauss", None, None),
+    ("kte", "kte", None),
+    ("strip", "strip", None),
+    ("sausage_d5", "sausage", 5),
+    ("sausage_d9", "sausage", 9),
 ]
 OUT = Path(tempfile.gettempdir()) / "qbx-transplanted-vs-gauss-2d.png"
 
@@ -86,12 +86,18 @@ def kte_alpha_for_rho(rho: float) -> float:
     return float(2.0 / (rho + 1.0 / rho))
 
 
-def make_quad(npts: int, map_name: str | None, strip_rho: float) -> mp.Quadrature:
+def make_quad(
+    npts: int,
+    map_name: str | None,
+    strip_rho: float,
+    sausage_degree: int | None = None,
+) -> mp.Quadrature:
     if map_name is None:
         return mp.LegendreGaussQuadrature(npts - 1, force_dim_axis=True)
-    return mp.TransplantedLegendreGaussQuadrature(
+    return mp.transplanted_legendre_gauss_quadrature(
         npts - 1,
         map_name=map_name,
+        sausage_degree=9 if sausage_degree is None else sausage_degree,
         strip_rho=strip_rho,
         kte_rho=strip_rho,
         force_dim_axis=True,
@@ -184,12 +190,13 @@ def eval_rule(
     panel_edges: np.ndarray,
     npts: int,
     map_name: str | None,
+    sausage_degree: int | None,
     strip_rho: float,
     targets: np.ndarray,
     centers: np.ndarray,
     radii: np.ndarray,
 ) -> np.ndarray:
-    quad = make_quad(npts, map_name, strip_rho)
+    quad = make_quad(npts, map_name, strip_rho, sausage_degree)
     mesh, t_src = make_mesh_and_t(panel_edges, npts, quad.nodes)
     sources = mesh.groups[0].nodes.reshape(2, -1)
     sigma = np.cos(MODE * 2.0 * np.pi * t_src)
@@ -227,8 +234,8 @@ def main() -> None:
     )
 
     orders, totals = [], []
-    errors = {name: [] for name, _ in MAPS}
-    names = [n for n, _ in MAPS]
+    errors = {name: [] for name, _, _ in MAPS}
+    names = [n for n, _, _ in MAPS]
 
     print("QBX convergence on meshmode circle (frozen Gauss targets+centers)")
     print("order  total_nodes  " + "  ".join(f"{n:>10s}" for n in names))
@@ -246,13 +253,14 @@ def main() -> None:
 
             orders.append(npts - 1)
             totals.append(NPANELS * npts)
-            for name, map_name in MAPS:
+            for name, map_name, sausage_degree in MAPS:
                 values = eval_rule(
                     actx,
                     lpot,
                     panel_edges,
                     npts,
                     map_name,
+                    sausage_degree,
                     strip_rho,
                     targets,
                     centers,

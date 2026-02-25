@@ -25,24 +25,26 @@ Clenshaw-Curtis and Fejér quadrature in one dimension
     :members:
     :show-inheritance:
 
+.. _quadrature-transplanted-1d:
+
 Transplanted quadrature in one dimension
 ----------------------------------------
 
 The transplanted maps implemented here include the Hale-Trefethen
 conformal-map family and the Kosloff-Tal-Ezer map.
 
-Given a base rule :math:`(s_i, w_i)` on :math:`[-1,1]`, transplanted quadrature
+Given a base rule :math:`(s_i, w_i^{(s)})` on :math:`[-1,1]`, transplanted quadrature
 uses a map :math:`x=g(s)` to build
 
 .. math::
 
-    x_i = g(s_i), \qquad \tilde w_i = w_i g'(s_i),
+    x_i = g(s_i), \qquad \tilde w_i = w_i^{(s)} g'(s_i),
 
 so that
 
 .. math::
 
-    \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s))g'(s)\,ds
+    \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s))\,g'(s)\,ds
     \approx \sum_i \tilde w_i f(x_i).
 
 Map functions
@@ -60,8 +62,8 @@ Use ``map_name="identity"`` for the unmodified base rule.
 Sausage polynomial maps
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Use ``map_name="sausage_d{odd}"`` (for example ``"sausage_d5"``,
-``"sausage_d9"``, ``"sausage_d17"``) for odd-degree normalized polynomial
+Use ``map_name="sausage"`` with odd ``sausage_degree`` (for example
+``sausage_degree=5``, ``9``, ``17``) for odd-degree normalized polynomial
 truncations of :math:`\arcsin`.
 
 .. autofunction:: map_sausage
@@ -96,22 +98,14 @@ Map dispatcher
 
 .. autofunction:: map_trefethen_transplant
 
-Quadrature classes
-~~~~~~~~~~~~~~~~~~
+Quadrature wrappers
+~~~~~~~~~~~~~~~~~~~
 
 .. currentmodule:: modepy
 
-Transplanted1DQuadrature
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: transplanted_1d_quadrature
 
-.. autoclass:: Transplanted1DQuadrature
-    :show-inheritance:
-
-TransplantedLegendreGaussQuadrature
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: TransplantedLegendreGaussQuadrature
-    :show-inheritance:
+.. autofunction:: transplanted_legendre_gauss_quadrature
 
 Example
 ~~~~~~~
@@ -120,16 +114,17 @@ Example
 
     import modepy as mp
 
-    q_kte = mp.TransplantedLegendreGaussQuadrature(
+    q_kte = mp.transplanted_legendre_gauss_quadrature(
         20,
         map_name="kte",
         kte_rho=1.4,
         force_dim_axis=True,
     )
 
-    q_sausage = mp.TransplantedLegendreGaussQuadrature(
+    q_sausage = mp.transplanted_legendre_gauss_quadrature(
         20,
-        map_name="sausage_d9",
+        map_name="sausage",
+        sausage_degree=9,
         force_dim_axis=True,
     )
 
@@ -137,12 +132,12 @@ References
 ~~~~~~~~~~
 
 * N. Hale and L. N. Trefethen, *New Quadrature Formulas from Conformal
-  Maps*, ``SIAM Journal on Numerical Analysis`` 46(2), 930-948 (2008),
-  doi:10.1137/07068607X.
+  Maps*, *SIAM Journal on Numerical Analysis* 46(2), 930-948 (2008),
+  `doi:10.1137/07068607X <https://doi.org/10.1137/07068607X>`__.
 * D. Kosloff and H. Tal-Ezer, *A Modified Chebyshev Pseudospectral Method
-  with an O(N^{-1}) Time Step Restriction*,
-  ``Journal of Computational Physics`` 104(2), 457-469 (1993),
-  doi:10.1006/jcph.1993.1044.
+  with an :math:`O(N^{-1})` Time Step Restriction*,
+  *Journal of Computational Physics* 104(2), 457-469 (1993),
+  `doi:10.1006/jcph.1993.1044 <https://doi.org/10.1006/jcph.1993.1044>`__.
 
 Quadratures on the simplex
 --------------------------
