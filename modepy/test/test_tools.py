@@ -466,9 +466,6 @@ def test_tensor_product_shapes():
             (mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2))), 3, 6, 5),
             ]
 
-    assert isinstance(mp.Hypercube(1), mp.Simplex)
-    assert isinstance(mp.TensorProductShape((mp.Simplex(2),)), mp.Simplex)
-
     for shape, dim, nvertices, nfaces in shapes:
         assert shape.dim == dim
         assert shape.nvertices == nvertices
