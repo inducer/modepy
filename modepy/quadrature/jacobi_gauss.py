@@ -265,11 +265,17 @@ def jacobi_gauss_lobatto_nodes(
         alpha: float, beta: float, N: int,          # noqa: N803
         backend: str | None = None,
         force_dim_axis: bool = False) -> ArrayF:
-    """Compute the Gauss-Lobatto quadrature
-    nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
-    with the same parameters. There will be *N+1* nodes.
+    """Compute Gauss-Lobatto quadrature nodes associated with
+    :class:`~modepy.JacobiGaussQuadrature` with the same parameters.
 
-    Exact to degree :math:`2N - 1`.
+    This helper returns only the *N+1* nodes; the corresponding
+    Gauss-Lobatto quadrature rule (using these nodes with appropriate
+    weights) is exact for polynomials up to degree :math:`2N - 1`
+    when :math:`N \\ge 1`.
+
+    For :math:`N = 0`, this function returns a single node at ``0``.
+    This degenerate case does not correspond to a Gauss-Lobatto node
+    set with endpoints :math:`\\pm 1`, but is provided for convenience.
     """
 
     x: np.ndarray[tuple[int, ...], np.dtype[np.floating]] = np.zeros((N + 1,))
