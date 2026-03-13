@@ -265,11 +265,17 @@ def jacobi_gauss_lobatto_nodes(
         alpha: float, beta: float, N: int,          # noqa: N803
         backend: str | None = None,
         force_dim_axis: bool = False) -> ArrayF:
-    """Compute the Gauss-Lobatto quadrature
-    nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
-    with the same parameters. There will be *N+1* nodes.
+    """Compute Gauss-Lobatto quadrature nodes associated with
+    :class:`~modepy.JacobiGaussQuadrature` with the same parameters.
 
-    Exact to degree :math:`2N - 3`.
+    This helper returns only the *N+1* nodes; the corresponding
+    Gauss-Lobatto quadrature rule (using these nodes with appropriate
+    weights) is exact for polynomials up to degree :math:`2N - 1`
+    when :math:`N \\ge 1`.
+
+    For :math:`N = 0`, this function returns a single node at ``0``.
+    This degenerate case does not correspond to a Gauss-Lobatto node
+    set with endpoints :math:`\\pm 1`, but is provided for convenience.
     """
 
     x: np.ndarray[tuple[int, ...], np.dtype[np.floating]] = np.zeros((N + 1,))
@@ -313,7 +319,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
 
         I[f] = \int_{-1}^1 f(x) (1 - x)^\alpha (1 + x)^\beta\, \mathrm{d}x,
 
-    There will be *N+1* nodes. Exact to degree :math:`2N - 3`.
+    There will be *N+1* nodes. Exact to degree :math:`2N - 1`.
 
     .. versionadded:: 2024.2
     """
@@ -382,7 +388,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
         if force_dim_axis:
             nodes = nodes.reshape(1, -1)
 
-        super().__init__(nodes, weights, 2*N - 3)
+        super().__init__(nodes, weights, 2*N - 1)
 
 
 class LegendreGaussLobattoQuadrature(JacobiGaussLobattoQuadrature):
