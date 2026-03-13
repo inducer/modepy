@@ -269,7 +269,7 @@ def jacobi_gauss_lobatto_nodes(
     nodes corresponding to the :class:`~modepy.JacobiGaussQuadrature`
     with the same parameters. There will be *N+1* nodes.
 
-    Exact to degree :math:`2N - 3`.
+    Exact to degree :math:`2N - 1`.
     """
 
     x: np.ndarray[tuple[int, ...], np.dtype[np.floating]] = np.zeros((N + 1,))
@@ -313,7 +313,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
 
         I[f] = \int_{-1}^1 f(x) (1 - x)^\alpha (1 + x)^\beta\, \mathrm{d}x,
 
-    There will be *N+1* nodes. Exact to degree :math:`2N - 3`.
+    There will be *N+1* nodes. Exact to degree :math:`2N - 1`.
 
     .. versionadded:: 2024.2
     """
@@ -382,7 +382,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
         if force_dim_axis:
             nodes = nodes.reshape(1, -1)
 
-        super().__init__(nodes, weights, 2*N - 3)
+        super().__init__(nodes, weights, 2*N - 1)
 
 
 class LegendreGaussLobattoQuadrature(JacobiGaussLobattoQuadrature):
