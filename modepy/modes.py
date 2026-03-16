@@ -231,7 +231,7 @@ def grad_jacobi(alpha: float, beta: float, n: int, x: RealValueT) -> RealValueT:
         return math.sqrt(n*(n+alpha+beta+1)) * jacobi(alpha+1, beta+1, n-1, x)
 
 
-def binom(x, y):
+def binom(x: float, y: float) -> float:
     # FIXME This may overflow quickly.
     # mpmath has clever 'gammaprod' pole handling in case that's ever needed:
     # https://github.com/mpmath/mpmath/blob/75a2ed37c4f2c576a9d01d360ee4c94ead57c7ff/mpmath/functions/factorials.py#L61-L65
