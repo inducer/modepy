@@ -420,7 +420,7 @@ class _SimplexFace(Simplex, Face):
 
 
 @unit_vertices_for_shape.register(Simplex)
-def unit_vertices_for_simplex(shape: Simplex):
+def unit_vertices_for_simplex(shape: Simplex) -> ArrayF:
     result = np.empty((shape.dim, shape.dim+1), np.float64)
     result.fill(-1)
 
@@ -489,7 +489,7 @@ class Hypercube(TensorProductShape):
     def __init__(self, dim: int) -> None:
         super().__init__((Simplex(1),) * dim)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Any, ...]:
         # NOTE: ensures Hypercube is picklable
         return (self.dim,)
 
