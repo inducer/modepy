@@ -56,11 +56,11 @@ THE SOFTWARE.
 """
 
 import math
-from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.linalg as la
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from pytools import memoize_method
 
@@ -414,8 +414,10 @@ class Reshapeable(Protocol):
     def shape(self) -> tuple[int, ...]: ...
 
     def reshape(
-            self, *newshape: tuple[int, ...], order: str
-            ) -> Self:
+            self,
+            shape: tuple[int, ...], /, *,
+            order: Literal["A", "C", "F"] | None = "C"
+        ) -> Reshapeable:
         ...
 
 
