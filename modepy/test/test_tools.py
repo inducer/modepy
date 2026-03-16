@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 import logging
 from functools import partial
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import numpy.linalg as la
@@ -33,41 +34,46 @@ import pytest
 import modepy as mp
 
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from modepy.typing import ArrayF
+
 logger = logging.getLogger(__name__)
 
 
 # {{{ modal decay test functions
 
-def jump(where, x):
+def jump(where: float, x: ArrayF) -> ArrayF:
     result = np.empty_like(x)
     result[x >= where] = 1
     result[x < where] = 0
     return result
 
 
-def smooth_jump(where, x):
+def smooth_jump(where: float, x: ArrayF) -> ArrayF:
     return np.arctan(100*(x-where))/(0.5*np.pi)
 
 
-def kink(where, x):
+def kink(where: float, x: ArrayF) -> ArrayF:
     result = np.empty_like(x)
     result[x >= where] = x[x >= where]
     result[x < where] = 0
     return result
 
 
-def c1(where, x):
+def c1(where: float, x: ArrayF) -> ArrayF:
     result = np.empty_like(x)
     result[x >= where] = x[x >= where]**2
     result[x < where] = 0
     return result
 
 
-def sample_polynomial(x):
+def sample_polynomial(x: ArrayF) -> ArrayF:
     return 3*x**2 + 5*x + 3
 
 
-def constant(x):
+def constant(x: ArrayF) -> ArrayF:
     return 5+0*x
 
 # }}}
@@ -92,7 +98,11 @@ def constant(x):
     ("kink-2d", partial(kink, 0), 2, 15, -1.6),
     ("c1-2d", partial(c1, -0.1), 2, 15, -2.3),
     ])
-def test_modal_decay(case_name, test_func, dims, n, expected_expn):
+def test_modal_decay(case_name: str,
+                     test_func: Callable[[ArrayF], ArrayF],
+                     dims: int,
+                     n: int,
+                     expected_expn: float) -> None:
     space = mp.PN(dims, n)
     nodes = mp.warp_and_blend_nodes(dims, n)
     basis = mp.orthonormal_basis_for_space(space, mp.Simplex(dims))
@@ -110,7 +120,7 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     expn = expn[0]
 
     print(f"{case_name}: computed: {expn:g}, expected: {expected_expn:g}")
-    assert abs(expn-expected_expn) < 0.1
+    assert np.abs(expn - expected_expn) < 0.1
 
 
 @pytest.mark.parametrize(("case_name", "test_func", "dims", "n"), [
@@ -122,8 +132,11 @@ def test_modal_decay(case_name, test_func, dims, n, expected_expn):
     ("poly-2d", sample_polynomial, 2, 5),
     ("const-2d", constant, 2, 5),
     ])
-def test_residual_estimation(case_name, test_func, dims, n):
-    def estimate_resid(inner_n):
+def test_residual_estimation(case_name: str,
+                             test_func: Callable[[ArrayF], ArrayF],
+                             dims: int,
+                             n: int) -> None:
+    def estimate_resid(inner_n: int) -> ArrayF:
         nodes = mp.warp_and_blend_nodes(dims, inner_n)
         basis = mp.orthonormal_basis_for_space(
                 mp.PN(dims, inner_n), mp.Simplex(dims))
@@ -148,7 +161,10 @@ def test_residual_estimation(case_name, test_func, dims, n):
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
+def test_resampling_matrix(dims: int,
+                           shape_cls: type[mp.Shape],
+                           ncoarse: int = 5,
+                           nfine: int = 10) -> None:
     shape = shape_cls(dims)
 
     coarse_space = mp.space_for_shape(shape, ncoarse)
@@ -181,7 +197,7 @@ def test_resampling_matrix(dims, shape_cls, ncoarse=5, nfine=10):
     mp.TensorProductSpace((mp.QN(1, 3), mp.QN(1, 5), mp.QN(1, 2))),
     mp.TensorProductSpace((mp.QN(2, 3), mp.QN(1, 2))),
     ])
-def test_non_homogeneous_tensor_product_resampling(space_nh):
+def test_non_homogeneous_tensor_product_resampling(space_nh: mp.FunctionSpace) -> None:
     shape = mp.Hypercube(space_nh.spatial_dim)
     orders_h = 5
 
@@ -224,7 +240,9 @@ def test_non_homogeneous_tensor_product_resampling(space_nh):
 
 # {{{ test_diff_matrix
 
-def _test_diff_matrix(space, shape, rtol=2.0e-4):
+def _test_diff_matrix(space: mp.FunctionSpace,
+                      shape: mp.Shape,
+                      rtol: float = 2.0e-4) -> None:
     nodes = mp.edge_clustered_nodes_for_space(space, shape)
     basis = mp.basis_for_space(space, shape)
 
@@ -239,7 +257,6 @@ def _test_diff_matrix(space, shape, rtol=2.0e-4):
     for i in range(shape.dim):
         error = la.norm(df_dx[i] - df_dx_num[i]) / la.norm(df_dx[i])
         logger.info("error: %.5e", error)
-        print(error)
 
         assert error < rtol, error
 
@@ -249,7 +266,9 @@ def _test_diff_matrix(space, shape, rtol=2.0e-4):
     (mp.Simplex, 5),
     (mp.Hypercube, 5),
     (mp.Hypercube, (6, 7, 5))])
-def test_diff_matrix(dims, shape_cls, order):
+def test_diff_matrix(dims: int,
+                     shape_cls: type[mp.Shape],
+                     order: int | tuple[int, ...]) -> None:
     if isinstance(order, tuple):
         order = order[dims] if dims == 1 else order[:dims]
 
@@ -258,7 +277,7 @@ def test_diff_matrix(dims, shape_cls, order):
     _test_diff_matrix(space, shape)
 
 
-def test_nonhomogeneous_tensor_product_diff_matrix():
+def test_nonhomogeneous_tensor_product_diff_matrix() -> None:
     shape = mp.Hypercube(3)
     space = mp.TensorProductSpace((mp.QN(2, 5), mp.QN(1, 5)))
 
@@ -266,7 +285,7 @@ def test_nonhomogeneous_tensor_product_diff_matrix():
 
 
 @pytest.mark.parametrize("dims", [2, 3])
-def test_diff_matrix_permutation(dims):
+def test_diff_matrix_permutation(dims: int) -> None:
     order = 5
     space = mp.PN(dims, order)
 
@@ -295,7 +314,10 @@ def test_diff_matrix_permutation(dims):
 
 @pytest.mark.parametrize("dims", [2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3):
+def test_nodal_quadrature_bilinear_form_matrix_for_face(
+        dims: int,
+        shape_cls: type[mp.Shape],
+        order: int = 3) -> None:
     vol_shape = shape_cls(dims)
     vol_space = mp.space_for_shape(vol_shape, order)
 
@@ -356,7 +378,11 @@ def test_nodal_quadrature_bilinear_form_matrix_for_face(dims, shape_cls, order=3
 @pytest.mark.parametrize("dims", [1, 2])
 @pytest.mark.parametrize("order", [3, 5, 8])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
+def test_estimate_lebesgue_constant(
+        dims: int,
+        order: int,
+        shape_cls: type[mp.Shape],
+        visualize: bool = False) -> None:
     shape = shape_cls(dims)
     space = mp.space_for_shape(shape, order)
 
@@ -401,7 +427,7 @@ def test_estimate_lebesgue_constant(dims, order, shape_cls, visualize=False):
 # {{{ test_hypercube_submesh
 
 @pytest.mark.parametrize("dims", [2, 3, 4])
-def test_hypercube_submesh(dims, order=3):
+def test_hypercube_submesh(dims: int, order: int = 3) -> None:
     shape = mp.Hypercube(dims)
     space = mp.space_for_shape(shape, order)
 
@@ -431,7 +457,7 @@ def test_hypercube_submesh(dims, order=3):
     mp.Hypercube(2),
     mp.Hypercube(3),
     ])
-def test_normals(shape):
+def test_normals(shape: mp.Shape) -> None:
     vol_vertices = mp.unit_vertices_for_shape(shape)
     vol_centroid = np.mean(vol_vertices, axis=1)
 
@@ -453,7 +479,7 @@ def test_normals(shape):
 
 # {{{ test_tensor_product_shapes
 
-def test_tensor_product_shapes():
+def test_tensor_product_shapes() -> None:
     # shape, dim, nvertices, nfaces
     shapes = [
             (mp.Hypercube(1), 1, 2, 2),
@@ -485,7 +511,7 @@ def test_tensor_product_shapes():
 # {{{ tensor product reshape
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_tensor_product_reshape(dim):
+def test_tensor_product_reshape(dim: int) -> None:
     interval = mp.Simplex(1)
     shape = mp.TensorProductShape((interval,) * dim)
     space = mp.TensorProductSpace(tuple(mp.PN(1, 4+i) for i in range(dim)))
@@ -516,7 +542,7 @@ def test_tensor_product_reshape(dim):
                 nodes_r[0][nid]
 
             for j in range(dim):
-                varies_along_axis_j = np.diff(nodes_r[i], axis=j).any()
+                varies_along_axis_j = np.any(np.diff(nodes_r[i], axis=j))
                 assert varies_along_axis_j == (j == i)
 
             f_ax = np.exp(nodes[i])
@@ -541,7 +567,7 @@ def test_tensor_product_reshape(dim):
 # {{{ test_tensor_product_vdm_dim_by_dim
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_tensor_product_vdm_dim_by_dim(dim):
+def test_tensor_product_vdm_dim_by_dim(dim: int) -> None:
     """Apply tensor product Vandermonde one dimension at a time, check that the
     result matches what's obtained via the whole-space Vandermonde.
     """
@@ -597,7 +623,7 @@ def test_tensor_product_vdm_dim_by_dim(dim):
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("shape_cls", [mp.Simplex, mp.Hypercube])
-def test_shape_pickling(dims, shape_cls):
+def test_shape_pickling(dims: int, shape_cls: type[mp.Shape]) -> None:
     import pickle
 
     shape = shape_cls(dims)
@@ -608,20 +634,20 @@ def test_shape_pickling(dims, shape_cls):
     assert shape == reloaded_shape
 
     pkl2 = pickle.dumps(tp_space)
-    reloaded_tp_space = pickle.loads(pkl2)
+    reloaded_tp_space = cast("mp.FunctionSpace", pickle.loads(pkl2))
     assert tp_space.spatial_dim == reloaded_tp_space.spatial_dim
     assert tp_space.space_dim == reloaded_tp_space.space_dim
 
 # }}}
 
 
-def test_inf():
+def test_inf() -> None:
     from modepy.quadrature import _Inf  # pyright: ignore[reportPrivateUsage]
 
     with pytest.raises(TypeError):
         - _Inf()  # pyright: ignore[reportOperatorIssue, reportUnusedExpression]
 
-    def agree(x: bool, y: bool):
+    def agree(x: bool, y: bool) -> bool:
         if x is NotImplemented or y is NotImplemented:
             return True
         else:

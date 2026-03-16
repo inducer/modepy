@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.linalg as la
@@ -32,10 +33,14 @@ import modepy.nodes as nd
 import modepy.shapes as shp
 
 
+if TYPE_CHECKING:
+    from modepy.typing import ArrayF
+
+
 # {{{ test_barycentric_coordinate_map
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
-def test_barycentric_coordinate_map(dims):
+def test_barycentric_coordinate_map(dims: int) -> None:
     n = 100
     from modepy.tools import (
         barycentric_to_equilateral,
@@ -62,12 +67,12 @@ def test_barycentric_coordinate_map(dims):
 
 # {{{ test_warp
 
-def test_warp():
+def test_warp() -> None:
     """Check some assumptions on the node warp factor calculator"""
     n = 17
     from functools import partial
 
-    def wfc(x):
+    def wfc(x: float) -> float:
         return nd.warp_factor(n, np.array([x]), scaled=False)[0]
 
     assert abs(wfc(-1)) < 1e-12
@@ -83,7 +88,7 @@ def test_warp():
 
 # {{{ test_tri_face_node_distribution
 
-def test_tri_face_node_distribution():
+def test_tri_face_node_distribution() -> None:
     """Test whether the nodes on the faces of the triangle are distributed
     according to the same proportions on each face.
 
@@ -105,7 +110,7 @@ def test_tri_face_node_distribution():
             [i for i, nt in enumerate(node_tuples) if sum(nt) == n]
             ]
 
-    projected_face_points = []
+    projected_face_points: list[ArrayF] = []
     for face_i in faces:
         start = unodes[:, face_i[0]]
         end = unodes[:, face_i[-1]]
@@ -126,7 +131,7 @@ def test_tri_face_node_distribution():
 
 @pytest.mark.parametrize("dims", [1, 2, 3])
 @pytest.mark.parametrize("n", [1, 3, 6])
-def test_simplex_nodes(dims, n):
+def test_simplex_nodes(dims: int, n: int) -> None:
     """Verify basic assumptions on simplex interpolation nodes"""
 
     eps = 1e-10
@@ -140,7 +145,7 @@ def test_simplex_nodes(dims, n):
 
 # {{{ test_affine_map
 
-def test_affine_map():
+def test_affine_map() -> None:
     """Check that our cheapo geometry-targeted linear algebra actually works."""
     from modepy.tools import AffineMap
 
@@ -162,9 +167,9 @@ def test_affine_map():
 # {{{ test_tensor_product_nodes
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_tensor_product_nodes(dim):
+def test_tensor_product_nodes(dim: int) -> None:
     nnodes = 10
-    nodes_1d = np.arange(nnodes)
+    nodes_1d = np.arange(nnodes, dtype=np.float64)
     nodes = nd.tensor_product_nodes(dim, nodes_1d)
 
     assert np.allclose(
@@ -177,10 +182,10 @@ def test_tensor_product_nodes(dim):
 # {{{ test_nonhomogeneous_tensor_product_nodes
 
 @pytest.mark.parametrize("dim", [1, 2, 3, 4])
-def test_nonhomogeneous_tensor_product_nodes(dim):
+def test_nonhomogeneous_tensor_product_nodes(dim: int) -> None:
     nnodes = (3, 7, 5, 4)[:dim]
     nodes = nd.tensor_product_nodes([
-        np.arange(n) for n in nnodes
+        np.arange(n, dtype=np.float64) for n in nnodes
         ])
 
     assert np.allclose(
@@ -195,13 +200,12 @@ def test_nonhomogeneous_tensor_product_nodes(dim):
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("shape_cls", [shp.Hypercube, shp.Simplex])
-def test_order0_nodes(dim, shape_cls):
+def test_order0_nodes(dim: int, shape_cls: type[shp.Shape]) -> None:
     shape = shape_cls(dim)
     import modepy as mp
     space = mp.space_for_shape(shape, order=0)
 
-    centroid = (np.mean(mp.unit_vertices_for_shape(shape), axis=1)
-            .reshape(-1, 1))
+    centroid = np.mean(mp.unit_vertices_for_shape(shape), axis=1).reshape(-1, 1)
     nodes = mp.equispaced_nodes_for_space(space, shape)
     assert not np.isnan(nodes).any()
     assert np.allclose(centroid, nodes)
@@ -216,7 +220,7 @@ def test_order0_nodes(dim, shape_cls):
 # {{{ test_tensor_product_shape_nodes
 
 @pytest.mark.parametrize("shape", ["square", "cube", "squared_cube", "prism"])
-def test_tensor_product_shape_nodes(shape, visualize=False):
+def test_tensor_product_shape_nodes(shape: str, visualize: bool = False) -> None:
     order = (5, 3, 4)
 
     if shape == "square":
@@ -257,12 +261,12 @@ def test_tensor_product_shape_nodes(shape, visualize=False):
 
 # {{{ test_tensor_product_nodes_vs_tuples
 
-def test_tensor_product_nodes_vs_tuples():
+def test_tensor_product_nodes_vs_tuples() -> None:
     import modepy as mp
     shapes = [
-            (shp.Hypercube(2), (3, 5)),
-            (shp.Hypercube(3), (3, 5, 4)),
-            ]
+        (shp.Hypercube(2), (3, 5)),
+        (shp.Hypercube(3), (3, 5, 4)),
+    ]
 
     for shape, order in shapes:
         space = mp.space_for_shape(shape, order)
@@ -277,7 +281,7 @@ def test_tensor_product_nodes_vs_tuples():
 
 # {{{ test_random_nodes_for_tensor_product
 
-def test_random_nodes_for_tensor_product():
+def test_random_nodes_for_tensor_product() -> None:
     import modepy as mp
     shape = mp.TensorProductShape((mp.Simplex(1), mp.Simplex(2)))
 
@@ -294,7 +298,7 @@ def test_random_nodes_for_tensor_product():
 
 # {{{ test_tp_0d
 
-def test_tp_0d():
+def test_tp_0d() -> None:
     import modepy as mp
     shape = mp.Hypercube(0)
     space = mp.QN(0, 5)
