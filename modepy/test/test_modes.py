@@ -25,10 +25,12 @@ THE SOFTWARE.
 
 
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.linalg as la
 import pytest
+from typing_extensions import override
 
 from pymbolic.mapper.evaluator import EvaluationMapper
 from pymbolic.mapper.stringifier import (
@@ -39,6 +41,11 @@ from pymbolic.mapper.stringifier import (
 import modepy as mp
 from modepy.typing import ArrayF
 
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pymbolic.primitives import If
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +60,7 @@ logger = logging.getLogger(__name__)
     (5, 0),
     (3, 4)
     ])
-def test_scaled_jacobi(alpha, beta):
+def test_scaled_jacobi(alpha: float, beta: float) -> None:
     from modepy.modes import binom, scaled_jacobi as jacobi
 
     for n in range(10):
@@ -76,7 +83,7 @@ def test_scaled_jacobi(alpha, beta):
     (5, 0, 3e-13),
     (3, 4, 1e-14)
     ])
-def test_orthonormality_jacobi_1d(alpha, beta, ebound):
+def test_orthonormality_jacobi_1d(alpha: float, beta: float, ebound: float) -> None:
     """Verify that the Jacobi polymials are orthogonal in 1D."""
     from modepy.quadrature.jacobi_gauss import JacobiGaussQuadrature
 
@@ -85,20 +92,16 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
 
     from functools import partial
     jac_f = [partial(mp.jacobi, alpha, beta, n) for n in range(max_n)]
-    maxerr = 0
 
     for i, fi in enumerate(jac_f):
         for j, fj in enumerate(jac_f):
             result = quad(lambda x: fi(x)*fj(x))  # noqa: B023
             true_result = 1.0 if i == j else 0.0
 
-            err = abs(result-true_result)
-            maxerr = np.maximum(maxerr, err)
-            if abs(result - true_result) > ebound:
-                logger.error("[FAILED] (%g, %g): (%d, %d) error %.5e",
-                        alpha, beta, i, j, abs(result - true_result))
-
-            assert abs(result-true_result) < ebound
+            err = np.abs(result-true_result)
+            assert err < ebound, (
+                f"[FAILED] ({alpha}, {beta}): ({i}, {j}) error {err:.5e}"
+            )
 
 # }}}
 
@@ -110,7 +113,7 @@ def test_orthonormality_jacobi_1d(alpha, beta, ebound):
     mp.Hypercube(3),
     ])
 @pytest.mark.parametrize("order", [1, 2, 4, 6])
-def test_basis_size_against_space_dim(shape, order):
+def test_basis_size_against_space_dim(shape: mp.Shape, order: int) -> None:
     space = mp.space_for_shape(shape, order)
     for basis in [
                 mp.basis_for_space(space, shape),
@@ -136,7 +139,7 @@ def test_basis_size_against_space_dim(shape, order):
     mp.Hypercube(2),
     mp.Hypercube(3),
     ])
-def test_basis_orthogonality(shape, order, ebound):
+def test_basis_orthogonality(order: int, ebound: float, shape: mp.Shape) -> None:
     """Test orthogonality of ONBs using cubature."""
 
     qspace = mp.space_for_shape(shape, 2*order)
@@ -148,13 +151,14 @@ def test_basis_orthogonality(shape, order, ebound):
         for j, g in enumerate(basis.functions):
             true_result = 1 if i == j else 0
             result = cub(lambda x: f(x)*g(x))  # noqa: B023
+
             err = abs(result-true_result)
-            logger.info("error %.5e max %.5e", err, maxerr)
             maxerr = np.maximum(maxerr, err)
-            if err > ebound:
-                logger.info("bound exceeded at order %d for (f_{%d}, f_{%d}): %.5e",
-                        order, i, j, err)
-            assert err < ebound
+            logger.info("error %.5e max %.5e", err, maxerr)
+
+            assert err < ebound, (
+                f"bound exceeded at order {order} for (f_{i}, f_{j}): {err:.5e}"
+            )
 
     logger.info("order %d max error %.5e", order, maxerr)
 
@@ -163,7 +167,10 @@ def test_basis_orthogonality(shape, order, ebound):
 
 # {{{ test_basis_grad
 
-def get_inhomogeneous_tensor_prod_basis(space, shape):
+def get_inhomogeneous_tensor_prod_basis(
+        space: mp.FunctionSpace,
+        shape: mp.Shape
+    ) -> mp.Basis:
     if space.spatial_dim == 1:
         return mp.basis_for_space(space, shape)
 
@@ -185,7 +192,12 @@ def get_inhomogeneous_tensor_prod_basis(space, shape):
 
     (mp.Hypercube, get_inhomogeneous_tensor_prod_basis),
     ])
-def test_basis_grad(dim, shape_cls, order, basis_getter):
+def test_basis_grad(
+        dim: int,
+        order: int,
+        shape_cls: type[mp.Shape],
+        basis_getter: Callable[[mp.FunctionSpace, mp.Shape], mp.Basis]
+    ) -> None:
     """Do a simplistic FD-style check on the gradients of the basis."""
 
     h = 1.0e-4
@@ -242,7 +254,8 @@ class MyStringifyMapper(CSESplittingStringifyMapperMixin[[]], StringifyMapper[[]
 
 
 class MyEvaluationMapper(EvaluationMapper[ArrayF]):
-    def map_if(self, expr):
+    @override
+    def map_if(self, expr: If, /) -> ArrayF:
         return np.where(self.rec(expr.condition),
                 self.rec(expr.then), self.rec(expr.else_))
 
@@ -261,7 +274,11 @@ class MyEvaluationMapper(EvaluationMapper[ArrayF]):
     (mp.orthonormal_basis_for_space),
     (mp.monomial_basis_for_space),
     ])
-def test_symbolic_basis(shape, order, basis_getter):
+def test_symbolic_basis(
+        shape: mp.Shape,
+        order: int,
+        basis_getter: Callable[[mp.FunctionSpace, mp.Shape], mp.Basis]
+    ) -> None:
     basis = basis_getter(mp.space_for_shape(shape, order), shape)
     sym_basis = [mp.symbolicize_function(f, shape.dim) for f in basis.functions]
 
@@ -337,7 +354,7 @@ def test_symbolic_basis(shape, order, basis_getter):
 # {{{ test_modal_coeffs_by_projection
 
 @pytest.mark.parametrize("dim", [2, 3])
-def test_modal_coeffs_by_projection(dim):
+def test_modal_coeffs_by_projection(dim: int) -> None:
     shape = mp.Simplex(dim)
     space = mp.space_for_shape(shape, order=5)
     basis = mp.orthonormal_basis_for_space(space, shape)
@@ -360,7 +377,7 @@ def test_modal_coeffs_by_projection(dim):
 # }}}
 
 
-def test_tp_0d():
+def test_tp_0d() -> None:
     basis = mp.TensorProductBasis([])
     nodes = np.zeros((0, 15))
     for f in basis.functions:

@@ -37,6 +37,8 @@ if TYPE_CHECKING:
     from modepy.typing import NodalFunction
 
 
+# {{{ test_quad_finder_lincomb
+
 def test_quad_finder_lincomb() -> None:
     basis = constr.adapt_2d_integrands_to_complex_arg(
         mp.monomial_basis_for_space(
@@ -72,6 +74,10 @@ def test_quad_finder_lincomb() -> None:
     for test_f, ref_f in zip(b2, b2_ref, strict=True):
         assert la.norm(test_f(base_quad.nodes) - ref_f(base_quad.nodes), 2) < 1e-13
 
+# }}}
+
+
+# {{{ test_orthogonalize_basis
 
 def test_orthogonalize_basis() -> None:
     orig_basis = mp.monomial_basis_for_space(mp.PN(2, order=7), mp.Simplex(2))
@@ -94,6 +100,10 @@ def test_orthogonalize_basis() -> None:
     eye = constr._mass_matrix(integrate, onb)
     assert la.norm(eye - np.eye(len(onb))) < 2e-12
 
+# }}}
+
+
+# {{{ test_guess_nodes_vr
 
 def test_guess_nodes_vr() -> None:
     order = 7
@@ -131,6 +141,10 @@ def test_guess_nodes_vr() -> None:
         plt.gca().set_aspect("equal")
         plt.show()
 
+# }}}
+
+
+# {{{ test_undetermined_coeffs
 
 def test_undetermined_coeffs() -> None:
     order = 7
@@ -159,6 +173,10 @@ def test_undetermined_coeffs() -> None:
         print(order, repr(f), err)
         assert err < 2e-15, (err, comb, i_f, ref)
 
+# }}}
+
+
+# {{{ test_quad_residual_derivatives
 
 def test_quad_residual_derivatives() -> None:
     order = 7
@@ -241,6 +259,10 @@ def test_quad_residual_derivatives() -> None:
     print(eoc_rec)
     assert eoc_rec.order_estimate() >= 0.95
 
+# }}}
+
+
+# {{{ test_quad_gauss_newton
 
 def test_quad_gauss_newton() -> None:
     order = 7
@@ -287,3 +309,16 @@ def test_quad_gauss_newton() -> None:
         resid_norm = la.norm(qrj.residual)
 
     assert resid_norm < 1e-14
+
+# }}}
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        exec(sys.argv[1])
+    else:
+        from pytest import main
+        main([__file__])
+
+# vim: fdm=marker
