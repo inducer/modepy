@@ -45,6 +45,7 @@ from modepy.matrices import (
 from modepy.modes import (
     Basis,
     BasisNotOrthonormal,
+    SimplexBasis,
     TensorProductBasis,
     basis_for_space,
     grad_jacobi,
@@ -133,6 +134,7 @@ __all__ = [
     "QuadratureRuleUnavailable",
     "Shape",
     "Simplex",
+    "SimplexBasis",
     "TensorProductBasis",
     "TensorProductQuadrature",
     "TensorProductShape",
