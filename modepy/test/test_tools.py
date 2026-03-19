@@ -157,6 +157,99 @@ def test_residual_estimation(case_name: str,
 # }}}
 
 
+# {{{ test_interp_error_coefficient_estimator_matrix
+
+@pytest.mark.parametrize("shape", [
+    mp.Simplex(1),
+    mp.Simplex(2),
+    mp.Simplex(3),
+    mp.Hypercube(1),
+    mp.Hypercube(2),
+    mp.Hypercube(3),
+])
+def test_interp_error_coefficient_estimator_matrix(shape: mp.Shape) -> None:
+    """Check that interp_error_coefficient_estimator_matrix gives estimates that
+    track the actual interpolation error for functions of varying smoothness.
+
+    For each shape the test:
+    - Builds the estimator matrix C at polynomial order 7.
+    - For four test functions (C^1, C^2, C^3, analytic) computes both the
+      estimated error ``||C @ f_nodes||_2`` and the actual RMS interpolation
+      error sampled at many random points inside the reference element.
+    - Asserts that estimated and actual errors are within a factor of 100 of
+      each other.
+    - Asserts that estimated errors are ordered correctly by smoothness:
+      C^1 > C^2 > C^3 > analytic.
+
+    Test functions use ``|x - 0.3|^alpha`` with fractional exponents alpha,
+    which are C^{floor(alpha)} but not C^{ceil(alpha)}, evaluated on the first
+    reference coordinate.  Fractional powers avoid the piecewise-polynomial
+    coincidences that cause accidental zero modal coefficients.
+    """
+    from modepy.modal_decay import interp_error_coefficient_estimator_matrix
+
+    order = 7
+    space = mp.space_for_shape(shape, order)
+    nodes = mp.edge_clustered_nodes_for_space(space, shape)
+    basis = mp.orthonormal_basis_for_space(space, shape)
+
+    # Build the estimator matrix (one tail order = highest-degree modes only)
+    err_est_matrix = interp_error_coefficient_estimator_matrix(nodes, 1, basis)
+
+    # Dense random sample for measuring actual interpolation error.
+    # Using random sampling instead of quadrature avoids availability and
+    # negative-weight issues with high-order rules for 3D simplices.
+    n_fine = 2000
+    rng = np.random.default_rng(seed=42)
+    fine_nodes = mp.random_nodes_for_shape(shape, n_fine, rng)
+    resamp = mp.resampling_matrix(basis.functions, fine_nodes, nodes)
+
+    def _errors(f: Callable[[ArrayF], ArrayF]) -> tuple[float, float]:
+        f_nodes = f(nodes)
+        estimated = float(la.norm(err_est_matrix @ f_nodes))
+        # RMS error at random fine nodes (normalised by sqrt(n_fine) so
+        # it approximates the L2 error per unit volume)
+        actual = float(la.norm(f(fine_nodes) - resamp @ f_nodes) / np.sqrt(n_fine))
+        return estimated, actual
+
+    # |x - 0.3|^alpha with fractional alpha: C^k = C^{floor(alpha)}, not C^{k+1}.
+    # Kink at x = 0.3, which lies inside every reference element used here.
+    test_cases: list[tuple[str, Callable[[ArrayF], ArrayF]]] = [
+        ("c1", lambda pts: np.abs(pts[0] - 0.3) ** 1.5),
+        ("c2", lambda pts: np.abs(pts[0] - 0.3) ** 2.5),
+        ("c3", lambda pts: np.abs(pts[0] - 0.3) ** 3.5),
+        ("analytic", lambda pts: np.exp(pts[0])),
+    ]
+
+    estimated_errors: dict[str, float] = {}
+
+    for name, f in test_cases:
+        est, act = _errors(f)
+        estimated_errors[name] = est
+        logger.info("shape=%s %s: estimated=%.5e actual=%.5e",
+                    shape, name, est, act)
+
+        # Estimated and actual errors should be within a factor of 100
+        if act > 1e-14:
+            ratio = est / act
+            assert 0.05 < ratio < 100, (
+                f"shape={shape} {name}: estimated/actual={ratio:.3e} "
+                f"out of [0.05, 100]"
+            )
+        else:
+            assert est < 1e-10, (
+                f"shape={shape} {name}: actual error tiny ({act:.2e}) "
+                f"but estimated is {est:.2e}"
+            )
+
+    # Smoother functions should yield strictly smaller estimated errors
+    assert estimated_errors["c1"] > estimated_errors["c2"], shape
+    assert estimated_errors["c2"] > estimated_errors["c3"], shape
+    assert estimated_errors["c3"] > estimated_errors["analytic"], shape
+
+# }}}
+
+
 # {{{ test_resampling_matrix
 
 @pytest.mark.parametrize("dims", [1, 2, 3])

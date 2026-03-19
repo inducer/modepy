@@ -23,6 +23,11 @@ intersphinx_mapping = {
 
 autodoc_member_order = "bysource"
 
+nitpick_ignore_regex = [
+    # NOTE: optype does not have Sphinx compatible documentation
+    ["py:class", r"onp.*"],
+]
+
 sphinxconfig_missing_reference_aliases = {
     # numpy
     "NDArray": "obj:numpy.typing.NDArray",

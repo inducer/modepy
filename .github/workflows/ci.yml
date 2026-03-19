@@ -32,7 +32,7 @@ jobs:
                 python-version: '3.x'
         -   name: "Main Script"
             run: |
-                EXTRA_INSTALL="matplotlib pytest scipy scipy-stubs basedpyright"
+                EXTRA_INSTALL="matplotlib pytest scipy scipy-stubs basedpyright optype"
                 curl -L -O https://tiker.net/ci-support-v0
                 . ./ci-support-v0
                 build_py_project_in_venv

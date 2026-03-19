@@ -23,14 +23,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-
+from functools import singledispatch
 from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.linalg as la
+from typing_extensions import deprecated
+
+from modepy.modes import Basis, SimplexBasis, TensorProductBasis
 
 
 if TYPE_CHECKING:
+    import optype.numpy as onp
     from numpy.typing import NDArray
 
     from modepy.typing import ArrayF
@@ -49,25 +53,82 @@ The method implemented in this module follows this article:
 
 .. versionadded:: 2013.2
 
-.. autofunction:: simplex_interp_error_coefficient_estimator_matrix
+.. autofunction:: degree_vector
+.. autofunction:: interp_error_coefficient_estimator_matrix
 .. autofunction:: fit_modal_decay
 .. autofunction:: estimate_relative_expansion_residual
 """
 
 
-def simplex_interp_error_coefficient_estimator_matrix(
-        unit_nodes: ArrayF,
-        order: int,
-        n_tail_orders: int) -> ArrayF:
+@singledispatch
+def degree_vector(basis: Basis) -> onp.Array1D[np.integer]:
+    """Return a vector of integers indicating the 'overall order' of each basis
+    function in the basis, in order. For simplex discretizations, consider
+    the total degree. For tensor product discretizations, the max degree.
+
+    .. versionadded:: 2026.1.1
+    """
+    raise TypeError(f"unsupported basis type: {type(basis)}")
+
+
+@degree_vector.register(SimplexBasis)
+def degree_vector_simplex(basis: SimplexBasis) -> onp.Array1D[np.integer]:
+    return np.array([
+                        sum(mid_tuple)
+                        for mid_tuple in basis.mode_ids
+                    ])
+
+
+@degree_vector.register(TensorProductBasis)
+def degree_vector_tp(basis: TensorProductBasis) -> onp.Array1D[np.integer]:
+    degree_vectors = [degree_vector(b) for b in basis.bases]
+    return np.array([
+                        max(
+                            ov[mode_id]
+                            for mode_id, ov
+                            in zip(mid_tuple, degree_vectors, strict=True)
+                        )
+                        for mid_tuple in basis._mode_index_tuples  # pyright: ignore[reportPrivateUsage]
+                    ])
+
+
+def interp_error_coefficient_estimator_matrix(
+            unit_nodes: ArrayF,
+            n_tail_orders: int,
+            basis: Basis,
+        ) -> ArrayF:
     """Return a matrix :math:`C` that, when multiplied by a vector of nodal values,
-    yields the coeffiicients belonging to the basis functions of the *n_tail_orders*
+    yields the coefficients belonging to the basis functions of the *n_tail_orders*
     highest orders.
 
     The 2-norm of the resulting coefficients can be used as an estimate of the
     interpolation error.
 
-    .. versionadded:: 2018.1
+    .. versionadded:: 2026.1.1
     """
+    from modepy.matrices import vandermonde
+    vdm = vandermonde(basis.functions, unit_nodes)
+    vdm_inv = la.inv(vdm)
+
+    degree_vec = degree_vector(basis)
+
+    max_order = np.max(degree_vec)
+    return vdm_inv[degree_vec > max_order-n_tail_orders]
+
+
+@deprecated("Use interp_error_coefficient_estimator_matrix instead")
+def simplex_interp_error_coefficient_estimator_matrix(
+            unit_nodes: ArrayF,
+            order: int,
+            n_tail_orders: int,
+        ) -> ArrayF:
+    from warnings import warn
+    warn("simplex_interp_error_coefficient_estimator_matrix is deprecated, "
+         "use interp_error_coefficient_estimator_matrix instead. "
+         "This will stop working in 2027.x.",
+         DeprecationWarning, stacklevel=2,
+     )
+
     dim, _nunit_nodes = unit_nodes.shape
 
     from modepy.shapes import Simplex
@@ -77,24 +138,8 @@ def simplex_interp_error_coefficient_estimator_matrix(
 
     from modepy.modes import orthonormal_basis_for_space
     basis = orthonormal_basis_for_space(space, shape)
-
-    from modepy.matrices import vandermonde
-    vdm = vandermonde(basis.functions, unit_nodes)
-    vdm_inv = la.inv(vdm)
-
-    if dim > 1:
-        order_vector = np.array([
-            # NOTE: basis.mode_ids are declared as `Tuple[Hashable, ...]`, which
-            # cannot be summed
-            sum(mode_id) for mode_id in basis.mode_ids
-            ])
-    else:
-        order_vector = np.array(basis.mode_ids)
-
-    max_order = np.max(order_vector)
-    assert max_order == order
-
-    return vdm_inv[order_vector > max_order-n_tail_orders]
+    return interp_error_coefficient_estimator_matrix(
+                        unit_nodes, n_tail_orders, basis)
 
 
 def make_mode_number_vector(
