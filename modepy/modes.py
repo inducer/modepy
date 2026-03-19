@@ -83,6 +83,10 @@ Conversion to Symbolic
 
 .. autofunction:: symbolicize_function
 
+Base classes
+------------
+.. autoclass:: SimplexBasis
+
 Tensor product adapter
 ----------------------
 
@@ -873,7 +877,7 @@ def _grad_pkdo_1d(order: tuple[int], r: ArrayF) -> tuple[ArrayF]:
     return (grad_jacobi(0, 0, i, r0),)
 
 
-class _SimplexBasis(Basis):
+class SimplexBasis(Basis, ABC):
     def __init__(self, dim, order):
         self._dim = dim
         self._order = order
@@ -889,7 +893,7 @@ class _SimplexBasis(Basis):
         return tuple(gnitsam(self._order, self._dim))
 
 
-class _SimplexONB(_SimplexBasis):
+class _SimplexONB(SimplexBasis):
     is_orthonormal = True
 
     def orthonormality_weight(self):
@@ -920,7 +924,7 @@ class _SimplexONB(_SimplexBasis):
             raise NotImplementedError(f"gradient in {self._dim} dimensions")
 
 
-class _SimplexMonomialBasis(_SimplexBasis):
+class _SimplexMonomialBasis(SimplexBasis):
     def orthonormality_weight(self) -> float:
         raise BasisNotOrthonormal
 
