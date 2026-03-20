@@ -1,27 +1,28 @@
 from __future__ import annotations
 
 
-r"""
-.. currentmodule:: modepy.quadrature.transplanted
+__copyright__ = """
+Copyright (C) 2026 Xiaoyu Wei, Alex Fikl, University of Illinois Board of Trustees
+"""
 
-Transplanted quadrature applies a smooth map :math:`x=g(s)` to an existing
-one-dimensional rule on :math:`[-1,1]`.
+__license__ = """
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Given base nodes/weights :math:`(s_i, w_i^{(s)})`, the transplanted rule is
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-.. math::
-
-    x_i = g(s_i), \qquad \tilde w_i = w_i^{(s)} g'(s_i),
-
-so that
-
-.. math::
-
-    \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s)) g'(s)\,ds
-    \approx \sum_i \tilde w_i f(x_i).
-
-For map names, parameters, examples, and references, see
-:ref:`quadrature-transplanted-1d`.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
 
 from functools import lru_cache
