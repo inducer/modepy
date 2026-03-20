@@ -128,11 +128,8 @@ def map_kosloff_tal_ezer(
     alpha = float(alpha)
     denom = asin(alpha)
 
-    g = np.asarray(np.arcsin(alpha * s) / denom, dtype=np.float64)
-    gp = np.asarray(
-        alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2)),
-        dtype=np.float64,
-    )
+    g = np.arcsin(alpha * s) / denom
+    gp = alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2))
 
     return g, gp
 
@@ -198,27 +195,21 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
 
     omega = 2.0 * k * np.arcsin(s) / np.pi
     sn_jacobi, cn_jacobi, dn_jacobi, _ = ellipj(omega, m)
-    sn = np.asarray(sn_jacobi, dtype=np.float64)
-    cn = np.asarray(cn_jacobi, dtype=np.float64)
-    dn = np.asarray(dn_jacobi, dtype=np.float64)
 
-    g = np.asarray(np.arctanh(m4 * sn) / np.arctanh(m4), dtype=np.float64)
-    gp = np.asarray(
-        (
+    g = np.arctanh(m4 * sn_jacobi) / np.arctanh(m4)
+    gp = (
             2.0
             * k
             * m4
-            * cn
-            * dn
+            * cn_jacobi
+            * dn_jacobi
             / (
                 np.pi
                 * np.sqrt(1.0 - s**2)
-                * (1.0 - np.sqrt(m) * sn**2)
+                * (1.0 - np.sqrt(m) * sn_jacobi**2)
                 * np.arctanh(m4)
             )
-        ),
-        dtype=np.float64,
-    )
+        )
 
     return g, gp
 
