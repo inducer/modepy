@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 
 import logging
+from functools import partial
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -32,10 +33,16 @@ import numpy.linalg as la
 import pytest
 
 import modepy as mp
+from modepy.quadrature.transplanted import (
+    map_identity,
+    map_kosloff_tal_ezer,
+    map_sausage,
+    map_strip,
+)
 
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from modepy.typing import ArrayF
 
@@ -117,25 +124,23 @@ def test_clenshaw_curtis_quadrature() -> None:
 
 
 @pytest.mark.parametrize(
-    ("map_name", "sausage_degree"),
+    ("map_fn", "check_exact_weight_sum"),
     [
-        ("identity", 9),
-        ("sausage", 5),
-        ("sausage", 9),
-        ("sausage", 17),
-        ("kte", 9),
-        ("kosloff_tal_ezer", 9),
+        (map_identity, True),
+        (partial(map_sausage, degree=5), True),
+        (partial(map_sausage, degree=9), True),
+        (partial(map_sausage, degree=17), True),
+        (partial(map_kosloff_tal_ezer, rho=1.4), False),
     ],
 )
 def test_transplanted_legendre_gauss_quadrature(
-    map_name: str,
-    sausage_degree: int,
+    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]],
+    check_exact_weight_sum: bool,
 ) -> None:
     base = mp.LegendreGaussQuadrature(15, force_dim_axis=True)
     transplanted = mp.transplanted_legendre_gauss_quadrature(
         15,
-        map_name=map_name,
-        sausage_degree=sausage_degree,
+        map_fn,
         force_dim_axis=True,
     )
 
@@ -147,20 +152,13 @@ def test_transplanted_legendre_gauss_quadrature(
     assert transplanted.nodes.shape == base.nodes.shape
     assert transplanted.weights.shape == base.weights.shape
 
-    from modepy.quadrature.transplanted import map_trefethen_transplant
-
-    mapped_nodes, mapped_jacobian = map_trefethen_transplant(
-        base_nodes,
-        map_name=map_name,
-        sausage_degree=sausage_degree,
-    )
+    mapped_nodes, mapped_jacobian = map_fn(base_nodes)
 
     assert la.norm(trans_nodes - mapped_nodes, np.inf) < 1.0e-14
     assert la.norm(trans_weights - base_weights * mapped_jacobian, np.inf) < 1.0e-14
 
-    # Sausage maps are polynomial maps, so integrating constants
-    # should remain exact.
-    if map_name == "sausage":
+    # Polynomial maps preserve exactness for constant integrands.
+    if check_exact_weight_sum:
         err = abs(float(np.sum(trans_weights)) - 2.0)
         assert err < 1.0e-14
 
@@ -170,8 +168,7 @@ def test_transplanted_strip_map_quadrature() -> None:
 
     transplanted = mp.transplanted_legendre_gauss_quadrature(
         32,
-        map_name="strip",
-        strip_rho=1.4,
+        partial(map_strip, rho=1.4),
         force_dim_axis=True,
     )
 
@@ -188,7 +185,7 @@ def test_transplanted_strip_map_rejects_endpoint_rules() -> None:
 
     with pytest.raises(ValueError, match="interior nodes"):
         mp.transplanted_1d_quadrature(
-            mp.ClenshawCurtisQuadrature(5, force_dim_axis=True), map_name="strip"
+            mp.ClenshawCurtisQuadrature(5, force_dim_axis=True), map_strip
         )
 
 
@@ -196,34 +193,12 @@ def test_transplanted_sausage_map_rejects_even_degrees() -> None:
     with pytest.raises(ValueError, match="positive odd degree"):
         mp.transplanted_legendre_gauss_quadrature(
             8,
-            map_name="sausage",
-            sausage_degree=4,
+            partial(map_sausage, degree=4),
             force_dim_axis=True,
         )
 
 
-def test_transplanted_sausage_map_name_matches_direct_map() -> None:
-    from modepy.quadrature.transplanted import map_sausage, map_trefethen_transplant
-
-    s = np.linspace(-0.95, 0.95, 33)
-
-    for degree in [5, 9, 17]:
-        g, gp = map_sausage(s, degree=degree)
-        g_ref, gp_ref = map_trefethen_transplant(
-            s,
-            map_name="sausage",
-            sausage_degree=degree,
-        )
-        assert la.norm(g - g_ref, np.inf) < 1.0e-15
-        assert la.norm(gp - gp_ref, np.inf) < 1.0e-15
-
-
-def test_transplanted_kte_map_name_matches_direct_map() -> None:
-    from modepy.quadrature.transplanted import (
-        map_kosloff_tal_ezer,
-        map_trefethen_transplant,
-    )
-
+def test_transplanted_kte_map_rho_alpha_equivalence() -> None:
     s = np.linspace(-1.0, 1.0, 33)
     rho = 1.4
     alpha = 2.0 / (rho + 1.0 / rho)
@@ -233,21 +208,15 @@ def test_transplanted_kte_map_name_matches_direct_map() -> None:
     assert la.norm(g - g_ref, np.inf) < 1.0e-15
     assert la.norm(gp - gp_ref, np.inf) < 1.0e-15
 
-    g_name, gp_name = map_trefethen_transplant(s, map_name="kte", kte_rho=rho)
-    assert la.norm(g - g_name, np.inf) < 1.0e-15
-    assert la.norm(gp - gp_name, np.inf) < 1.0e-15
-
 
 def test_transplanted_kte_map_rejects_invalid_parameters() -> None:
-    from modepy.quadrature.transplanted import map_trefethen_transplant
-
     s = np.array([0.0])
 
     with pytest.raises(ValueError, match="rho must be > 1"):
-        map_trefethen_transplant(s, map_name="kte", kte_rho=1.0)
+        map_kosloff_tal_ezer(s, rho=1.0)
 
     with pytest.raises(ValueError, match="0 < alpha < 1"):
-        map_trefethen_transplant(s, map_name="kte", kte_alpha=1.0)
+        map_kosloff_tal_ezer(s, alpha=1.0)
 
 
 @pytest.mark.parametrize("kind", [1, 2])

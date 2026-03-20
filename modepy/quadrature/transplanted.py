@@ -24,7 +24,7 @@ For map names, parameters, examples, and references, see
 :ref:`quadrature-transplanted-1d`.
 """
 
-from functools import lru_cache
+from functools import lru_cache, partial
 from math import asin, isfinite, log, sqrt
 from typing import TYPE_CHECKING, cast
 
@@ -34,6 +34,8 @@ from modepy.quadrature import Quadrature
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from modepy.typing import ArrayF
 
 
@@ -135,29 +137,6 @@ def map_kosloff_tal_ezer(
     return g, gp
 
 
-def _map_preserves_exact_to(map_name: str, *, sausage_degree: int) -> bool:
-    if map_name == "identity":
-        return True
-
-    legacy_sausage_degree = _sausage_degree_from_map_name(map_name)
-    if legacy_sausage_degree is not None:
-        return legacy_sausage_degree == 1
-
-    return map_name == "sausage" and sausage_degree == 1
-
-
-def _sausage_degree_from_map_name(map_name: str) -> int | None:
-    if not map_name.startswith("sausage_d"):
-        return None
-
-    degree_text = map_name[len("sausage_d") :]
-    if not degree_text.isdigit():
-        raise ValueError(
-            f"unsupported sausage map '{map_name}'. Expected format: sausage_d{{odd}}"
-        )
-
-    return int(degree_text)
-
 
 @lru_cache(maxsize=16)
 def _strip_map_parameter_m(rho: float) -> float:
@@ -244,68 +223,9 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
     return g, gp
 
 
-def map_trefethen_transplant(
-    s: ArrayF,
-    map_name: str,
-    *,
-    sausage_degree: int = 9,
-    strip_rho: float = 1.4,
-    kte_rho: float = 1.4,
-    kte_alpha: float | None = None,
-) -> tuple[ArrayF, ArrayF]:
-    """Map 1D nodes to a Trefethen transplanted quadrature rule.
-
-    :arg s: nodes on :math:`[-1, 1]`.
-    :arg map_name: one of ``identity``, ``sausage``, ``kte``,
-        ``kosloff_tal_ezer``, ``strip``.
-    :arg sausage_degree: odd polynomial degree for ``map_name="sausage"``.
-    :arg strip_rho: strip-map parameter for ``map_name="strip"``.
-    :arg kte_rho: KTE parameter for ``map_name in {"kte", "kosloff_tal_ezer"}``
-        when ``kte_alpha`` is not supplied.
-    :arg kte_alpha: explicit KTE :math:`\alpha` override.
-
-    :returns: ``(mapped_nodes, jacobian)``.
-
-    The supported maps are:
-
-    * ``identity``: :func:`map_identity`
-    * ``sausage``: :func:`map_sausage`
-    * ``sausage_d{odd}`` (legacy alias): :func:`map_sausage`
-    * ``kte`` / ``kosloff_tal_ezer``: :func:`map_kosloff_tal_ezer`
-    * ``strip``: :func:`map_strip`
-
-    """
-    if map_name == "identity":
-        return map_identity(s)
-
-    if map_name == "sausage":
-        return map_sausage(s, sausage_degree)
-
-    legacy_sausage_degree = _sausage_degree_from_map_name(map_name)
-    if legacy_sausage_degree is not None:
-        return map_sausage(s, legacy_sausage_degree)
-
-    if map_name == "strip":
-        return map_strip(s, rho=strip_rho)
-
-    if map_name in {"kte", "kosloff_tal_ezer"}:
-        return map_kosloff_tal_ezer(s, rho=kte_rho, alpha=kte_alpha)
-
-    raise ValueError(
-        "unsupported map_name "
-        f"'{map_name}'. Expected one of: "
-        "identity, sausage, sausage_d{odd}, kte, kosloff_tal_ezer, strip"
-    )
-
-
 def transplanted_1d_quadrature(
     quadrature: Quadrature,
-    map_name: str = "sausage",
-    *,
-    sausage_degree: int = 9,
-    strip_rho: float = 1.4,
-    kte_rho: float = 1.4,
-    kte_alpha: float | None = None,
+    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]] = partial(map_sausage, degree=9),
 ) -> Quadrature:
     r"""Map an existing 1D quadrature rule using a Trefethen transplant map.
 
@@ -317,6 +237,13 @@ def transplanted_1d_quadrature(
 
     by mapping existing nodes :math:`s_i` and scaling existing weights :math:`w_i`
     with :math:`g'(s_i)`.
+
+    :arg map_fn: a callable ``(s: ArrayF) -> (nodes, jacobian)``, such as
+        :func:`~modepy.quadrature.transplanted.map_identity`,
+        :func:`~modepy.quadrature.transplanted.map_sausage`,
+        :func:`~modepy.quadrature.transplanted.map_kosloff_tal_ezer`,
+        or :func:`~modepy.quadrature.transplanted.map_strip`,
+        with parameters (if any) bound via :func:`functools.partial`.
     """
     base_nodes = quadrature.nodes
     if base_nodes.ndim == 1:
@@ -330,21 +257,14 @@ def transplanted_1d_quadrature(
             "transplanted_1d_quadrature requires a one-dimensional base quadrature"
         )
 
-    mapped_nodes, jacobian = map_trefethen_transplant(
-        nodes_1d,
-        map_name=map_name,
-        sausage_degree=sausage_degree,
-        strip_rho=strip_rho,
-        kte_rho=kte_rho,
-        kte_alpha=kte_alpha,
-    )
+    mapped_nodes, jacobian = map_fn(nodes_1d)
     mapped_weights = quadrature.weights * jacobian
 
     if force_dim_axis:
         mapped_nodes = np.reshape(mapped_nodes, (1, mapped_nodes.shape[0]))
 
     exact_to = None
-    if _map_preserves_exact_to(map_name, sausage_degree=sausage_degree):
+    if map_fn is map_identity:
         try:
             exact_to = quadrature.exact_to
         except AttributeError:
@@ -355,12 +275,8 @@ def transplanted_1d_quadrature(
 
 def transplanted_legendre_gauss_quadrature(
     n: int,
-    map_name: str = "sausage",
+    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]] = partial(map_sausage, degree=9),
     *,
-    sausage_degree: int = 9,
-    strip_rho: float = 1.4,
-    kte_rho: float = 1.4,
-    kte_alpha: float | None = None,
     backend: str | None = None,
     force_dim_axis: bool = False,
 ) -> Quadrature:
@@ -373,9 +289,5 @@ def transplanted_legendre_gauss_quadrature(
             backend=backend,
             force_dim_axis=force_dim_axis,
         ),
-        map_name=map_name,
-        sausage_degree=sausage_degree,
-        strip_rho=strip_rho,
-        kte_rho=kte_rho,
-        kte_alpha=kte_alpha,
+        map_fn,
     )

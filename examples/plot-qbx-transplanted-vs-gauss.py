@@ -4,7 +4,7 @@ from __future__ import annotations
 # pyright: basic, reportMissingImports=false
 import tempfile
 import warnings
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import pairwise
 from pathlib import Path
 
@@ -29,18 +29,25 @@ from sumpy.qbx import LayerPotential
 
 import modepy as mp
 from modepy.quadrature import Transformed1DQuadrature
+from modepy.quadrature.transplanted import (
+    map_kosloff_tal_ezer,
+    map_sausage,
+    map_strip,
+)
 
 
 NPANELS, MODE = 8, 8
 QBX_ORDER = 20
 ASSOC_TOL = 0.05
 NPTS = list(range(4, 30))
+# Each entry is (label, map_fn_factory) where factory takes strip_rho and returns
+# a bound map function (or None for plain Gauss-Legendre).
 MAPS = [
-    ("gauss", None, None),
-    ("kte", "kte", None),
-    ("strip", "strip", None),
-    ("sausage_d5", "sausage", 5),
-    ("sausage_d9", "sausage", 9),
+    ("gauss",     lambda rho: None),
+    ("kte",       lambda rho: partial(map_kosloff_tal_ezer, rho=rho)),
+    ("strip",     lambda rho: partial(map_strip, rho=rho)),
+    ("sausage_d5", lambda rho: partial(map_sausage, degree=5)),
+    ("sausage_d9", lambda rho: partial(map_sausage, degree=9)),
 ]
 OUT = Path(tempfile.gettempdir()) / "qbx-transplanted-vs-gauss-2d.png"
 
@@ -88,18 +95,13 @@ def kte_alpha_for_rho(rho: float) -> float:
 
 def make_quad(
     npts: int,
-    map_name: str | None,
-    strip_rho: float,
-    sausage_degree: int | None = None,
+    map_fn,
 ) -> mp.Quadrature:
-    if map_name is None:
+    if map_fn is None:
         return mp.LegendreGaussQuadrature(npts - 1, force_dim_axis=True)
     return mp.transplanted_legendre_gauss_quadrature(
         npts - 1,
-        map_name=map_name,
-        sausage_degree=9 if sausage_degree is None else sausage_degree,
-        strip_rho=strip_rho,
-        kte_rho=strip_rho,
+        map_fn,
         force_dim_axis=True,
     )
 
@@ -152,7 +154,7 @@ def source_ds_weights(quad: mp.Quadrature, panel_edges: np.ndarray) -> np.ndarra
 
 
 def gauss_centers_radii(actx, panel_edges: np.ndarray, npts: int):
-    qg = make_quad(npts, None, 2.0)
+    qg = make_quad(npts, None)
     mesh, _ = make_mesh_and_t(panel_edges, npts, qg.nodes)
     discr = Discretization(actx, mesh, make_group(npts - 1, qg))
     qbx = QBXLayerPotentialSource(
@@ -189,14 +191,12 @@ def eval_rule(
     lpot,
     panel_edges: np.ndarray,
     npts: int,
-    map_name: str | None,
-    sausage_degree: int | None,
-    strip_rho: float,
+    map_fn,
     targets: np.ndarray,
     centers: np.ndarray,
     radii: np.ndarray,
 ) -> np.ndarray:
-    quad = make_quad(npts, map_name, strip_rho, sausage_degree)
+    quad = make_quad(npts, map_fn)
     mesh, t_src = make_mesh_and_t(panel_edges, npts, quad.nodes)
     sources = mesh.groups[0].nodes.reshape(2, -1)
     sigma = np.cos(MODE * 2.0 * np.pi * t_src)
@@ -233,9 +233,11 @@ def main() -> None:
         source_kernels=(lknl,),
     )
 
+    maps = [(name, factory(strip_rho)) for name, factory in MAPS]
+    names = [name for name, _ in maps]
+
     orders, totals = [], []
-    errors = {name: [] for name, _, _ in MAPS}
-    names = [n for n, _, _ in MAPS]
+    errors = {name: [] for name in names}
 
     print("QBX convergence on meshmode circle (frozen Gauss targets+centers)")
     print("order  total_nodes  " + "  ".join(f"{n:>10s}" for n in names))
@@ -245,7 +247,7 @@ def main() -> None:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=cl.CompilerWarning)
 
-            qg = make_quad(npts, None, strip_rho)
+            qg = make_quad(npts, None)
             tgt_mesh, t_tgt = make_mesh_and_t(panel_edges, npts, qg.nodes)
             targets = tgt_mesh.groups[0].nodes.reshape(2, -1)
             centers, radii = gauss_centers_radii(actx, panel_edges, npts)
@@ -253,15 +255,13 @@ def main() -> None:
 
             orders.append(npts - 1)
             totals.append(NPANELS * npts)
-            for name, map_name, sausage_degree in MAPS:
+            for name, map_fn in maps:
                 values = eval_rule(
                     actx,
                     lpot,
                     panel_edges,
                     npts,
-                    map_name,
-                    sausage_degree,
-                    strip_rho,
+                    map_fn,
                     targets,
                     centers,
                     radii,

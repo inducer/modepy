@@ -93,11 +93,6 @@ Use ``map_name="strip"`` with ``strip_rho > 1``.
 
 .. autofunction:: map_strip
 
-Map dispatcher
-^^^^^^^^^^^^^^
-
-.. autofunction:: map_trefethen_transplant
-
 Quadrature wrappers
 ~~~~~~~~~~~~~~~~~~~
 
@@ -112,19 +107,20 @@ Example
 
 .. code-block:: python
 
+    from functools import partial
+
     import modepy as mp
+    from modepy.quadrature.transplanted import map_kosloff_tal_ezer, map_sausage
 
     q_kte = mp.transplanted_legendre_gauss_quadrature(
         20,
-        map_name="kte",
-        kte_rho=1.4,
+        partial(map_kosloff_tal_ezer, rho=1.4),
         force_dim_axis=True,
     )
 
     q_sausage = mp.transplanted_legendre_gauss_quadrature(
         20,
-        map_name="sausage",
-        sausage_degree=9,
+        partial(map_sausage, degree=9),
         force_dim_axis=True,
     )
 
