@@ -155,11 +155,9 @@ def map_kosloff_tal_ezer(
     matching the parameter choice discussed by Hale-Trefethen for a
     :math:`\rho`-ellipse analyticity model.
 
-    Reference:
-        D. Kosloff and H. Tal-Ezer, "A Modified Chebyshev Pseudospectral
-        Method with an O(N^{-1}) Time Step Restriction," Journal of
-        Computational Physics 104(2), 457-469 (1993),
-        doi:10.1006/jcph.1993.1044.
+    .. rubric:: Reference
+
+    [KosloffTalEzer1993]_
     """
     if alpha is None:
         if rho <= 1.0:
