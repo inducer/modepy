@@ -43,9 +43,9 @@ NPTS = list(range(4, 30))
 # Each entry is (label, map_fn_factory) where factory takes strip_rho and returns
 # a bound map function (or None for plain Gauss-Legendre).
 MAPS = [
-    ("gauss",     lambda rho: None),
-    ("kte",       lambda rho: partial(map_kosloff_tal_ezer, rho=rho)),
-    ("strip",     lambda rho: partial(map_strip, rho=rho)),
+    ("gauss", lambda rho: None),
+    ("kte", lambda rho: partial(map_kosloff_tal_ezer, rho=rho)),
+    ("strip", lambda rho: partial(map_strip, rho=rho)),
     ("sausage_d5", lambda rho: partial(map_sausage, degree=5)),
     ("sausage_d9", lambda rho: partial(map_sausage, degree=9)),
 ]

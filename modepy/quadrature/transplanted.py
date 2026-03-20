@@ -24,7 +24,7 @@ For map names, parameters, examples, and references, see
 :ref:`quadrature-transplanted-1d`.
 """
 
-from functools import lru_cache, partial
+from functools import lru_cache
 from math import asin, isfinite, log, sqrt
 from typing import TYPE_CHECKING, cast
 
@@ -132,7 +132,6 @@ def map_kosloff_tal_ezer(
     gp = alpha / (denom * np.sqrt(1.0 - alpha**2 * s**2))
 
     return g, gp
-
 
 
 @lru_cache(maxsize=16)
