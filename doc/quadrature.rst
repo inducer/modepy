@@ -33,6 +33,11 @@ Transplanted quadrature in one dimension
 The transplanted maps implemented here include the Hale-Trefethen
 conformal-map family and the Kosloff-Tal-Ezer map.
 
+.. note::
+
+    In using the term 'transplanted', we are following the terminology from
+    [HaleTrefethen2008]_.
+
 Given a base rule :math:`(s_i, w_i^{(s)})` on :math:`[-1,1]`, transplanted quadrature
 uses a map :math:`x=g(s)` to build
 
