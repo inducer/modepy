@@ -3,7 +3,6 @@ from __future__ import annotations
 # Optional QBX dependencies (meshmode/pytential/sumpy) are not installed in CI.
 # pyright: basic, reportMissingImports=false
 import tempfile
-import warnings
 from functools import lru_cache, partial
 from itertools import pairwise
 from pathlib import Path
@@ -114,19 +113,18 @@ def make_group(order: int, quad: mp.Quadrature):
         def quadrature_rule(self):
             return quad
 
-
     return _G
 
 
 def make_mesh_and_t(panel_edges: np.ndarray, npts: int, unit_nodes: np.ndarray):
-        return mgen.make_curve_mesh(
-            mgen.circle,
-            panel_edges,
-            order=npts - 1,
-            unit_nodes=unit_nodes,
-            node_vertex_consistency_tolerance=False,
-            return_parametrization_points=True,
-        )
+    return mgen.make_curve_mesh(
+        mgen.circle,
+        panel_edges,
+        order=npts - 1,
+        unit_nodes=unit_nodes,
+        node_vertex_consistency_tolerance=False,
+        return_parametrization_points=True,
+    )
 
 
 def source_ds_weights(quad: mp.Quadrature, panel_edges: np.ndarray) -> np.ndarray:
@@ -227,27 +225,26 @@ def main() -> None:
     print("-" * (33 + 12 * len(names)))
 
     for i, npts in enumerate(NPTS):
+        qg = make_quad(npts, None)
+        tgt_mesh, t_tgt = make_mesh_and_t(panel_edges, npts, qg.nodes)
+        targets = tgt_mesh.groups[0].nodes.reshape(2, -1)
+        centers, radii = gauss_centers_radii(actx, panel_edges, npts)
+        ref = np.cos(MODE * 2.0 * np.pi * t_tgt) / (2.0 * MODE)
 
-            qg = make_quad(npts, None)
-            tgt_mesh, t_tgt = make_mesh_and_t(panel_edges, npts, qg.nodes)
-            targets = tgt_mesh.groups[0].nodes.reshape(2, -1)
-            centers, radii = gauss_centers_radii(actx, panel_edges, npts)
-            ref = np.cos(MODE * 2.0 * np.pi * t_tgt) / (2.0 * MODE)
-
-            orders.append(npts - 1)
-            totals.append(NPANELS * npts)
-            for name, map_fn in maps:
-                values = eval_rule(
-                    actx,
-                    lpot,
-                    panel_edges,
-                    npts,
-                    map_fn,
-                    targets,
-                    centers,
-                    radii,
-                )
-                errors[name].append(float(np.max(np.abs(values - ref))))
+        orders.append(npts - 1)
+        totals.append(NPANELS * npts)
+        for name, map_fn in maps:
+            values = eval_rule(
+                actx,
+                lpot,
+                panel_edges,
+                npts,
+                map_fn,
+                targets,
+                centers,
+                radii,
+            )
+            errors[name].append(float(np.max(np.abs(values - ref))))
 
         vals = "  ".join(f"{errors[name][i]:10.3e}" for name in names)
         print(f"{orders[i]:5d}  {totals[i]:11d}  {vals}")
