@@ -25,9 +25,8 @@ For map names, parameters, examples, and references, see
 """
 
 from functools import lru_cache
-from importlib import import_module
 from math import asin, isfinite, log, sqrt
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -35,51 +34,7 @@ from modepy.quadrature import Quadrature
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from modepy.typing import ArrayF
-
-
-class _RootScalarResult(Protocol):
-    converged: bool
-    root: float
-
-
-class _RootScalarFn(Protocol):
-    def __call__(
-        self,
-        f: Callable[[float], float],
-        *,
-        bracket: tuple[float, float],
-        method: str,
-    ) -> _RootScalarResult: ...
-
-
-class _EllipkFn(Protocol):
-    def __call__(self, x: float) -> float: ...
-
-
-class _EllipjFn(Protocol):
-    def __call__(
-        self, u: ArrayF, m: float
-    ) -> tuple[ArrayF, ArrayF, ArrayF, ArrayF]: ...
-
-
-def _scipy_attr(module_name: str, attr_name: str) -> object:
-    try:
-        module = import_module(module_name)
-    except ImportError as exc:
-        raise RuntimeError(
-            "The Trefethen strip map requires scipy. "
-            "Install modepy with scipy support to use map_name='strip'."
-        ) from exc
-
-    try:
-        return cast("object", getattr(module, attr_name))
-    except AttributeError as exc:
-        raise RuntimeError(
-            f"scipy module '{module_name}' is missing required attribute '{attr_name}'"
-        ) from exc
 
 
 def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
@@ -209,8 +164,14 @@ def _strip_map_parameter_m(rho: float) -> float:
     if rho <= 1.0:
         raise ValueError(f"strip map parameter rho must be > 1: {rho}")
 
-    root_scalar = cast("_RootScalarFn", _scipy_attr("scipy.optimize", "root_scalar"))
-    ellipk = cast("_EllipkFn", _scipy_attr("scipy.special", "ellipk"))
+    try:
+        from scipy.optimize import root_scalar
+        from scipy.special import ellipk
+    except ImportError as exc:
+        raise RuntimeError(
+            "The Trefethen strip map requires scipy. "
+            "Install modepy with scipy support to use map_name='strip'."
+        ) from exc
 
     target = 4.0 * log(rho) / np.pi
 
@@ -244,8 +205,13 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
     if np.any(np.abs(s) >= 1.0):
         raise ValueError("strip map expects interior nodes, i.e. abs(s) < 1")
 
-    ellipj = cast("_EllipjFn", _scipy_attr("scipy.special", "ellipj"))
-    ellipk = cast("_EllipkFn", _scipy_attr("scipy.special", "ellipk"))
+    try:
+        from scipy.special import ellipj, ellipk
+    except ImportError as exc:
+        raise RuntimeError(
+            "The Trefethen strip map requires scipy. "
+            "Install modepy with scipy support to use map_name='strip'."
+        ) from exc
 
     m = _strip_map_parameter_m(rho)
     m4 = sqrt(sqrt(m))
