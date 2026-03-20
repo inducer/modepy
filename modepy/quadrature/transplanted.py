@@ -74,7 +74,7 @@ def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
     :arg degree: positive odd degree in ``{1, 3, 5, ...}``.
     """
     coeffs = _arcsin_taylor_coefficients(degree)
-    denom = np.asarray(sum(coeffs), dtype=s.dtype)
+    denom = sum(coeffs)
 
     g = np.zeros_like(s)
     gp = np.zeros_like(s)
