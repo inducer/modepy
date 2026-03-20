@@ -43,7 +43,8 @@ if TYPE_CHECKING:
 def map_identity(s: ArrayF) -> tuple[ArrayF, ArrayF]:
     """Identity transplant map on :math:`[-1, 1]`.
 
-    Returns ``(s, 1)``.
+    :returns: ``(nodes, jacobian)`` where *nodes* is a copy of *s* and
+        *jacobian* is an array of ones with the same shape.
     """
     return np.array(s, copy=True), np.ones_like(s)
 
@@ -72,7 +73,9 @@ def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
     This is the normalized odd Taylor truncation of :math:`\arcsin(s)`
     through the monomial of degree *degree*.
 
+    :arg s: quadrature nodes on :math:`[-1, 1]`.
     :arg degree: positive odd degree in ``{1, 3, 5, ...}``.
+    :returns: ``(nodes, jacobian)``.
     """
     coeffs = _arcsin_taylor_coefficients(degree)
     denom = sum(coeffs)
@@ -102,17 +105,22 @@ def map_kosloff_tal_ezer(
 
         g(s) = \frac{\arcsin(\alpha s)}{\arcsin(\alpha)},
 
-    where :math:`0 < \alpha < 1`.
-
-    If *alpha* is not provided, it is chosen from *rho* using
+    where :math:`0 < \alpha < 1`. If *alpha* is not provided, it is chosen from
+    *rho* using
 
     .. math::
 
         \alpha = \frac{2}{\rho + \rho^{-1}},
 
-    matching the parameter choice discussed by Hale-Trefethen [HaleTrefethen2008]_ for a
-    :math:`\rho`-ellipse analyticity model.
+    matching the parameter choice discussed by Hale-Trefethen [HaleTrefethen2008]_
+    for a :math:`\rho`-ellipse analyticity model.
 
+    :arg s: quadrature nodes on :math:`[-1, 1]`.
+    :arg rho: ellipse parameter, must satisfy ``rho > 1``. Ignored if *alpha*
+        is given explicitly.
+    :arg alpha: map parameter satisfying ``0 < alpha < 1``. If *None*, computed
+        from *rho*.
+    :returns: ``(nodes, jacobian)``.
     """
     if alpha is None:
         if rho <= 1.0:
@@ -168,12 +176,21 @@ def _strip_map_parameter_m(rho: float) -> float:
 def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
     r"""Strip map from Hale-Trefethen [HaleTrefethen2008]_ transplanted quadrature.
 
+    The map is based on the Schwarz-Christoffel transformation that maps the
+    unit disk to a rectangle, composed with an :math:`\arcsin` to pull back to
+    :math:`[-1, 1]`. The parameter *rho* controls the half-width of the
+    analyticity strip: a larger *rho* concentrates nodes near the endpoints.
+
+    :arg s: quadrature nodes on :math:`(-1, 1)` (strict interior).
     :arg rho: strip parameter, must satisfy ``rho > 1``.
+    :returns: ``(nodes, jacobian)``.
 
     .. important::
 
         This map requires interior nodes (``abs(s) < 1``), so it is intended
         for base rules such as Legendre-Gauss that do not include endpoints.
+        Other common rules, such as Gauss-Lobatto or Clenshaw-Curtis, cannot be
+        used.
     """
     if np.any(np.abs(s) >= 1.0):
         raise ValueError("strip map expects interior nodes, i.e. abs(s) < 1")
@@ -215,23 +232,27 @@ def transplanted_1d_quadrature(
     quadrature: Quadrature,
     map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]],
 ) -> Quadrature:
-    r"""Map an existing 1D quadrature rule using a Trefethen transplant map.
+    r"""Map an existing 1D quadrature rule using a transplant map.
 
     The transformed rule approximates
 
     .. math::
 
-        \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s)) g'(s)\,ds,
+        \int_{-1}^1 f(x)\,\mathrm{d}x = \int_{-1}^1 f(g(s)) g'(s)\,\mathrm{d}s,
 
     by mapping existing nodes :math:`s_i` and scaling existing weights :math:`w_i`
     with :math:`g'(s_i)`.
 
+    :arg quadrature: a one-dimensional :class:`~modepy.Quadrature` whose nodes
+        lie in :math:`[-1, 1]`.
     :arg map_fn: a callable ``(s: ArrayF) -> (nodes, jacobian)``, such as
         :func:`~modepy.quadrature.transplanted.map_identity`,
         :func:`~modepy.quadrature.transplanted.map_sausage`,
         :func:`~modepy.quadrature.transplanted.map_kosloff_tal_ezer`,
         or :func:`~modepy.quadrature.transplanted.map_strip`,
         with parameters (if any) bound via :func:`functools.partial`.
+    :returns: a new :class:`~modepy.Quadrature` with mapped nodes and
+        adjusted weights.
     """
     base_nodes = quadrature.nodes
     if base_nodes.ndim == 1:
@@ -268,7 +289,7 @@ def transplanted_legendre_gauss_quadrature(
     backend: str | None = None,
     force_dim_axis: bool = False,
 ) -> Quadrature:
-    r"""Legendre-Gauss quadrature transplanted by a Trefethen map."""
+    """Legendre-Gauss quadrature transplanted by a Trefethen map."""
     from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
 
     return transplanted_1d_quadrature(

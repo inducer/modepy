@@ -30,27 +30,29 @@ Clenshaw-Curtis and Fejér quadrature in one dimension
 Transplanted quadrature in one dimension
 ----------------------------------------
 
-The transplanted maps implemented here include the Hale-Trefethen
-conformal-map family and the Kosloff-Tal-Ezer map.
+The transplanted maps implemented here include the conformal maps from
+Hale-Trefethen (the sausage polynomial family and the strip map) as well as
+the earlier Kosloff-Tal-Ezer :math:`\arcsin` map.
 
 .. note::
 
     In using the term 'transplanted', we are following the terminology from
-    [HaleTrefethen2008]_.
+    [HaleTrefethen2008]_. In other nomenclature, this is also referred to as a
+    change of variables transformation using a conformal mapping.
 
 Given a base rule :math:`(s_i, w_i^{(s)})` on :math:`[-1,1]`, transplanted quadrature
-uses a map :math:`x=g(s)` to build
+uses a map :math:`g(s): [-1, 1] \to [-1, 1]` to build
 
 .. math::
 
-    x_i = g(s_i), \qquad \tilde w_i = w_i^{(s)} g'(s_i),
+    x_i = g(s_i), \qquad w_i = w_i^{(s)} g'(s_i),
 
 so that
 
 .. math::
 
-    \int_{-1}^1 f(x)\,dx = \int_{-1}^1 f(g(s))\,g'(s)\,ds
-    \approx \sum_i \tilde w_i f(x_i).
+    \int_{-1}^1 f(x)\,\mathrm{d}x = \int_{-1}^1 f(g(s))\,g'(s)\,\mathrm{d}s
+    \approx \sum_i w_i f(x_i).
 
 Map functions
 ~~~~~~~~~~~~~
@@ -60,41 +62,20 @@ Map functions
 Identity map
 ^^^^^^^^^^^^
 
-Use ``map_name="identity"`` for the unmodified base rule.
-
 .. autofunction:: map_identity
 
 Sausage polynomial maps
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-Use ``map_name="sausage"`` with odd ``sausage_degree`` (for example
-``sausage_degree=5``, ``9``, ``17``) for odd-degree normalized polynomial
-truncations of :math:`\arcsin`.
 
 .. autofunction:: map_sausage
 
 Kosloff-Tal-Ezer map
 ^^^^^^^^^^^^^^^^^^^^
 
-Use ``map_name="kte"`` (or ``"kosloff_tal_ezer"``).
-
-* ``kte_rho`` (``>1``) sets the default parameterization
-  :math:`\alpha = 2/(\rho + \rho^{-1})`.
-* ``kte_alpha`` explicitly sets :math:`\alpha` (must satisfy ``0<alpha<1``)
-  and overrides ``kte_rho``.
-
 .. autofunction:: map_kosloff_tal_ezer
 
 Strip conformal map
 ^^^^^^^^^^^^^^^^^^^
-
-Use ``map_name="strip"`` with ``strip_rho > 1``.
-
-.. note::
-
-    The strip map requires interior nodes (``abs(s)<1``), so endpoint rules
-    (for example Gauss-Lobatto or Clenshaw-Curtis) are not valid with
-    ``map_name="strip"``.
 
 .. autofunction:: map_strip
 
