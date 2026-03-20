@@ -216,7 +216,7 @@ def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
 
 def transplanted_1d_quadrature(
     quadrature: Quadrature,
-    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]] = partial(map_sausage, degree=9),
+    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]],
 ) -> Quadrature:
     r"""Map an existing 1D quadrature rule using a Trefethen transplant map.
 
@@ -266,7 +266,7 @@ def transplanted_1d_quadrature(
 
 def transplanted_legendre_gauss_quadrature(
     n: int,
-    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]] = partial(map_sausage, degree=9),
+    map_fn: Callable[[ArrayF], tuple[ArrayF, ArrayF]],
     *,
     backend: str | None = None,
     force_dim_axis: bool = False,
