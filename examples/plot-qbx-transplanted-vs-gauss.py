@@ -114,28 +114,11 @@ def make_group(order: int, quad: mp.Quadrature):
         def quadrature_rule(self):
             return quad
 
-        def discretization_key(self):
-            return (
-                type(self),
-                self.dim,
-                self.order,
-                tuple(quad.nodes.ravel()),
-                tuple(quad.weights.ravel()),
-            )
 
     return _G
 
 
 def make_mesh_and_t(panel_edges: np.ndarray, npts: int, unit_nodes: np.ndarray):
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message=(
-                "Unimplemented: Cannot check element orientation for a mesh with "
-                "mesh.dim != mesh.ambient_dim"
-            ),
-            category=UserWarning,
-        )
         return mgen.make_curve_mesh(
             mgen.circle,
             panel_edges,
@@ -244,8 +227,6 @@ def main() -> None:
     print("-" * (33 + 12 * len(names)))
 
     for i, npts in enumerate(NPTS):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=cl.CompilerWarning)
 
             qg = make_quad(npts, None)
             tgt_mesh, t_tgt = make_mesh_and_t(panel_edges, npts, qg.nodes)

@@ -66,7 +66,7 @@ def _arcsin_taylor_coefficients(max_odd_degree: int) -> tuple[float, ...]:
 
 
 def map_sausage(s: ArrayF, degree: int) -> tuple[ArrayF, ArrayF]:
-    r"""Odd-degree polynomial sausage map from Hale-Trefethen (2008).
+    r"""Odd-degree polynomial sausage map from Hale-Trefethen [HaleTrefethen2008]_.
 
     This is the normalized odd Taylor truncation of :math:`\arcsin(s)`
     through the monomial of degree *degree*.
@@ -93,7 +93,7 @@ def map_kosloff_tal_ezer(
     rho: float = 1.4,
     alpha: float | None = None,
 ) -> tuple[ArrayF, ArrayF]:
-    r"""Kosloff-Tal-Ezer map.
+    r"""Kosloff-Tal-Ezer map from [KosloffTalEzer1993]_.
 
     The map is
 
@@ -109,12 +109,9 @@ def map_kosloff_tal_ezer(
 
         \alpha = \frac{2}{\rho + \rho^{-1}},
 
-    matching the parameter choice discussed by Hale-Trefethen for a
+    matching the parameter choice discussed by Hale-Trefethen [HaleTrefethen2008]_ for a
     :math:`\rho`-ellipse analyticity model.
 
-    .. rubric:: Reference
-
-    [KosloffTalEzer1993]_
     """
     if alpha is None:
         if rho <= 1.0:
@@ -162,13 +159,13 @@ def _strip_map_parameter_m(rho: float) -> float:
 
     result = root_scalar(f, bracket=(1.0e-14, upper), method="brentq")
     if not result.converged:
-        raise RuntimeError("failed to solve strip-map parameter m")
+        raise RuntimeError(f"failed to solve strip-map parameter m for rho={rho}")
 
     return float(result.root)
 
 
 def map_strip(s: ArrayF, *, rho: float = 1.4) -> tuple[ArrayF, ArrayF]:
-    r"""Strip map from Hale-Trefethen transplanted quadrature.
+    r"""Strip map from Hale-Trefethen [HaleTrefethen2008]_ transplanted quadrature.
 
     :arg rho: strip parameter, must satisfy ``rho > 1``.
 
