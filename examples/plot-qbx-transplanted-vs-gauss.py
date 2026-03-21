@@ -106,14 +106,20 @@ def make_quad(
 
 
 def make_group(order: int, quad: mp.Quadrature):
-    class _G(PolynomialGivenNodesElementGroup):
+    class GivenQuadratureElementGroup(PolynomialGivenNodesElementGroup):
         def __init__(self, meg):
             super().__init__(meg, order, quad.nodes)
 
         def quadrature_rule(self):
             return quad
 
-    return _G
+        def discretization_key(self):
+            # FIXME: this is a bad discretization key (missing nodes + weights),
+            # but we need to implement something for this example for use in
+            # Discretization caching.
+            return (type(self), type(quad), self.dim, self.order)
+
+    return GivenQuadratureElementGroup
 
 
 def make_mesh_and_t(panel_edges: np.ndarray, npts: int, unit_nodes: np.ndarray):
