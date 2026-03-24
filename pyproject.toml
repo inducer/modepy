@@ -160,3 +160,6 @@ ignore = [
 root = "test"
 reportUnknownArgumentType = "hint"
 
+[tool.pytest.ini_options]
+python_files = ["*.py"]
+testpaths = ["modepy"]

@@ -25,6 +25,11 @@ Clenshaw-Curtis and Fejér quadrature in one dimension
     :members:
     :show-inheritance:
 
+Gauss-Kronrod quadrature
+------------------------
+
+.. automodule:: modepy.quadrature.kronrod
+
 .. _quadrature-transplanted-1d:
 
 Transplanted quadrature in one dimension
