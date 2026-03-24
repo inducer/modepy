@@ -99,7 +99,7 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
         d = 2*s + 1
 
         if dimension == 0:
-            super().__init__(np.zeros((dimension, 1)), np.ones(1), exact_to=inf)
+            super().__init__(np.zeros((dimension, 1)), np.ones(1), _exact_to=inf)
             return
 
         import math
@@ -144,4 +144,4 @@ class GrundmannMoellerSimplexQuadrature(Quadrature):
             nodes.append(real_p)
             weights.append(dim_factor * w)
 
-        super().__init__(np.array(nodes).T, np.array(weights), exact_to=d)
+        super().__init__(np.array(nodes).T, np.array(weights), _exact_to=d)

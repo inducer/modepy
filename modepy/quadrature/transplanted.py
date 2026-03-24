@@ -279,7 +279,7 @@ def transplanted_1d_quadrature(
         except AttributeError:
             exact_to = None
 
-    return Quadrature(mapped_nodes, mapped_weights, exact_to=exact_to)
+    return Quadrature(mapped_nodes, mapped_weights, _exact_to=exact_to)
 
 
 def transplanted_legendre_gauss_quadrature(

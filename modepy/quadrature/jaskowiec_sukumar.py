@@ -64,4 +64,4 @@ class JaskowiecSukumarQuadrature(Quadrature):
         exact_to = rule["quad_degree"]
         assert isinstance(exact_to, int)
 
-        super().__init__(points, weights, exact_to=exact_to)
+        super().__init__(points, weights, _exact_to=exact_to)

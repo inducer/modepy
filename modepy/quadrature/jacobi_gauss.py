@@ -115,7 +115,7 @@ class JacobiGaussQuadrature(Quadrature):
             x = x.reshape(1, -1)
 
         exact_to = 2*N + 1
-        super().__init__(x, w, exact_to=exact_to)
+        super().__init__(x, w, _exact_to=exact_to)
 
         self.alpha: float = alpha
         """Power of :math:`(1 - x)` term in Jacobi quadrature."""

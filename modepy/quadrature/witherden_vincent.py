@@ -65,4 +65,4 @@ class WitherdenVincentQuadrature(Quadrature):
             raise QuadratureRuleUnavailable(f"Unsupported order: {order}") from None
 
         super().__init__(rule["points"], rule["weights"],
-                         exact_to=rule["quad_degree"])
+                         _exact_to=rule["quad_degree"])

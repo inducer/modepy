@@ -95,7 +95,7 @@ class ClenshawCurtisQuadrature(Quadrature):
         if force_dim_axis:
             x = x.reshape(1, -1)
 
-        super().__init__(x, w, exact_to=N)
+        super().__init__(x, w, _exact_to=N)
 
 # }}}
 

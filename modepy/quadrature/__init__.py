@@ -46,6 +46,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from dataclasses import dataclass
 from functools import singledispatch
 from numbers import Number
 from typing import TYPE_CHECKING
@@ -137,29 +138,31 @@ def isinf(obj: object) -> bool:
     return isinstance(obj, _Inf)
 
 
+@dataclass(frozen=True)
 class Quadrature:
-    """The basic interface for a quadrature rule."""
+    """The basic interface for a quadrature rule.
 
-    def __init__(self,
-                 nodes: ArrayF,
-                 weights: ArrayF,
-                 exact_to: int | _Inf | None = None) -> None:
-        """
-        :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
-            of the qudrature rule.
-        :arg weights: an array of length *nnodes*.
-        :arg exact_to: an optional argument denoting the summed polynomial
-            degree to which the quadrature is exact. By default, `exact_to`
-            is `None` and will *not* be set as an attribute.
-        """
+    .. autoattribute:: nodes
+    .. autoattribute:: weights
+    .. attribute:: exact_to
+    .. automethod:: __call__
+    """
 
-        self.nodes: ArrayF = nodes
-        """An array of shape *(dim, nnodes)*, where *dim* is the dimension
-        of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
-        """
-        self.weights: ArrayF = weights
-        """A vector of length *nnodes* that contains the quadrature weights."""
-        self._exact_to = exact_to
+    nodes: ArrayF
+    """
+    an array of shape *(d, nnodes)*, where *d* is the dimension of the qudrature rule.
+    """
+
+    weights: ArrayF
+    """
+    an array of length *nnodes*.
+    """
+
+    _exact_to: int | _Inf | None = None
+    """
+    the summed polynomial degree to which the quadrature is exact. If *None*,
+    no polynomial exactness should be expected.
+    """
 
     @property
     def dim(self) -> int:
@@ -206,7 +209,7 @@ class ZeroDimensionalQuadrature(Quadrature):
         super().__init__(np.empty((0, 1), dtype=np.float64),
                          np.ones((1,), dtype=np.float64),
                          # NOTE: exact_to is expected to be an int
-                         exact_to=np.inf)
+                         _exact_to=inf)
 
 
 class Transformed1DQuadrature(Quadrature):
@@ -227,7 +230,7 @@ class Transformed1DQuadrature(Quadrature):
         super().__init__(
             left + (quad.nodes + 1) / 2 * length,
             length / 2 * quad.weights,
-            exact_to=quad._exact_to)
+            _exact_to=quad._exact_to)
 
 
 class TensorProductQuadrature(Quadrature):
@@ -266,7 +269,7 @@ class TensorProductQuadrature(Quadrature):
             # "infinite" accuracy
             exact_to = inf
 
-        super().__init__(x, w, exact_to=exact_to)
+        super().__init__(x, w, _exact_to=exact_to)
 
         self.quadratures = quads
 

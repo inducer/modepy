@@ -73,4 +73,4 @@ class XiaoGimbutasSimplexQuadrature(Quadrature):
         nodes = e2u(order_table["points"].T)
         wts = order_table["weights"]*e2u.jacobian
 
-        super().__init__(nodes, wts, exact_to=order)
+        super().__init__(nodes, wts, _exact_to=order)
