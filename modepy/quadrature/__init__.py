@@ -146,7 +146,7 @@ class Quadrature:
                  exact_to: int | _Inf | None = None) -> None:
         """
         :arg nodes: an array of shape *(d, nnodes)*, where *d* is the dimension
-            of the qudrature rule.
+            of the quadrature rule.
         :arg weights: an array of length *nnodes*.
         :arg exact_to: an optional argument denoting the summed polynomial
             degree to which the quadrature is exact. By default, `exact_to`
@@ -155,7 +155,7 @@ class Quadrature:
 
         self.nodes: ArrayF = nodes
         """An array of shape *(dim, nnodes)*, where *dim* is the dimension
-        of the qudrature rule. In 1D, the shape is just *(nnodes,)*.
+        of the quadrature rule. In 1D, the shape is just *(nnodes,)*.
         """
         self.weights: ArrayF = weights
         """A vector of length *nnodes* that contains the quadrature weights."""
