@@ -16,3 +16,4 @@ a.out
 tags
 
 .cache
+.venv
