@@ -3176,6 +3176,14 @@
             {
                 "code": "reportAny",
                 "range": {
+                    "startColumn": 31,
+                    "endColumn": 43,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAny",
+                "range": {
                     "startColumn": 15,
                     "endColumn": 32,
                     "lineCount": 2
@@ -3572,14 +3580,6 @@
         ],
         "./modepy/quadrature/construction.py": [
             {
-                "code": "reportAny",
-                "range": {
-                    "startColumn": 15,
-                    "endColumn": 72,
-                    "lineCount": 1
-                }
-            },
-            {
                 "code": "reportUnknownMemberType",
                 "range": {
                     "startColumn": 15,
@@ -3834,22 +3834,6 @@
                 "range": {
                     "startColumn": 8,
                     "endColumn": 18,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAny",
-                "range": {
-                    "startColumn": 12,
-                    "endColumn": 18,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAny",
-                "range": {
-                    "startColumn": 25,
-                    "endColumn": 31,
                     "lineCount": 1
                 }
             },
@@ -6009,6 +5993,22 @@
             }
         ],
         "./modepy/shapes.py": [
+            {
+                "code": "reportUnknownVariableType",
+                "range": {
+                    "startColumn": 32,
+                    "endColumn": 41,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportUnknownArgumentType",
+                "range": {
+                    "startColumn": 15,
+                    "endColumn": 24,
+                    "lineCount": 1
+                }
+            },
             {
                 "code": "reportAny",
                 "range": {
