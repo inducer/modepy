@@ -51,7 +51,7 @@ THE SOFTWARE.
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from numbers import Number
-from typing import Literal, TypeVar, overload
+from typing import TypeVar
 
 import numpy as np
 from typing_extensions import override
@@ -121,24 +121,24 @@ class TensorProductSpace(FunctionSpace):
     bases: tuple[FunctionSpace, ...]
     """A :class:`tuple` of the base spaces that take part in the tensor product."""
 
-    @overload
-    # pyright-ignore: they overlap, can't be helped.
-    def __new__(cls, bases: tuple[FunctionSpaceT]) -> FunctionSpaceT: ...  # pyright: ignore[reportOverlappingOverload]
+    def __init__(self,
+                 bases: tuple[FunctionSpace, ...], *,
+                 flatten: bool = True) -> None:
+        if flatten:
+            from warnings import warn
 
-    @overload
-    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> TensorProductSpace: ...
+            if any(isinstance(s, TensorProductSpace) for s in bases):
+                warn(f"Automatic flattening in the '{type(self).__name__}' constructor "
+                    "is deprecated and will be set to False in 2026. Use "
+                    f"'{type(self).__name__}.flatten()' instead to manually flatten.",
+                    DeprecationWarning, stacklevel=2)
 
-    def __new__(cls, bases: tuple[FunctionSpace, ...]) -> FunctionSpace:
-        if len(bases) == 1:
-            return bases[0]
-        else:
-            return FunctionSpace.__new__(cls)
+            bases = sum((
+                space.bases if isinstance(space, TensorProductSpace) else (space,)
+                for space in bases
+                ), ())
 
-    def __init__(self, bases: tuple[FunctionSpace, ...]) -> None:
-        self.bases = sum((
-            space.bases if isinstance(space, TensorProductSpace) else (space,)
-            for space in bases
-            ), ())
+        self.bases = bases
 
     def __getnewargs__(self):
         # Ensures TensorProductSpace is picklable
@@ -171,6 +171,25 @@ class TensorProductSpace(FunctionSpace):
                 f"spatial_dim={self.spatial_dim}, space_dim={self.space_dim}, "
                 f"bases={self.bases!r}"
                 ")")
+
+    def flatten(self) -> FunctionSpace:
+        """Flattens a tensor product space into its component pieces.
+
+        This function recursively removes tensor product spaces from
+        :attr:`TensorProductSpace.bases`. If only a single spaces remains in the
+        tensor product, then it is returned directly.
+        """
+        bases: list[FunctionSpace] = []
+        for s in self.bases:
+            if isinstance(s, TensorProductSpace):
+                s = s.flatten()
+
+            bases.extend(s.bases if isinstance(s, TensorProductSpace) else [s])
+
+        if len(bases) == 1:
+            return bases[0]
+        else:
+            return TensorProductSpace(tuple(bases))
 
 
 @space_for_shape.register(TensorProductShape)
@@ -256,21 +275,8 @@ class QN(TensorProductSpace):
         \left \{\prod_{i=1}^d x_i^{n_i}:\max n_i\le N\right\}.
     """
 
-    @overload
-    # pyright-ignore: they overlap, can't be helped.
-    def __new__(cls, spatial_dim: Literal[1], order: int) -> PN: ...  # pyright: ignore[reportOverlappingOverload]
-
-    @overload
-    def __new__(cls, spatial_dim: int, order: int) -> QN: ...
-
-    def __new__(cls, spatial_dim: int, order: int) -> FunctionSpace:
-        if spatial_dim == 1:
-            return PN(spatial_dim, order)
-        else:
-            return FunctionSpace.__new__(cls)
-
     def __init__(self, spatial_dim: int, order: int) -> None:
-        super().__init__((PN(1, order),) * spatial_dim)
+        super().__init__((PN(1, order),) * spatial_dim, flatten=False)
 
     @property
     @override
