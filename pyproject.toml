@@ -47,8 +47,7 @@ test = [
     "basedpyright",
     "pytest",
     "ruff",
-    # NOTE: 0.18 requires Python 3.12
-    "optype<0.18",
+    "optype",
 ]
 
 [project.urls]
@@ -139,7 +138,7 @@ zerod = "zerod"
 extend-exclude = []
 
 [tool.basedpyright]
-pythonVersion = "3.10"
+pythonVersion = "3.12"
 pythonPlatform = "All"
 
 reportImplicitStringConcatenation = "none"
