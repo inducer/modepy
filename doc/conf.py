@@ -41,6 +41,7 @@ sphinxconfig_missing_reference_aliases = {
     "BasisGradient": "obj:modepy.typing.BasisGradient",
     "NodalFunction": "obj:modepy.typing.NodalFunction",
     "RealValueT": "obj:modepy.typing.RealValueT",
+    "numpy._typing._array_like.NDArray": "obj:numpy.typing.NDArray"
 }
 
 
