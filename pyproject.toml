@@ -86,14 +86,14 @@ extend-select = [
 ]
 extend-ignore = [
     "C90",  # McCabe complexity
-    "E221", # multiple spaces before operator
-    "E226", # missing whitespace around arithmetic operator
-    "E241", # multiple spaces after comma
-    "E242", # tab after comma
-    "E402", # module level import not at the top of file
-    "N818", # error suffix in exception names
-    "RUF067", # no code in __init__ *shrug*
-    "TRY004",
+    "multiple-spaces-before-operator",
+    "missing-whitespace-around-arithmetic-operator",
+    "multiple-spaces-after-comma",
+    "tab-after-comma",
+    "module-import-not-at-top-of-file",
+    "error-suffix-on-exception-name",
+    "non-empty-init-module",
+    "type-check-without-type-error",
 ]
 allowed-confusables = ["‐", "–"]
 
@@ -103,9 +103,9 @@ inline-quotes = "double"
 multiline-quotes = "double"
 
 [tool.ruff.lint.per-file-ignores]
-"modepy/quadrature/jaskowiec_sukumar_tet_data.py" = ["E202", "E203"]
-"modepy/test/test_*.py" = ["S102"]
-"doc/conf.py" = ["S102"]
+"modepy/quadrature/jaskowiec_sukumar_tet_data.py" = ["whitespace-before-close-bracket", "whitespace-before-punctuation"]
+"modepy/test/test_*.py" = ["exec-builtin"]
+"doc/conf.py" = ["exec-builtin"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

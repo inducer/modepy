@@ -108,7 +108,9 @@ from modepy.shapes import (
     unit_vertices_for_shape,
 )
 from modepy.spaces import PN, QN, FunctionSpace, TensorProductSpace, space_for_shape
-from modepy.version import VERSION_TEXT as __version__  # noqa: N811
+from modepy.version import (
+    VERSION_TEXT as __version__,  # ruff:ignore[constant-imported-as-non-constant]
+)
 
 
 GaussLegendreQuadrature = LegendreGaussQuadrature

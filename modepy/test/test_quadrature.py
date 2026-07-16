@@ -76,7 +76,7 @@ def test_transformed_quadrature() -> None:
 
 
 try:
-    import scipy  # noqa: F401
+    import scipy  # ruff:ignore[unused-import]
 except ImportError:
     BACKENDS = [None, "builtin"]
 else:
@@ -99,7 +99,7 @@ def test_gauss_quadrature(backend: str, quad_cls: type[mp.Quadrature]) -> None:
         assert quad.nodes.shape[1] == s + 1
         for deg in range(quad.exact_to + 1):
             def f(x: ArrayF) -> ArrayF:
-                return np.sum(x**deg, axis=0)  # noqa: B023
+                return np.sum(x**deg, axis=0)  # ruff:ignore[function-uses-loop-variable]
 
             i_f = quad(f)
             i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))
@@ -115,7 +115,7 @@ def test_clenshaw_curtis_quadrature() -> None:
         assert quad.nodes.shape[1] == s + 1
         for deg in range(quad.exact_to + 1):
             def f(x: ArrayF) -> ArrayF:
-                return x**deg  # noqa: B023
+                return x**deg  # ruff:ignore[function-uses-loop-variable]
 
             i_f = quad(f)
             i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))
@@ -228,7 +228,7 @@ def test_fejer_quadrature(kind: int) -> None:
         quad = FejerQuadrature(s, kind, force_dim_axis=True)
 
         def f(x: ArrayF) -> ArrayF:
-            return x**deg  # noqa: B023
+            return x**deg  # ruff:ignore[function-uses-loop-variable]
 
         i_f = quad(f)
         i_f_true = 1 / (deg + 1) * (1 - (-1) ** (deg + 1))

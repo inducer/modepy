@@ -45,7 +45,7 @@ def _make_clenshaw_curtis_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     if n == 1:
         return np.array([-1, 1]), np.array([1, 1])
 
-    N = np.arange(1, n, 2)  # noqa: N806
+    N = np.arange(1, n, 2)  # ruff:ignore[non-lowercase-variable-in-function]
     r = len(N)
     m = n - r
 
@@ -82,7 +82,7 @@ class ClenshawCurtisQuadrature(Quadrature):
         `DOI <https://doi.org/10.1007/s10543-006-0045-4>`__
     """
 
-    def __init__(self, N: int, force_dim_axis: bool = False) -> None:  # noqa: N803
+    def __init__(self, N: int, force_dim_axis: bool = False) -> None:  # ruff:ignore[invalid-argument-name]
         if not force_dim_axis:
             from warnings import warn
             warn("setting 'force_dim_axis' to 'False' is deprecated and "
@@ -107,10 +107,10 @@ def _make_fejer1_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     if n < 1:
         raise ValueError(f"Fejer1 order must be at least 1: n = {n}")
 
-    N = np.arange(1, n, 2)  # noqa: N806
+    N = np.arange(1, n, 2)  # ruff:ignore[non-lowercase-variable-in-function]
     r = len(N)
     m = n - r
-    K = np.arange(0, m)  # noqa: N806
+    K = np.arange(0, m)  # ruff:ignore[non-lowercase-variable-in-function]
 
     # Fejer1 nodes: k = 1/2, 3/2, ..., n-1/2
     x = np.cos((np.arange(0, n) + 0.5) * np.pi / n)
@@ -131,7 +131,7 @@ def _make_fejer2_nodes_and_weights(n: int) -> tuple[ArrayF, ArrayF]:
     if n < 2:
         raise ValueError(f"Fejer2 order must be at least 2: n = {n}")
 
-    N = np.arange(1, n, 2)  # noqa: N806
+    N = np.arange(1, n, 2)  # ruff:ignore[non-lowercase-variable-in-function]
     r = len(N)
     m = n - r
 
@@ -162,7 +162,7 @@ class FejerQuadrature(Quadrature):
     """
 
     def __init__(self,
-                 N: int,  # noqa: N803
+                 N: int,  # ruff:ignore[invalid-argument-name]
                  kind: int = 1,
                  force_dim_axis: bool = False) -> None:
         if not force_dim_axis:
