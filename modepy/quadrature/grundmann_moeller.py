@@ -51,7 +51,7 @@ def _extended_euclidean(q: int, r: int) -> tuple[int, int, int]:
 
     while r:
         quot, t = divmod(q, r)
-        T = big_q[0] - quot*big_r[0], big_q[1] - quot*big_r[1]  # noqa: N806
+        T = big_q[0] - quot*big_r[0], big_q[1] - quot*big_r[1]  # ruff:ignore[non-lowercase-variable-in-function]
         q, r = r, t
         big_q, big_r = big_r, T
 

@@ -277,7 +277,7 @@ class LegendreGaussTensorProductQuadrature(TensorProductQuadrature):
     """
 
     def __init__(self,
-                 N: int, dims: int,  # noqa: N803
+                 N: int, dims: int,  # ruff:ignore[invalid-argument-name]
                  backend: str | None = None) -> None:
         from modepy.quadrature.jacobi_gauss import LegendreGaussQuadrature
         super().__init__([
@@ -291,7 +291,7 @@ class LegendreGaussLobattoTensorProductQuadrature(TensorProductQuadrature):
     """
 
     def __init__(self,
-                 N: int, dims: int,  # noqa: N803
+                 N: int, dims: int,  # ruff:ignore[invalid-argument-name]
                  backend: str | None = None) -> None:
         from modepy.quadrature.jacobi_gauss import LegendreGaussLobattoQuadrature
         super().__init__([

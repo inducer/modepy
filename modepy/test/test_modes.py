@@ -95,7 +95,7 @@ def test_orthonormality_jacobi_1d(alpha: float, beta: float, ebound: float) -> N
 
     for i, fi in enumerate(jac_f):
         for j, fj in enumerate(jac_f):
-            result = quad(lambda x: fi(x)*fj(x))  # noqa: B023
+            result = quad(lambda x: fi(x)*fj(x))  # ruff:ignore[function-uses-loop-variable]
             true_result = 1.0 if i == j else 0.0
 
             err = np.abs(result-true_result)
@@ -150,7 +150,7 @@ def test_basis_orthogonality(order: int, ebound: float, shape: mp.Shape) -> None
     for i, f in enumerate(basis.functions):
         for j, g in enumerate(basis.functions):
             true_result = 1 if i == j else 0
-            result = cub(lambda x: f(x)*g(x))  # noqa: B023
+            result = cub(lambda x: f(x)*g(x))  # ruff:ignore[function-uses-loop-variable]
 
             err = abs(result-true_result)
             maxerr = np.maximum(maxerr, err)

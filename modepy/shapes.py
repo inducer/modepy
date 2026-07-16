@@ -617,7 +617,7 @@ def submesh_for_simplex(
                     node_dict[add_tuples(current, d2)],
                     ))
 
-        for current in node_tuples:  # noqa: B007
+        for current in node_tuples:  # ruff:ignore[unused-loop-control-variable]
             try_add_line((0,), (1,),)
 
         return result_line
@@ -635,7 +635,7 @@ def submesh_for_simplex(
                     node_dict[add_tuples(current, d3)],
                     ))
 
-        for current in node_tuples:  # noqa: B007
+        for current in node_tuples:  # ruff:ignore[unused-loop-control-variable]
             # this is a tessellation of a square into two triangles.
             # subtriangles that fall outside of the master triangle are
             # simply not added.
@@ -664,7 +664,7 @@ def submesh_for_simplex(
                     node_dict[add_tuples(current, d4)],
                     ))
 
-        for current in node_tuples:  # noqa: B007
+        for current in node_tuples:  # ruff:ignore[unused-loop-control-variable]
             # this is a tessellation of a cube into six tets.
             # subtets that fall outside of the master tet are simply not added.
 

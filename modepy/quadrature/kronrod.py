@@ -436,7 +436,7 @@ def _transform_semi_inf_neg(f, s0, s):
         if np.isinf(x):
             return 1.0   # -inf maps to t=1, the far end of (0,1)
         diff = s0 - x
-        if diff == 0.0:  # noqa: RUF069
+        if diff == 0.0:  # ruff:ignore[float-equality-comparison]
             return 0.0
         return 1.0 / (1.0 + 1.0 / diff)
 
@@ -455,7 +455,7 @@ def _transform_semi_inf_pos(f, s0, s):
         if np.isinf(x):
             return 1.0
         diff = x - s0
-        if diff == 0.0:  # noqa: RUF069
+        if diff == 0.0:  # ruff:ignore[float-equality-comparison]
             return 0.0
         return 1.0 / (1.0 + 1.0 / diff)
 
@@ -632,7 +632,7 @@ def test_kronrod_exactness() -> None:
         krule = make_kronrod_quadrature(n)
         for deg in range(krule.exact_to + 1):
             def f(x: ArrayF) -> ArrayF:
-                return np.cos(deg * np.arccos(x))  # noqa: B023
+                return np.cos(deg * np.arccos(x))  # ruff:ignore[function-uses-loop-variable]
 
             ik_f = krule(f)
             ig_f = krule.gauss_quadrature(f)

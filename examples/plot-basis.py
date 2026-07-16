@@ -29,7 +29,7 @@ all_values = []
 stretch_factor = 1.5
 
 for (i, j), basis_func in zip(basis.mode_ids, basis.functions, strict=True):
-    all_nodes.append(plot_nodes + [stretch_factor * i, stretch_factor * j])  # noqa: RUF005
+    all_nodes.append(plot_nodes + [stretch_factor * i, stretch_factor * j])  # ruff:ignore[collection-literal-concatenation]
     all_triangles.append(tri_subtriangles + node_count)
     all_values.append(basis_func(eval_nodes))
     node_count += len(plot_nodes)

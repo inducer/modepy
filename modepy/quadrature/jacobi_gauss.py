@@ -78,7 +78,7 @@ class JacobiGaussQuadrature(Quadrature):
     """
 
     def __init__(self,
-            alpha: float, beta: float, N: int,                  # noqa: N803
+            alpha: float, beta: float, N: int,                  # ruff:ignore[invalid-argument-name]
             backend: str | None = None,
             force_dim_axis: bool = False) -> None:
         r"""
@@ -124,7 +124,7 @@ class JacobiGaussQuadrature(Quadrature):
 
     @staticmethod
     def compute_weights_and_nodes(
-            N: int, alpha: float, beta: float,  # noqa: N803
+            N: int, alpha: float, beta: float,  # ruff:ignore[invalid-argument-name]
             ) -> tuple[ArrayF, ArrayF]:
         """
         :arg N: order of the Gauss quadrature (the order of exactly
@@ -172,7 +172,7 @@ class JacobiGaussQuadrature(Quadrature):
             else:
                 return -(alpha**2 - beta**2) / ((2*n + apb) * (2*n + apb + 2))
 
-        T = np.zeros((N + 1, N + 1))    # noqa: N806
+        T = np.zeros((N + 1, N + 1))    # ruff:ignore[non-lowercase-variable-in-function]
         current_a: float | np.floating = 0.0
 
         for n in range(N + 1):
@@ -208,7 +208,7 @@ class LegendreGaussQuadrature(JacobiGaussQuadrature):
     """
 
     def __init__(self,
-                 N: int,  # noqa: N803
+                 N: int,  # ruff:ignore[invalid-argument-name]
                  backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
         super().__init__(
@@ -229,7 +229,7 @@ class ChebyshevGaussQuadrature(JacobiGaussQuadrature):
     """
 
     def __init__(self,
-                 N: int,  # noqa: N803
+                 N: int,  # ruff:ignore[invalid-argument-name]
                  kind: int = 1,
                  backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
@@ -253,7 +253,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
     """
 
     def __init__(self,
-                 alpha: float, N: int,  # noqa: N803
+                 alpha: float, N: int,  # ruff:ignore[invalid-argument-name]
                  backend: str | None = None,
                  force_dim_axis: bool = False) -> None:
         super().__init__(
@@ -262,7 +262,7 @@ class GaussGegenbauerQuadrature(JacobiGaussQuadrature):
 
 
 def jacobi_gauss_lobatto_nodes(
-        alpha: float, beta: float, N: int,          # noqa: N803
+        alpha: float, beta: float, N: int,          # ruff:ignore[invalid-argument-name]
         backend: str | None = None,
         force_dim_axis: bool = False) -> ArrayF:
     """Compute Gauss-Lobatto quadrature nodes associated with
@@ -298,7 +298,7 @@ def jacobi_gauss_lobatto_nodes(
 
 
 def legendre_gauss_lobatto_nodes(
-        N: int,                     # noqa: N803
+        N: int,                     # ruff:ignore[invalid-argument-name]
         backend: str | None = None,
         force_dim_axis: bool = False) -> ArrayF:
     """Compute the Legendre-Gauss-Lobatto quadrature nodes.
@@ -325,7 +325,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
     """
 
     def __init__(self,
-            alpha: float, beta: float, N: int,  # noqa: N803
+            alpha: float, beta: float, N: int,  # ruff:ignore[invalid-argument-name]
             *, backend: str | None = None,
             force_dim_axis: bool = False) -> None:
         nodes = jacobi_gauss_lobatto_nodes(alpha, beta, N, backend)
@@ -393,7 +393,7 @@ class JacobiGaussLobattoQuadrature(Quadrature):
 
 class LegendreGaussLobattoQuadrature(JacobiGaussLobattoQuadrature):
     def __init__(
-                self, N, *, backend: str | None = None,  # noqa: N803
+                self, N, *, backend: str | None = None,  # ruff:ignore[invalid-argument-name]
                 force_dim_axis: bool = False
             ) -> None:
         super().__init__(0, 0, N, backend=backend, force_dim_axis=force_dim_axis)
