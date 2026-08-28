@@ -608,21 +608,21 @@ def test_semi_pos_inf():
 
 def test_semi_pos_neg():
     # Semi-infinite negative: e^x from -inf to 0
-    approx_int, err_est = quadgk(lambda x: np.exp(x), -np.inf, 0)
+    approx_int, err_est = quadgk(np.exp, -np.inf, 0)
     assert err_est < 1e-10
     check("integral e^x from -inf to 0", approx_int, 1.0)
 
 
 def test_multi_break():
     # Multiple breakpoints
-    approx_int, err_est = quadgk(lambda x: abs(x), -1, 0, 1)
+    approx_int, err_est = quadgk(abs, -1, 0, 1)
     assert err_est < 1e-10
     check("integral |x| from -1 to 1 (with breakpoint)", approx_int, 1.0)
 
 
 def test_oscillatory():
     # Oscillatory
-    approx_int, err_est = quadgk(lambda x: np.sin(x), 0, np.pi)
+    approx_int, err_est = quadgk(np.sin, 0, np.pi)
     assert err_est < 1e-10
     check("integral sin(x) from 0 to pi", approx_int, 2.0)
 

@@ -823,7 +823,9 @@ def test_inf() -> None:
 
     for a in [5, _Inf(), np.inf, -np.inf, "z"]:
         for b in [5, _Inf(), np.inf, -np.inf, "z"]:
+            # ruff: ignore[unnecessary-dunder-call]
             assert agree(a.__lt__(b), b.__gt__(a))  # pyright: ignore[reportArgumentType]
+            # ruff: ignore[unnecessary-dunder-call]
             assert agree(a.__le__(b), b.__ge__(a))  # pyright: ignore[reportArgumentType]
 
 
