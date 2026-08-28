@@ -85,14 +85,15 @@ extend-select = [
     "TC",
 ]
 extend-ignore = [
-    "C90",  # McCabe complexity
-    "multiple-spaces-before-operator",
-    "missing-whitespace-around-arithmetic-operator",
-    "multiple-spaces-after-comma",
-    "tab-after-comma",
-    "module-import-not-at-top-of-file",
+    "complex-structure",
     "error-suffix-on-exception-name",
+    "missing-whitespace-around-arithmetic-operator",
+    "module-import-not-at-top-of-file",
+    "multiple-spaces-after-comma",
+    "multiple-spaces-before-operator",
     "non-empty-init-module",
+    "pytest-parameter-with-default-argument",
+    "tab-after-comma",
     "type-check-without-type-error",
 ]
 allowed-confusables = ["‐", "–"]
