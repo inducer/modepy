@@ -32,6 +32,9 @@ Hypercubes
 .. autofunction:: tensor_product_nodes
 .. autofunction:: legendre_gauss_tensor_product_nodes
 .. autofunction:: legendre_gauss_lobatto_tensor_product_nodes
+
+.. autofunction:: padua_jacobi_nodes
+.. autofunction:: padua_nodes
 """
 
 from __future__ import annotations
@@ -447,6 +450,101 @@ def legendre_gauss_lobatto_tensor_product_nodes(dims: int, n: int) -> ArrayF:
     from modepy.quadrature.jacobi_gauss import legendre_gauss_lobatto_nodes
     return tensor_product_nodes(dims,
         legendre_gauss_lobatto_nodes(n, force_dim_axis=True))
+
+# }}}
+
+
+# {{{ Padua nodes
+
+def _make_padua_grid_nodes(
+        alpha: float, beta: float, order: int
+        ) -> tuple[ArrayF, ArrayF]:
+    from modepy.quadrature.jacobi_gauss import jacobi_gauss_lobatto_nodes
+    mu = jacobi_gauss_lobatto_nodes(alpha, beta, order)
+    eta = jacobi_gauss_lobatto_nodes(alpha, beta, order + 1)
+
+    return mu, eta
+
+
+def _make_padua_jacobi_nodes(mu: ArrayF, eta: ArrayF, odd_or_even: int) -> ArrayF:
+    nodes = np.stack(np.meshgrid(mu, eta, indexing="ij"))
+    indices = np.sum(
+            np.meshgrid(np.arange(mu.size), np.arange(eta.size), indexing="ij"),
+            axis=0)
+
+    return nodes[:, indices % 2 == odd_or_even].reshape(2, -1)
+
+
+def _first_padua_jacobi_nodes(alpha: float, beta: float, order: int) -> ArrayF:
+    mu, eta = _make_padua_grid_nodes(alpha, beta, order)
+    return _make_padua_jacobi_nodes(mu, eta, 0)
+
+
+def _second_padua_jacobi_nodes(alpha: float, beta: float, order: int) -> ArrayF:
+    # NOTE: these are just "rotated" by pi/2 from the first family
+    mu, eta = _make_padua_grid_nodes(alpha, beta, order)
+    return _make_padua_jacobi_nodes(eta, mu, 0)
+
+
+def _third_padua_jacobi_nodes(alpha: float, beta: float, order: int) -> ArrayF:
+    # NOTE: these are just "rotated" by pi from the first family
+    mu, eta = _make_padua_grid_nodes(alpha, beta, order)
+    return _make_padua_jacobi_nodes(mu, eta, 1)
+
+
+def _fourth_padua_jacobi_nodes(alpha: float, beta: float, order: int) -> ArrayF:
+    # NOTE: these are just "rotated" by 2 pi/3 from the first family
+    mu, eta = _make_padua_grid_nodes(alpha, beta, order)
+    return _make_padua_jacobi_nodes(eta, mu, 1)
+
+
+def padua_jacobi_nodes(
+        alpha: float, beta: float, order: int,
+        family: str = "first") -> ArrayF:
+    r"""Generalized Padua-Jacobi nodes.
+
+    The Padua-Jacobi nodes are constructed from an interlaced grid of
+    standard Jacobi-Gauss-Lobatto nodes, making use of
+    :func:`~modepy.quadrature.jacobi_gauss.jacobi_gauss_lobatto_nodes`.
+    This construction is detailed in
+
+        M. Briani, A. Sommariva, M. Vianello,
+        *Computing Fekete and Lebesgue Points: Simplex, Square, Disk*,
+        Journal of Computational and Applied Mathematics, Vol. 236,
+        pp. 2477--2486, 2012, `DOI <http://dx.doi.org/10.1016/j.cam.2011.12.006>`_.
+
+    The values of the parameters :math:`(\alpha, \beta)` can have an effect
+    on the Lebesgue constant of the resulting set, but all of them have
+    optimal growth of :math:`\mathcal{O}(\log^2 n)`.
+
+    The Padua-Jacobi nodes are not rotationally symmetric.
+
+    :arg family: one of the four families of Padua-Jacobi nodes. The three
+        additional families are :math:`90^\circ` rotations of the first one.
+    """
+
+    if family == "first":
+        nodes = _first_padua_jacobi_nodes(alpha, beta, order)
+    elif family == "second":
+        nodes = _second_padua_jacobi_nodes(alpha, beta, order)
+    elif family == "third":
+        nodes = _third_padua_jacobi_nodes(alpha, beta, order)
+    elif family == "fourth":
+        nodes = _fourth_padua_jacobi_nodes(alpha, beta, order)
+    else:
+        raise ValueError(f"unknown Padua-Jacobi node family: '{family}'")
+
+    return nodes
+
+
+def padua_nodes(order: int, family: str = "first") -> ArrayF:
+    r"""Standard Padua nodes.
+
+    Padua nodes are Padua-Jacobi nodes with :math:`\alpha = \beta = -0.5`,
+    i.e. they are constructed from the Chebyshev-Gauss-Lobatto nodes.
+    """
+
+    return padua_jacobi_nodes(-0.5, -0.5, order, family=family)
 
 # }}}
 
