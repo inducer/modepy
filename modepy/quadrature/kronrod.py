@@ -52,6 +52,13 @@ import numpy as np
 from modepy import Quadrature
 
 
+__all__ = [
+    "KronrodGaussQuadrature",
+    "KronrodQuadrature",
+    "make_kronrod_quadrature",
+]
+
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
