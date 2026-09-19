@@ -43,7 +43,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         -   uses: actions/checkout@v7
-        -   uses: crate-ci/typos@master
+        -   uses: crate-ci/typos@main
 
     pytest:
         name: Pytest on Py${{ matrix.python-version }}
